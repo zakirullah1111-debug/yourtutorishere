@@ -14,16 +14,513 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      chat_history: {
+        Row: {
+          ai_model: string | null
+          created_at: string
+          id: string
+          message: string
+          response: string
+          session_id: string | null
+          user_id: string
+        }
+        Insert: {
+          ai_model?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          response: string
+          session_id?: string | null
+          user_id: string
+        }
+        Update: {
+          ai_model?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          response?: string
+          session_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount_pkr: number
+          created_at: string
+          id: string
+          package_type: string | null
+          payment_date: string | null
+          payment_method: string | null
+          payment_status: string | null
+          session_ids: string[] | null
+          student_id: string
+          transaction_id: string | null
+          tutor_id: string
+        }
+        Insert: {
+          amount_pkr: number
+          created_at?: string
+          id?: string
+          package_type?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          session_ids?: string[] | null
+          student_id: string
+          transaction_id?: string | null
+          tutor_id: string
+        }
+        Update: {
+          amount_pkr?: number
+          created_at?: string
+          id?: string
+          package_type?: string | null
+          payment_date?: string | null
+          payment_method?: string | null
+          payment_status?: string | null
+          session_ids?: string[] | null
+          student_id?: string
+          transaction_id?: string | null
+          tutor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          city: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string
+          first_name: string
+          gender: string | null
+          id: string
+          last_name: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email: string
+          first_name: string
+          gender?: string | null
+          id?: string
+          last_name: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          city?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string
+          first_name?: string
+          gender?: string | null
+          id?: string
+          last_name?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          is_verified: boolean | null
+          rating: number
+          session_id: string | null
+          student_id: string
+          tutor_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean | null
+          rating: number
+          session_id?: string | null
+          student_id: string
+          tutor_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          is_verified?: boolean | null
+          rating?: number
+          session_id?: string | null
+          student_id?: string
+          tutor_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          duration_minutes: number
+          id: string
+          recording_url: string | null
+          scheduled_date: string
+          scheduled_time: string
+          session_notes: string | null
+          status: string | null
+          student_feedback: string | null
+          student_id: string
+          student_rating: number | null
+          subject: string
+          tutor_feedback: string | null
+          tutor_id: string
+          tutor_rating: number | null
+          zoom_join_url: string | null
+          zoom_meeting_id: string | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          recording_url?: string | null
+          scheduled_date: string
+          scheduled_time: string
+          session_notes?: string | null
+          status?: string | null
+          student_feedback?: string | null
+          student_id: string
+          student_rating?: number | null
+          subject: string
+          tutor_feedback?: string | null
+          tutor_id: string
+          tutor_rating?: number | null
+          zoom_join_url?: string | null
+          zoom_meeting_id?: string | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          recording_url?: string | null
+          scheduled_date?: string
+          scheduled_time?: string
+          session_notes?: string | null
+          status?: string | null
+          student_feedback?: string | null
+          student_id?: string
+          student_rating?: number | null
+          subject?: string
+          tutor_feedback?: string | null
+          tutor_id?: string
+          tutor_rating?: number | null
+          zoom_join_url?: string | null
+          zoom_meeting_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      students: {
+        Row: {
+          additional_subjects: string[] | null
+          assigned_tutor_id: string | null
+          created_at: string
+          current_class: string | null
+          current_grade_average: number | null
+          education_board: string | null
+          id: string
+          last_session_date: string | null
+          next_session_date: string | null
+          notes: string | null
+          package_type: string | null
+          parent_email: string | null
+          parent_phone: string | null
+          parent_satisfaction: number | null
+          payment_status: string | null
+          primary_subject: string
+          progress_status: string | null
+          school_name: string | null
+          secondary_subject: string | null
+          sessions_per_week: number | null
+          status: string | null
+          total_hours_completed: number | null
+          total_sessions_completed: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          additional_subjects?: string[] | null
+          assigned_tutor_id?: string | null
+          created_at?: string
+          current_class?: string | null
+          current_grade_average?: number | null
+          education_board?: string | null
+          id?: string
+          last_session_date?: string | null
+          next_session_date?: string | null
+          notes?: string | null
+          package_type?: string | null
+          parent_email?: string | null
+          parent_phone?: string | null
+          parent_satisfaction?: number | null
+          payment_status?: string | null
+          primary_subject: string
+          progress_status?: string | null
+          school_name?: string | null
+          secondary_subject?: string | null
+          sessions_per_week?: number | null
+          status?: string | null
+          total_hours_completed?: number | null
+          total_sessions_completed?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          additional_subjects?: string[] | null
+          assigned_tutor_id?: string | null
+          created_at?: string
+          current_class?: string | null
+          current_grade_average?: number | null
+          education_board?: string | null
+          id?: string
+          last_session_date?: string | null
+          next_session_date?: string | null
+          notes?: string | null
+          package_type?: string | null
+          parent_email?: string | null
+          parent_phone?: string | null
+          parent_satisfaction?: number | null
+          payment_status?: string | null
+          primary_subject?: string
+          progress_status?: string | null
+          school_name?: string | null
+          secondary_subject?: string | null
+          sessions_per_week?: number | null
+          status?: string | null
+          total_hours_completed?: number | null
+          total_sessions_completed?: number | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "students_assigned_tutor_id_fkey"
+            columns: ["assigned_tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subjects: {
+        Row: {
+          category: string
+          created_at: string
+          icon: string | null
+          id: string
+          name: string
+          tutor_count: number | null
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name: string
+          tutor_count?: number | null
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          icon?: string | null
+          id?: string
+          name?: string
+          tutor_count?: number | null
+        }
+        Relationships: []
+      }
+      tutors: {
+        Row: {
+          active_students: number | null
+          additional_subjects: string[] | null
+          availability_days: string[] | null
+          average_rating: number | null
+          bio_summary: string | null
+          created_at: string
+          degree: string
+          education_level: string
+          graduation_year: number
+          hourly_rate_pkr: number
+          id: string
+          languages: string[] | null
+          preferred_time_slot: string | null
+          primary_subject: string
+          profile_complete: boolean | null
+          secondary_subject: string | null
+          status: string | null
+          teaching_levels: string[]
+          total_hours_taught: number | null
+          total_reviews: number | null
+          total_students_taught: number | null
+          university: string
+          updated_at: string
+          user_id: string
+          verified: boolean | null
+          years_of_experience: number | null
+        }
+        Insert: {
+          active_students?: number | null
+          additional_subjects?: string[] | null
+          availability_days?: string[] | null
+          average_rating?: number | null
+          bio_summary?: string | null
+          created_at?: string
+          degree: string
+          education_level: string
+          graduation_year: number
+          hourly_rate_pkr: number
+          id?: string
+          languages?: string[] | null
+          preferred_time_slot?: string | null
+          primary_subject: string
+          profile_complete?: boolean | null
+          secondary_subject?: string | null
+          status?: string | null
+          teaching_levels: string[]
+          total_hours_taught?: number | null
+          total_reviews?: number | null
+          total_students_taught?: number | null
+          university: string
+          updated_at?: string
+          user_id: string
+          verified?: boolean | null
+          years_of_experience?: number | null
+        }
+        Update: {
+          active_students?: number | null
+          additional_subjects?: string[] | null
+          availability_days?: string[] | null
+          average_rating?: number | null
+          bio_summary?: string | null
+          created_at?: string
+          degree?: string
+          education_level?: string
+          graduation_year?: number
+          hourly_rate_pkr?: number
+          id?: string
+          languages?: string[] | null
+          preferred_time_slot?: string | null
+          primary_subject?: string
+          profile_complete?: boolean | null
+          secondary_subject?: string | null
+          status?: string | null
+          teaching_levels?: string[]
+          total_hours_taught?: number | null
+          total_reviews?: number | null
+          total_students_taught?: number | null
+          university?: string
+          updated_at?: string
+          user_id?: string
+          verified?: boolean | null
+          years_of_experience?: number | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "tutor" | "student"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +647,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "tutor", "student"],
+    },
   },
 } as const
