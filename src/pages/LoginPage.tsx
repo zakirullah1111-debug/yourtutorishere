@@ -1,19 +1,95 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { GraduationCap, Mail, Lock, Eye, EyeOff } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { GraduationCap, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const loginSchema = z.object({
+  email: z.string().email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
 
 const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  
+  const { signIn, user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Handle login logic
-    console.log("Login:", { email, password });
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
+  const validateForm = () => {
+    try {
+      loginSchema.parse({ email, password });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: { email?: string; password?: string } = {};
+        error.errors.forEach((err) => {
+          if (err.path[0] === "email") fieldErrors.email = err.message;
+          if (err.path[0] === "password") fieldErrors.password = err.message;
+        });
+        setErrors(fieldErrors);
+      }
+      return false;
+    }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+
+    const { error } = await signIn(email, password);
+
+    if (error) {
+      let errorMessage = "Login failed. Please try again.";
+      
+      if (error.message.includes("Invalid login credentials")) {
+        errorMessage = "Invalid email or password. Please check your credentials.";
+      } else if (error.message.includes("Email not confirmed")) {
+        errorMessage = "Please verify your email address before logging in.";
+      }
+
+      toast({
+        title: "Login Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Welcome back!",
+      description: "You have successfully logged in.",
+    });
+
+    navigate("/");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-subtle flex">
@@ -45,19 +121,25 @@ const LoginPage = () => {
             {/* Email */}
             <div>
               <label className="block text-sm font-medium text-foreground mb-2">
-                Email or Phone
+                Email
               </label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                 <input
-                  type="text"
+                  type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email or phone"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-primary outline-none text-foreground"
+                  placeholder="Enter your email"
+                  className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
+                    errors.email ? "border-destructive" : "border-border"
+                  } bg-card focus:ring-2 focus:ring-primary outline-none text-foreground`}
                   required
+                  disabled={isLoading}
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-destructive mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Password */}
@@ -72,8 +154,11 @@ const LoginPage = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full pl-12 pr-12 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-primary outline-none text-foreground"
+                  className={`w-full pl-12 pr-12 py-3 rounded-xl border ${
+                    errors.password ? "border-destructive" : "border-border"
+                  } bg-card focus:ring-2 focus:ring-primary outline-none text-foreground`}
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -83,6 +168,9 @@ const LoginPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-destructive mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Remember & Forgot */}
@@ -97,8 +185,21 @@ const LoginPage = () => {
             </div>
 
             {/* Submit */}
-            <Button type="submit" variant="gradient" size="xl" className="w-full">
-              Log In
+            <Button 
+              type="submit" 
+              variant="gradient" 
+              size="xl" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Log In"
+              )}
             </Button>
           </form>
 
@@ -111,7 +212,7 @@ const LoginPage = () => {
 
           {/* Social Login */}
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" size="lg" className="w-full">
+            <Button variant="outline" size="lg" className="w-full" disabled={isLoading}>
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -120,7 +221,7 @@ const LoginPage = () => {
               </svg>
               Google
             </Button>
-            <Button variant="outline" size="lg" className="w-full">
+            <Button variant="outline" size="lg" className="w-full" disabled={isLoading}>
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
