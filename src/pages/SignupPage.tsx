@@ -1,28 +1,130 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { GraduationCap, Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { GraduationCap, Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { z } from "zod";
+
+const signupSchema = z.object({
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
+  phone: z.string().min(10, "Please enter a valid phone number"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  level: z.string().optional(),
+});
 
 const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({
-    name: "",
+    firstName: "",
+    lastName: "",
     email: "",
     phone: "",
     password: "",
     level: "",
-    role: "student",
+    role: "student" as "student" | "tutor",
   });
 
+  const { signUp, user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Redirect if already logged in
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/");
+    }
+  }, [user, loading, navigate]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log("Signup:", formData);
+  const validateForm = () => {
+    try {
+      signupSchema.parse({
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        level: formData.level,
+      });
+      setErrors({});
+      return true;
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        const fieldErrors: Record<string, string> = {};
+        error.errors.forEach((err) => {
+          const field = err.path[0] as string;
+          fieldErrors[field] = err.message;
+        });
+        setErrors(fieldErrors);
+      }
+      return false;
+    }
   };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+
+    const { error } = await signUp(formData.email, formData.password, {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phone: formData.phone,
+      role: formData.role,
+      educationLevel: formData.role === "student" ? formData.level : undefined,
+    });
+
+    if (error) {
+      let errorMessage = "Sign up failed. Please try again.";
+      
+      if (error.message.includes("already registered")) {
+        errorMessage = "This email is already registered. Please try logging in.";
+      } else if (error.message.includes("invalid email")) {
+        errorMessage = "Please enter a valid email address.";
+      } else if (error.message.includes("weak password")) {
+        errorMessage = "Password is too weak. Please use a stronger password.";
+      }
+
+      toast({
+        title: "Sign Up Failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
+
+    toast({
+      title: "Account Created!",
+      description: "Please check your email to verify your account before logging in.",
+    });
+
+    navigate("/login");
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen gradient-subtle flex">
@@ -85,6 +187,7 @@ const SignupPage = () => {
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground"
               }`}
+              disabled={isLoading}
             >
               I'm a Student
             </button>
@@ -96,28 +199,57 @@ const SignupPage = () => {
                   ? "bg-card text-foreground shadow-sm"
                   : "text-muted-foreground"
               }`}
+              disabled={isLoading}
             >
               I'm a Tutor
             </button>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Full Name */}
-            <div>
-              <label className="block text-sm font-medium text-foreground mb-2">
-                Full Name
-              </label>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+            {/* Name Fields */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  First Name
+                </label>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleChange}
+                    placeholder="First name"
+                    className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
+                      errors.firstName ? "border-destructive" : "border-border"
+                    } bg-card focus:ring-2 focus:ring-primary outline-none text-foreground`}
+                    required
+                    disabled={isLoading}
+                  />
+                </div>
+                {errors.firstName && (
+                  <p className="text-sm text-destructive mt-1">{errors.firstName}</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Last Name
+                </label>
                 <input
                   type="text"
-                  name="name"
-                  value={formData.name}
+                  name="lastName"
+                  value={formData.lastName}
                   onChange={handleChange}
-                  placeholder="Enter your full name"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-primary outline-none text-foreground"
+                  placeholder="Last name"
+                  className={`w-full px-4 py-3 rounded-xl border ${
+                    errors.lastName ? "border-destructive" : "border-border"
+                  } bg-card focus:ring-2 focus:ring-primary outline-none text-foreground`}
                   required
+                  disabled={isLoading}
                 />
+                {errors.lastName && (
+                  <p className="text-sm text-destructive mt-1">{errors.lastName}</p>
+                )}
               </div>
             </div>
 
@@ -134,10 +266,16 @@ const SignupPage = () => {
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="Enter your email"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-primary outline-none text-foreground"
+                  className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
+                    errors.email ? "border-destructive" : "border-border"
+                  } bg-card focus:ring-2 focus:ring-primary outline-none text-foreground`}
                   required
+                  disabled={isLoading}
                 />
               </div>
+              {errors.email && (
+                <p className="text-sm text-destructive mt-1">{errors.email}</p>
+              )}
             </div>
 
             {/* Phone */}
@@ -153,10 +291,16 @@ const SignupPage = () => {
                   value={formData.phone}
                   onChange={handleChange}
                   placeholder="+92 XXX XXXXXXX"
-                  className="w-full pl-12 pr-4 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-primary outline-none text-foreground"
+                  className={`w-full pl-12 pr-4 py-3 rounded-xl border ${
+                    errors.phone ? "border-destructive" : "border-border"
+                  } bg-card focus:ring-2 focus:ring-primary outline-none text-foreground`}
                   required
+                  disabled={isLoading}
                 />
               </div>
+              {errors.phone && (
+                <p className="text-sm text-destructive mt-1">{errors.phone}</p>
+              )}
             </div>
 
             {/* Education Level (Students only) */}
@@ -171,7 +315,7 @@ const SignupPage = () => {
                     value={formData.level}
                     onChange={handleChange}
                     className="w-full px-4 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-primary outline-none text-foreground appearance-none"
-                    required
+                    disabled={isLoading}
                   >
                     <option value="">Select your level</option>
                     <option value="o-level">O-Level</option>
@@ -199,8 +343,11 @@ const SignupPage = () => {
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Create a strong password"
-                  className="w-full pl-12 pr-12 py-3 rounded-xl border border-border bg-card focus:ring-2 focus:ring-primary outline-none text-foreground"
+                  className={`w-full pl-12 pr-12 py-3 rounded-xl border ${
+                    errors.password ? "border-destructive" : "border-border"
+                  } bg-card focus:ring-2 focus:ring-primary outline-none text-foreground`}
                   required
+                  disabled={isLoading}
                 />
                 <button
                   type="button"
@@ -210,11 +357,19 @@ const SignupPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-sm text-destructive mt-1">{errors.password}</p>
+              )}
             </div>
 
             {/* Terms */}
             <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" className="w-4 h-4 mt-1 rounded border-border text-primary focus:ring-primary" required />
+              <input 
+                type="checkbox" 
+                className="w-4 h-4 mt-1 rounded border-border text-primary focus:ring-primary" 
+                required 
+                disabled={isLoading}
+              />
               <span className="text-sm text-muted-foreground">
                 I agree to the{" "}
                 <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>
@@ -224,8 +379,21 @@ const SignupPage = () => {
             </label>
 
             {/* Submit */}
-            <Button type="submit" variant="gradient" size="xl" className="w-full">
-              Create Account
+            <Button 
+              type="submit" 
+              variant="gradient" 
+              size="xl" 
+              className="w-full"
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <>
+                  <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                  Creating Account...
+                </>
+              ) : (
+                "Create Account"
+              )}
             </Button>
           </form>
 
@@ -238,7 +406,7 @@ const SignupPage = () => {
 
           {/* Social Signup */}
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" size="lg" className="w-full">
+            <Button variant="outline" size="lg" className="w-full" disabled={isLoading}>
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -247,7 +415,7 @@ const SignupPage = () => {
               </svg>
               Google
             </Button>
-            <Button variant="outline" size="lg" className="w-full">
+            <Button variant="outline" size="lg" className="w-full" disabled={isLoading}>
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                 <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
               </svg>
