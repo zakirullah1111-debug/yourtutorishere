@@ -217,19 +217,6 @@ export function HeroSection() {
               })}
             </div>
 
-            {/* Stats Card */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
-              className="absolute -bottom-6 -left-6 bg-card/90 backdrop-blur-xl p-4 rounded-2xl shadow-xl border border-border"
-            >
-              <div>
-                <p className="text-2xl font-bold text-foreground">5,000+</p>
-                <p className="text-sm text-muted-foreground">Students Learning from Home</p>
-              </div>
-            </motion.div>
-
             {/* Scene Navigation Dots */}
             <div className="absolute -bottom-16 left-1/2 -translate-x-1/2 flex gap-2">
               {lifestyleScenes.map((_, index) => (
