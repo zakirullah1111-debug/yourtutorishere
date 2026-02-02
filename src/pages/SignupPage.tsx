@@ -110,9 +110,11 @@ const SignupPage = () => {
       return;
     }
 
+    // TODO: Re-enable email verification before production deployment
+    // Email verification is temporarily disabled for faster testing iteration
     toast({
       title: "Account Created!",
-      description: "Please check your email to verify your account before logging in.",
+      description: "Registration successful! You can now log in.",
     });
 
     navigate("/login");
