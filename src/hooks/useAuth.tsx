@@ -1,7 +1,6 @@
 import { useState, useEffect, createContext, useContext, ReactNode } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 interface AuthContextType {
@@ -9,7 +8,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signUp: (email: string, password: string, metadata: SignUpMetadata) => Promise<{ error: Error | null }>;
-  signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
+  signIn: (email: string, password: string) => Promise<{ error: Error | null; role?: string }>;
   signOut: () => Promise<void>;
   userRole: "student" | "tutor" | "admin" | "moderator" | null;
 }
@@ -116,6 +115,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (roleError) {
           console.error("Error creating user role:", roleError);
         }
+
+        // Also create a student/tutor record if needed
+        if (metadata.role === "student") {
+          const { error: studentError } = await supabase
+            .from("students")
+            .insert({
+              user_id: data.user.id,
+              primary_subject: "Mathematics", // Default, can be updated later
+            });
+          if (studentError) {
+            console.error("Error creating student record:", studentError);
+          }
+        }
       }
 
       return { error: null };
@@ -126,13 +138,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
         return { error };
+      }
+
+      // Fetch user role for redirect
+      if (data.user) {
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .single();
+
+        const role = roleData?.role as string;
+        setUserRole(role as "student" | "tutor" | "admin" | "moderator" | null);
+        
+        return { error: null, role };
       }
 
       return { error: null };

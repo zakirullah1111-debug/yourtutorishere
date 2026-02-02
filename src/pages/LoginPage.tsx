@@ -23,12 +23,30 @@ const LoginPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const { userRole } = useAuth();
+
   // Redirect if already logged in
   useEffect(() => {
     if (!loading && user) {
-      navigate("/");
+      redirectBasedOnRole(userRole);
     }
-  }, [user, loading, navigate]);
+  }, [user, loading, userRole, navigate]);
+
+  const redirectBasedOnRole = (role: string | null) => {
+    switch (role) {
+      case "student":
+        navigate("/dashboard/student");
+        break;
+      case "tutor":
+        navigate("/dashboard/tutor");
+        break;
+      case "admin":
+        navigate("/dashboard/admin");
+        break;
+      default:
+        navigate("/");
+    }
+  };
 
   const validateForm = () => {
     try {
@@ -55,7 +73,7 @@ const LoginPage = () => {
 
     setIsLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error, role } = await signIn(email, password);
 
     if (error) {
       let errorMessage = "Login failed. Please try again.";
@@ -80,7 +98,8 @@ const LoginPage = () => {
       description: "You have successfully logged in.",
     });
 
-    navigate("/");
+    // Redirect based on role
+    redirectBasedOnRole(role || null);
   };
 
   if (loading) {
