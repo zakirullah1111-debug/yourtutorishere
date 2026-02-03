@@ -11,11 +11,17 @@ import {
   MessageSquare,
   CreditCard,
   Star,
+  BookOpen,
+  GraduationCap,
+  MapPin,
+  CheckCircle,
+  Sparkles,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,6 +49,29 @@ interface RecentActivity {
   time: string;
 }
 
+interface FeaturedTutor {
+  id: string;
+  first_name: string;
+  last_name: string;
+  avatar_url?: string;
+  primary_subject: string;
+  secondary_subject?: string;
+  university: string;
+  average_rating: number;
+  total_reviews: number;
+  hourly_rate_pkr: number;
+  years_of_experience: number;
+  verified: boolean;
+  city?: string;
+}
+
+interface SubjectCategory {
+  name: string;
+  emoji: string;
+  tutorCount: number;
+  color: string;
+}
+
 export default function StudentDashboard() {
   const { user } = useAuth();
   const [stats, setStats] = useState<StudentStats>({
@@ -53,7 +82,11 @@ export default function StudentDashboard() {
   });
   const [upcomingSessions, setUpcomingSessions] = useState<UpcomingSession[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [featuredTutors, setFeaturedTutors] = useState<FeaturedTutor[]>([]);
+  const [subjects, setSubjects] = useState<SubjectCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isNewUser, setIsNewUser] = useState(false);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -63,6 +96,17 @@ export default function StudentDashboard() {
 
   const fetchDashboardData = async () => {
     try {
+      // Fetch user profile
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("first_name, last_name")
+        .eq("user_id", user?.id)
+        .single();
+
+      if (profileData) {
+        setUserName(profileData.first_name);
+      }
+
       // Fetch student profile
       const { data: studentData } = await supabase
         .from("students")
@@ -71,15 +115,102 @@ export default function StudentDashboard() {
         .single();
 
       if (studentData) {
+        const hasCompletedSessions = (studentData.total_sessions_completed || 0) > 0;
+        setIsNewUser(!hasCompletedSessions);
+        
         setStats({
-          upcomingSessionsCount: 3, // Will be replaced with real query
+          upcomingSessionsCount: 3,
           totalHoursCompleted: studentData.total_hours_completed || 0,
           currentGradeAverage: studentData.current_grade_average || 0,
           activeTutorsCount: studentData.assigned_tutor_id ? 1 : 0,
         });
+      } else {
+        setIsNewUser(true);
       }
 
-      // Mock upcoming sessions for now
+      // Fetch featured tutors (top rated, verified)
+      const { data: tutorsData } = await supabase
+        .from("tutors")
+        .select("*")
+        .eq("status", "Active")
+        .eq("verified", true)
+        .order("average_rating", { ascending: false })
+        .limit(6);
+
+      if (tutorsData) {
+        // Fetch profiles for tutor names
+        const userIds = tutorsData.map((t) => t.user_id);
+        const { data: profilesData } = await supabase
+          .from("profiles")
+          .select("user_id, first_name, last_name, avatar_url, city")
+          .in("user_id", userIds);
+
+        const combinedTutors: FeaturedTutor[] = tutorsData.map((tutor) => {
+          const profile = profilesData?.find((p) => p.user_id === tutor.user_id);
+          return {
+            id: tutor.id,
+            first_name: profile?.first_name || "Unknown",
+            last_name: profile?.last_name || "",
+            avatar_url: profile?.avatar_url,
+            city: profile?.city,
+            primary_subject: tutor.primary_subject,
+            secondary_subject: tutor.secondary_subject,
+            university: tutor.university,
+            average_rating: Number(tutor.average_rating) || 0,
+            total_reviews: tutor.total_reviews || 0,
+            hourly_rate_pkr: tutor.hourly_rate_pkr,
+            years_of_experience: tutor.years_of_experience || 0,
+            verified: tutor.verified || false,
+          };
+        });
+
+        setFeaturedTutors(combinedTutors);
+      }
+
+      // Fetch subjects with tutor counts
+      const { data: subjectsData } = await supabase
+        .from("subjects")
+        .select("name, category, tutor_count")
+        .order("tutor_count", { ascending: false })
+        .limit(8);
+
+      if (subjectsData) {
+        const categoryEmojis: Record<string, string> = {
+          Sciences: "🔬",
+          Languages: "💬",
+          Business: "💼",
+          Humanities: "📚",
+        };
+        const categoryColors: Record<string, string> = {
+          Sciences: "from-blue-500 to-cyan-500",
+          Languages: "from-primary to-purple-500",
+          Business: "from-accent to-orange-500",
+          Humanities: "from-success to-emerald-500",
+        };
+
+        setSubjects(
+          subjectsData.map((s) => ({
+            name: s.name,
+            emoji: categoryEmojis[s.category] || "📚",
+            tutorCount: s.tutor_count || 0,
+            color: categoryColors[s.category] || "from-primary to-purple-500",
+          }))
+        );
+      } else {
+        // Fallback subjects if none in database
+        setSubjects([
+          { name: "Mathematics", emoji: "📐", tutorCount: 45, color: "from-blue-500 to-cyan-500" },
+          { name: "Physics", emoji: "⚛️", tutorCount: 38, color: "from-purple-500 to-pink-500" },
+          { name: "Chemistry", emoji: "🧪", tutorCount: 32, color: "from-green-500 to-teal-500" },
+          { name: "Biology", emoji: "🧬", tutorCount: 28, color: "from-red-500 to-orange-500" },
+          { name: "English", emoji: "📝", tutorCount: 55, color: "from-primary to-purple-500" },
+          { name: "Urdu", emoji: "✍️", tutorCount: 42, color: "from-amber-500 to-yellow-500" },
+          { name: "Computer Science", emoji: "💻", tutorCount: 35, color: "from-indigo-500 to-blue-500" },
+          { name: "Economics", emoji: "📊", tutorCount: 25, color: "from-emerald-500 to-green-500" },
+        ]);
+      }
+
+      // Mock upcoming sessions
       setUpcomingSessions([
         {
           id: "1",
@@ -180,6 +311,53 @@ export default function StudentDashboard() {
   return (
     <DashboardLayout userType="student">
       <div className="space-y-8">
+        {/* Welcome Section for New Users */}
+        {isNewUser && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-purple-600 to-pink-500 p-6 md:p-8 text-white"
+          >
+            <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles className="w-5 h-5" />
+                <span className="text-sm font-medium text-white/80">Welcome to Your-Tutor!</span>
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold mb-2">
+                Hello{userName ? `, ${userName}` : ""}! 👋
+              </h1>
+              <p className="text-white/80 mb-6 max-w-xl">
+                You're all set! Start by exploring our expert tutors or browse subjects you want to learn. 
+                Your first demo class is free!
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Button 
+                  size="lg" 
+                  className="bg-white text-primary hover:bg-white/90"
+                  asChild
+                >
+                  <Link to="/dashboard/student/find-tutors">
+                    <Users className="w-5 h-5 mr-2" />
+                    Find a Tutor
+                  </Link>
+                </Button>
+                <Button 
+                  size="lg" 
+                  variant="outline" 
+                  className="border-white/30 text-white hover:bg-white/10"
+                  asChild
+                >
+                  <Link to="/subjects">
+                    <BookOpen className="w-5 h-5 mr-2" />
+                    Browse Subjects
+                  </Link>
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {statCards.map((stat, index) => (
@@ -205,6 +383,130 @@ export default function StudentDashboard() {
             </motion.div>
           ))}
         </div>
+
+        {/* Available Subjects Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <BookOpen className="w-5 h-5 text-primary" />
+              Popular Subjects
+            </CardTitle>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/subjects">
+                View All <ArrowRight className="w-4 h-4 ml-1" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {subjects.map((subject, index) => (
+                <motion.div
+                  key={subject.name}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Link
+                    to={`/dashboard/student/find-tutors?subject=${encodeURIComponent(subject.name)}`}
+                    className="block p-4 rounded-xl border border-border hover:border-primary/50 hover:bg-muted/50 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{subject.emoji}</span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate group-hover:text-primary transition-colors">
+                          {subject.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {subject.tutorCount}+ tutors
+                        </p>
+                      </div>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Featured Tutors Section */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Star className="w-5 h-5 text-amber-500" />
+              Top Rated Tutors
+            </CardTitle>
+            <Button variant="ghost" size="sm" asChild>
+              <Link to="/dashboard/student/find-tutors">
+                View All <ArrowRight className="w-4 h-4 ml-1" />
+              </Link>
+            </Button>
+          </CardHeader>
+          <CardContent>
+            {featuredTutors.length === 0 ? (
+              <div className="text-center py-8">
+                <Users className="w-12 h-12 mx-auto text-muted-foreground mb-3" />
+                <p className="text-muted-foreground">No tutors available yet</p>
+                <Button variant="outline" className="mt-4" asChild>
+                  <Link to="/dashboard/student/find-tutors">Browse All Tutors</Link>
+                </Button>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {featuredTutors.slice(0, 6).map((tutor, index) => (
+                  <motion.div
+                    key={tutor.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                  >
+                    <Link
+                      to={`/dashboard/student/find-tutors?tutor=${tutor.id}`}
+                      className="block p-4 rounded-xl border border-border hover:border-primary/50 hover:shadow-md transition-all"
+                    >
+                      <div className="flex items-start gap-4">
+                        <Avatar className="w-14 h-14">
+                          <AvatarImage src={tutor.avatar_url} />
+                          <AvatarFallback className="bg-primary/10 text-primary text-lg">
+                            {tutor.first_name[0]}{tutor.last_name[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-semibold truncate">
+                              {tutor.first_name} {tutor.last_name}
+                            </h4>
+                            {tutor.verified && (
+                              <CheckCircle className="w-4 h-4 text-primary shrink-0" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-amber-500 mt-0.5">
+                            <Star className="w-3.5 h-3.5 fill-current" />
+                            <span className="font-medium">{tutor.average_rating.toFixed(1)}</span>
+                            <span className="text-muted-foreground">
+                              ({tutor.total_reviews} reviews)
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                            <BookOpen className="w-3.5 h-3.5" />
+                            <span className="truncate">{tutor.primary_subject}</span>
+                          </div>
+                          <div className="flex items-center justify-between mt-2">
+                            <span className="text-sm font-medium text-primary">
+                              PKR {tutor.hourly_rate_pkr}/hr
+                            </span>
+                            <Badge variant="secondary" className="text-xs">
+                              {tutor.years_of_experience}+ yrs
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Upcoming Sessions */}

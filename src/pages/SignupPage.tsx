@@ -113,11 +113,20 @@ const SignupPage = () => {
     // TODO: Re-enable email verification before production deployment
     // Email verification is temporarily disabled for faster testing iteration
     toast({
-      title: "Account Created!",
-      description: "Registration successful! You can now log in.",
+      title: "Welcome to Your-Tutor! 🎉",
+      description: "Your account has been created. Redirecting to your dashboard...",
     });
 
-    navigate("/login");
+    // Auto-redirect based on role after a brief delay to show the success message
+    setTimeout(() => {
+      if (formData.role === "student") {
+        navigate("/dashboard/student");
+      } else if (formData.role === "tutor") {
+        navigate("/dashboard/tutor");
+      } else {
+        navigate("/");
+      }
+    }, 1500);
   };
 
   if (loading) {
