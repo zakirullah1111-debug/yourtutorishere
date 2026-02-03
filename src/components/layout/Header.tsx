@@ -4,6 +4,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/hooks/useAuth";
+import { UserProfileDropdown } from "./UserProfileDropdown";
 
 const navLinks = [
   { name: "Home", href: "/" },
@@ -18,6 +20,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -72,12 +75,18 @@ export function Header() {
 
           {/* Desktop CTA */}
           <div className="hidden lg:flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Log in</Link>
-            </Button>
-            <Button variant="gradient" asChild>
-              <Link to="/signup">Get Started</Link>
-            </Button>
+            {!loading && user ? (
+              <UserProfileDropdown />
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link to="/login">Log in</Link>
+                </Button>
+                <Button variant="gradient" asChild>
+                  <Link to="/signup">Get Started</Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -119,12 +128,20 @@ export function Header() {
                   </Link>
                 ))}
                 <div className="flex flex-col gap-2 pt-4 border-t border-border mt-2">
-                  <Button variant="outline" asChild className="w-full">
-                    <Link to="/login">Log in</Link>
-                  </Button>
-                  <Button variant="gradient" asChild className="w-full">
-                    <Link to="/signup">Get Started</Link>
-                  </Button>
+                  {!loading && user ? (
+                    <div className="px-2">
+                      <UserProfileDropdown />
+                    </div>
+                  ) : (
+                    <>
+                      <Button variant="outline" asChild className="w-full">
+                        <Link to="/login">Log in</Link>
+                      </Button>
+                      <Button variant="gradient" asChild className="w-full">
+                        <Link to="/signup">Get Started</Link>
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </motion.div>
