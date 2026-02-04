@@ -24,6 +24,15 @@ import StudentProgress from "./pages/dashboard/student/Progress";
 import StudentPayments from "./pages/dashboard/student/Payments";
 import StudentSettings from "./pages/dashboard/student/Settings";
 
+// Tutor Dashboard Pages
+import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
+import MyStudents from "./pages/dashboard/tutor/MyStudents";
+import TutorSchedule from "./pages/dashboard/tutor/Schedule";
+import TutorEarnings from "./pages/dashboard/tutor/Earnings";
+import TutorReviews from "./pages/dashboard/tutor/Reviews";
+import TutorResources from "./pages/dashboard/tutor/Resources";
+import TutorSettings from "./pages/dashboard/tutor/Settings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -53,6 +62,15 @@ const App = () => (
             <Route path="/dashboard/student/progress" element={<StudentProgress />} />
             <Route path="/dashboard/student/payments" element={<StudentPayments />} />
             <Route path="/dashboard/student/settings" element={<StudentSettings />} />
+            
+            {/* Tutor Dashboard Routes */}
+            <Route path="/dashboard/tutor" element={<TutorDashboard />} />
+            <Route path="/dashboard/tutor/students" element={<MyStudents />} />
+            <Route path="/dashboard/tutor/schedule" element={<TutorSchedule />} />
+            <Route path="/dashboard/tutor/earnings" element={<TutorEarnings />} />
+            <Route path="/dashboard/tutor/reviews" element={<TutorReviews />} />
+            <Route path="/dashboard/tutor/resources" element={<TutorResources />} />
+            <Route path="/dashboard/tutor/settings" element={<TutorSettings />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
