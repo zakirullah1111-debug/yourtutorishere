@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,75 +53,127 @@ interface Transaction {
   sessions: number;
 }
 
-const monthlyEarnings = [
-  { month: "Sep", earnings: 45000 },
-  { month: "Oct", earnings: 52000 },
-  { month: "Nov", earnings: 48000 },
-  { month: "Dec", earnings: 61000 },
-  { month: "Jan", earnings: 58000 },
-  { month: "Feb", earnings: 42000 },
-];
-
-const subjectEarnings = [
-  { subject: "Mathematics", earnings: 85000, sessions: 42 },
-  { subject: "Physics", earnings: 62000, sessions: 31 },
-  { subject: "Chemistry", earnings: 45000, sessions: 22 },
-];
-
 export default function Earnings() {
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState("6months");
-  const [transactions, setTransactions] = useState<Transaction[]>([
-    {
-      id: "1",
-      studentName: "Ahmed Khan",
-      subject: "Mathematics",
-      amount: 6000,
-      date: "2026-02-03",
-      status: "completed",
-      sessions: 4,
-    },
-    {
-      id: "2",
-      studentName: "Sara Ali",
-      subject: "Physics",
-      amount: 4500,
-      date: "2026-02-01",
-      status: "completed",
-      sessions: 3,
-    },
-    {
-      id: "3",
-      studentName: "Usman Malik",
-      subject: "Chemistry",
-      amount: 3000,
-      date: "2026-01-30",
-      status: "pending",
-      sessions: 2,
-    },
-    {
-      id: "4",
-      studentName: "Fatima Zahra",
-      subject: "Mathematics",
-      amount: 7500,
-      date: "2026-01-28",
-      status: "completed",
-      sessions: 5,
-    },
-    {
-      id: "5",
-      studentName: "Hassan Raza",
-      subject: "Physics",
-      amount: 4500,
-      date: "2026-01-25",
-      status: "processing",
-      sessions: 3,
-    },
-  ]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [monthlyEarnings, setMonthlyEarnings] = useState<{ month: string; earnings: number }[]>([]);
+  const [subjectEarnings, setSubjectEarnings] = useState<{ subject: string; earnings: number; sessions: number }[]>([]);
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [thisMonthEarnings, setThisMonthEarnings] = useState(0);
+  const [pendingAmount, setPendingAmount] = useState(0);
+  const [totalSessions, setTotalSessions] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const totalEarnings = 192000;
-  const thisMonthEarnings = 42000;
-  const pendingAmount = 7500;
-  const totalSessions = 95;
+  useEffect(() => {
+    async function fetchEarnings() {
+      if (!user) return;
+
+      try {
+        const { data: tutorData } = await supabase
+          .from("tutors")
+          .select("id, hourly_rate_pkr")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!tutorData) {
+          setLoading(false);
+          return;
+        }
+
+        // Fetch all payments
+        const { data: payments } = await supabase
+          .from("payments")
+          .select("*")
+          .eq("tutor_id", tutorData.id)
+          .order("created_at", { ascending: false });
+
+        if (payments) {
+          const completed = payments.filter((p) => p.payment_status === "Completed");
+          const pending = payments.filter((p) => p.payment_status === "Pending" || p.payment_status === "Processing");
+
+          setTotalEarnings(completed.reduce((sum, p) => sum + p.amount_pkr, 0));
+          setPendingAmount(pending.reduce((sum, p) => sum + p.amount_pkr, 0));
+
+          // This month
+          const now = new Date();
+          const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+          const thisMonth = completed.filter((p) => new Date(p.created_at) >= startOfMonth);
+          setThisMonthEarnings(thisMonth.reduce((sum, p) => sum + p.amount_pkr, 0));
+
+          // Get student names for transactions
+          const studentIds = [...new Set(payments.map((p) => p.student_id))];
+          const { data: studentRecords } = await supabase.from("students").select("id, user_id, primary_subject").in("id", studentIds);
+          const userIds = studentRecords?.map((s) => s.user_id) || [];
+          const { data: profiles } = await supabase.from("profiles").select("user_id, first_name, last_name").in("user_id", userIds);
+
+          const studentMap = new Map();
+          studentRecords?.forEach((s) => {
+            const profile = profiles?.find((p) => p.user_id === s.user_id);
+            studentMap.set(s.id, { name: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown", subject: s.primary_subject });
+          });
+
+          setTransactions(
+            payments.slice(0, 10).map((p) => {
+              const student = studentMap.get(p.student_id);
+              return {
+                id: p.id,
+                studentName: student?.name || "Unknown",
+                subject: student?.subject || "N/A",
+                amount: p.amount_pkr,
+                date: p.payment_date || p.created_at,
+                status: (p.payment_status?.toLowerCase() as "completed" | "pending" | "processing") || "pending",
+                sessions: p.session_ids?.length || 1,
+              };
+            })
+          );
+
+          // Monthly earnings for chart
+          const monthlyData: Record<string, number> = {};
+          const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+          for (let i = 5; i >= 0; i--) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - i);
+            monthlyData[months[d.getMonth()]] = 0;
+          }
+          completed.forEach((p) => {
+            const d = new Date(p.created_at);
+            const monthName = months[d.getMonth()];
+            if (monthlyData[monthName] !== undefined) {
+              monthlyData[monthName] += p.amount_pkr;
+            }
+          });
+          setMonthlyEarnings(Object.entries(monthlyData).map(([month, earnings]) => ({ month, earnings })));
+        }
+
+        // Fetch sessions for total count
+        const { data: sessions } = await supabase
+          .from("sessions")
+          .select("id, subject, duration_minutes")
+          .eq("tutor_id", tutorData.id)
+          .eq("status", "Completed");
+
+        if (sessions) {
+          setTotalSessions(sessions.length);
+
+          // Subject earnings
+          const subjectMap: Record<string, { earnings: number; sessions: number }> = {};
+          sessions.forEach((s) => {
+            if (!subjectMap[s.subject]) subjectMap[s.subject] = { earnings: 0, sessions: 0 };
+            subjectMap[s.subject].sessions++;
+            subjectMap[s.subject].earnings += Math.round((s.duration_minutes / 60) * tutorData.hourly_rate_pkr);
+          });
+          setSubjectEarnings(Object.entries(subjectMap).map(([subject, data]) => ({ subject, ...data })));
+        }
+      } catch (error) {
+        console.error("Error fetching earnings:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchEarnings();
+  }, [user]);
 
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);

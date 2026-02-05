@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +46,7 @@ interface Student {
 }
 
 export default function MyStudents() {
+  const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [subjectFilter, setSubjectFilter] = useState("all");
@@ -51,73 +54,62 @@ export default function MyStudents() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Mock data for students
-    const mockStudents: Student[] = [
-      {
-        id: "1",
-        name: "Ahmed Khan",
-        email: "ahmed.khan@email.com",
-        subject: "Mathematics",
-        currentClass: "Grade 10",
-        sessionsCompleted: 15,
-        lastSession: "2026-02-02",
-        nextSession: "2026-02-05",
-        progress: "improving",
-        gradeAverage: 85,
-      },
-      {
-        id: "2",
-        name: "Sara Ali",
-        email: "sara.ali@email.com",
-        subject: "Physics",
-        currentClass: "Grade 11",
-        sessionsCompleted: 12,
-        lastSession: "2026-02-01",
-        nextSession: "2026-02-05",
-        progress: "stable",
-        gradeAverage: 78,
-      },
-      {
-        id: "3",
-        name: "Usman Malik",
-        email: "usman.malik@email.com",
-        subject: "Chemistry",
-        currentClass: "Grade 12",
-        sessionsCompleted: 8,
-        lastSession: "2026-01-30",
-        nextSession: "2026-02-06",
-        progress: "needs-attention",
-        gradeAverage: 65,
-      },
-      {
-        id: "4",
-        name: "Fatima Zahra",
-        email: "fatima.z@email.com",
-        subject: "Mathematics",
-        currentClass: "Grade 9",
-        sessionsCompleted: 20,
-        lastSession: "2026-02-03",
-        nextSession: null,
-        progress: "improving",
-        gradeAverage: 92,
-      },
-      {
-        id: "5",
-        name: "Hassan Raza",
-        email: "hassan.r@email.com",
-        subject: "Physics",
-        currentClass: "Grade 10",
-        sessionsCompleted: 6,
-        lastSession: "2026-01-28",
-        nextSession: "2026-02-07",
-        progress: "stable",
-        gradeAverage: 72,
-      },
-    ];
+    async function fetchStudents() {
+      if (!user) return;
 
-    setStudents(mockStudents);
-    setLoading(false);
-  }, []);
+      try {
+        // Get tutor record
+        const { data: tutorData } = await supabase
+          .from("tutors")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!tutorData) {
+          setLoading(false);
+          return;
+        }
+
+        // Fetch students assigned to this tutor
+        const { data: studentsData } = await supabase
+          .from("students")
+          .select("*")
+          .eq("assigned_tutor_id", tutorData.id);
+
+        if (studentsData && studentsData.length > 0) {
+          const userIds = studentsData.map((s) => s.user_id);
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, first_name, last_name, email")
+            .in("user_id", userIds);
+
+          const mappedStudents: Student[] = studentsData.map((student) => {
+            const profile = profiles?.find((p) => p.user_id === student.user_id);
+            return {
+              id: student.id,
+              name: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown",
+              email: profile?.email || "",
+              subject: student.primary_subject,
+              currentClass: student.current_class || "N/A",
+              sessionsCompleted: student.total_sessions_completed || 0,
+              lastSession: student.last_session_date || "",
+              nextSession: student.next_session_date,
+              progress: (student.progress_status?.toLowerCase() as "improving" | "stable" | "needs-attention") || "stable",
+              gradeAverage: Number(student.current_grade_average) || 0,
+            };
+          });
+
+          setStudents(mappedStudents);
+        }
+      } catch (error) {
+        console.error("Error fetching students:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStudents();
+  }, [user]);
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
