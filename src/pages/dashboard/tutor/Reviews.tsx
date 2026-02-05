@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -26,77 +29,110 @@ interface Review {
 }
 
 export default function Reviews() {
+  const { user } = useAuth();
   const [filterRating, setFilterRating] = useState("all");
   const [filterSubject, setFilterSubject] = useState("all");
   const [sortBy, setSortBy] = useState("recent");
-
-  const overallRating = 4.8;
-  const totalReviews = 47;
-  const ratingDistribution = [
-    { stars: 5, count: 35, percentage: 74 },
-    { stars: 4, count: 8, percentage: 17 },
-    { stars: 3, count: 3, percentage: 6 },
-    { stars: 2, count: 1, percentage: 2 },
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [overallRating, setOverallRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [ratingDistribution, setRatingDistribution] = useState([
+    { stars: 5, count: 0, percentage: 0 },
+    { stars: 4, count: 0, percentage: 0 },
+    { stars: 3, count: 0, percentage: 0 },
+    { stars: 2, count: 0, percentage: 0 },
     { stars: 1, count: 0, percentage: 0 },
-  ];
+  ]);
+  const [loading, setLoading] = useState(true);
 
-  const reviews: Review[] = [
-    {
-      id: "1",
-      studentName: "Ahmed Khan",
-      subject: "Mathematics",
-      rating: 5,
-      comment:
-        "Excellent tutor! Sir explains complex concepts in a very simple way. My grades have improved significantly since I started taking classes. Highly recommended for anyone struggling with math.",
-      date: "2026-02-01",
-      helpful: 12,
-      verified: true,
-    },
-    {
-      id: "2",
-      studentName: "Sara Ali",
-      subject: "Physics",
-      rating: 5,
-      comment:
-        "Best physics tutor I've ever had. Very patient and knowledgeable. Makes learning fun with real-world examples.",
-      date: "2026-01-28",
-      helpful: 8,
-      verified: true,
-    },
-    {
-      id: "3",
-      studentName: "Usman Malik",
-      subject: "Chemistry",
-      rating: 4,
-      comment:
-        "Great teaching style. Sometimes the sessions go a bit fast, but overall very helpful. Good at explaining organic chemistry.",
-      date: "2026-01-25",
-      helpful: 5,
-      verified: true,
-    },
-    {
-      id: "4",
-      studentName: "Fatima Zahra",
-      subject: "Mathematics",
-      rating: 5,
-      comment:
-        "My daughter's math scores went from C to A after just 2 months. Very professional and punctual tutor.",
-      date: "2026-01-20",
-      helpful: 15,
-      verified: true,
-    },
-    {
-      id: "5",
-      studentName: "Hassan Raza",
-      subject: "Physics",
-      rating: 4,
-      comment:
-        "Good tutor with solid subject knowledge. Helped me prepare for my board exams effectively.",
-      date: "2026-01-15",
-      helpful: 3,
-      verified: false,
-    },
-  ];
+  useEffect(() => {
+    async function fetchReviews() {
+      if (!user) return;
+
+      try {
+        const { data: tutorData } = await supabase
+          .from("tutors")
+          .select("id, average_rating, total_reviews")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!tutorData) {
+          setLoading(false);
+          return;
+        }
+
+        setOverallRating(Number(tutorData.average_rating) || 0);
+        setTotalReviews(tutorData.total_reviews || 0);
+
+        // Fetch all reviews
+        const { data: reviewsData } = await supabase
+          .from("reviews")
+          .select("*")
+          .eq("tutor_id", tutorData.id)
+          .order("created_at", { ascending: false });
+
+        if (reviewsData && reviewsData.length > 0) {
+          // Get student names
+          const studentIds = reviewsData.map((r) => r.student_id);
+          const { data: studentRecords } = await supabase
+            .from("students")
+            .select("id, user_id, primary_subject")
+            .in("id", studentIds);
+
+          const userIds = studentRecords?.map((s) => s.user_id) || [];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, first_name, last_name")
+            .in("user_id", userIds);
+
+          const studentMap = new Map();
+          studentRecords?.forEach((s) => {
+            const profile = profiles?.find((p) => p.user_id === s.user_id);
+            studentMap.set(s.id, {
+              name: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown",
+              subject: s.primary_subject,
+            });
+          });
+
+          setReviews(
+            reviewsData.map((r) => {
+              const student = studentMap.get(r.student_id);
+              return {
+                id: r.id,
+                studentName: student?.name || "Unknown Student",
+                subject: student?.subject || "N/A",
+                rating: r.rating,
+                comment: r.comment || "",
+                date: r.created_at.split("T")[0],
+                helpful: 0,
+                verified: r.is_verified || false,
+              };
+            })
+          );
+
+          // Calculate rating distribution
+          const dist = [0, 0, 0, 0, 0];
+          reviewsData.forEach((r) => {
+            if (r.rating >= 1 && r.rating <= 5) dist[r.rating - 1]++;
+          });
+          const total = reviewsData.length;
+          setRatingDistribution([
+            { stars: 5, count: dist[4], percentage: Math.round((dist[4] / total) * 100) },
+            { stars: 4, count: dist[3], percentage: Math.round((dist[3] / total) * 100) },
+            { stars: 3, count: dist[2], percentage: Math.round((dist[2] / total) * 100) },
+            { stars: 2, count: dist[1], percentage: Math.round((dist[1] / total) * 100) },
+            { stars: 1, count: dist[0], percentage: Math.round((dist[0] / total) * 100) },
+          ]);
+        }
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchReviews();
+  }, [user]);
 
   const subjects = [...new Set(reviews.map((r) => r.subject))];
 

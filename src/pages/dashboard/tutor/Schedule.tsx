@@ -1,5 +1,8 @@
 import { useState } from "react";
+import { useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,6 +72,7 @@ const TIME_SLOTS = [
 ];
 
 export default function Schedule() {
+  const { user } = useAuth();
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [availabilityDays, setAvailabilityDays] = useState<string[]>([
     "Monday",
@@ -79,44 +83,108 @@ export default function Schedule() {
   ]);
   const [preferredTimeSlot, setPreferredTimeSlot] = useState("afternoon");
   const [showAvailabilityDialog, setShowAvailabilityDialog] = useState(false);
+  const [todaySessions, setTodaySessions] = useState<Session[]>([]);
+  const [weekSchedule, setWeekSchedule] = useState<{ day: string; sessions: number }[]>(
+    DAYS_OF_WEEK.map((day) => ({ day, sessions: 0 }))
+  );
+  const [loading, setLoading] = useState(true);
 
-  // Mock sessions data
-  const todaySessions: Session[] = [
-    {
-      id: "1",
-      studentName: "Ahmed Khan",
-      subject: "Mathematics",
-      time: "14:00",
-      duration: 60,
-      status: "scheduled",
-    },
-    {
-      id: "2",
-      studentName: "Sara Ali",
-      subject: "Physics",
-      time: "16:00",
-      duration: 60,
-      status: "scheduled",
-    },
-    {
-      id: "3",
-      studentName: "Usman Malik",
-      subject: "Chemistry",
-      time: "18:00",
-      duration: 90,
-      status: "scheduled",
-    },
-  ];
+  useEffect(() => {
+    async function fetchSchedule() {
+      if (!user) return;
 
-  const weekSchedule = [
-    { day: "Monday", sessions: 3 },
-    { day: "Tuesday", sessions: 2 },
-    { day: "Wednesday", sessions: 4 },
-    { day: "Thursday", sessions: 2 },
-    { day: "Friday", sessions: 3 },
-    { day: "Saturday", sessions: 1 },
-    { day: "Sunday", sessions: 0 },
-  ];
+      try {
+        const { data: tutorData } = await supabase
+          .from("tutors")
+          .select("id, availability_days, preferred_time_slot")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (!tutorData) {
+          setLoading(false);
+          return;
+        }
+
+        if (tutorData.availability_days) {
+          setAvailabilityDays(tutorData.availability_days);
+        }
+        if (tutorData.preferred_time_slot) {
+          setPreferredTimeSlot(tutorData.preferred_time_slot);
+        }
+
+        // Fetch today's sessions
+        const todayStr = selectedDate?.toISOString().split("T")[0] || new Date().toISOString().split("T")[0];
+        const { data: sessionsData } = await supabase
+          .from("sessions")
+          .select("id, subject, scheduled_time, duration_minutes, status, student_id")
+          .eq("tutor_id", tutorData.id)
+          .eq("scheduled_date", todayStr)
+          .order("scheduled_time", { ascending: true });
+
+        if (sessionsData && sessionsData.length > 0) {
+          const studentIds = sessionsData.map((s) => s.student_id);
+          const { data: studentRecords } = await supabase
+            .from("students")
+            .select("id, user_id")
+            .in("id", studentIds);
+
+          const userIds = studentRecords?.map((s) => s.user_id) || [];
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("user_id, first_name, last_name")
+            .in("user_id", userIds);
+
+          const studentMap = new Map();
+          studentRecords?.forEach((s) => {
+            const profile = profiles?.find((p) => p.user_id === s.user_id);
+            if (profile) studentMap.set(s.id, profile);
+          });
+
+          setTodaySessions(
+            sessionsData.map((session) => {
+              const profile = studentMap.get(session.student_id);
+              return {
+                id: session.id,
+                studentName: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown",
+                subject: session.subject,
+                time: session.scheduled_time,
+                duration: session.duration_minutes,
+                status: session.status?.toLowerCase() as "scheduled" | "completed" | "cancelled",
+              };
+            })
+          );
+        }
+
+        // Fetch week schedule
+        const today = new Date();
+        const startOfWeek = new Date(today);
+        startOfWeek.setDate(today.getDate() - today.getDay() + 1);
+        const endOfWeek = new Date(startOfWeek);
+        endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+        const { data: weekSessions } = await supabase
+          .from("sessions")
+          .select("scheduled_date")
+          .eq("tutor_id", tutorData.id)
+          .gte("scheduled_date", startOfWeek.toISOString().split("T")[0])
+          .lte("scheduled_date", endOfWeek.toISOString().split("T")[0]);
+
+        const dayCounts = new Map<string, number>();
+        weekSessions?.forEach((session) => {
+          const dayName = new Date(session.scheduled_date).toLocaleDateString("en-US", { weekday: "long" });
+          dayCounts.set(dayName, (dayCounts.get(dayName) || 0) + 1);
+        });
+
+        setWeekSchedule(DAYS_OF_WEEK.map((day) => ({ day, sessions: dayCounts.get(day) || 0 })));
+      } catch (error) {
+        console.error("Error fetching schedule:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchSchedule();
+  }, [user, selectedDate]);
 
   const formatTime = (timeStr: string) => {
     const [hours] = timeStr.split(":");

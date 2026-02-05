@@ -87,6 +87,20 @@ export default function StudentDashboard() {
   const [loading, setLoading] = useState(true);
   const [isNewUser, setIsNewUser] = useState(false);
   const [userName, setUserName] = useState("");
+ 
+   const formatTimeAgo = (date: Date) => {
+     const now = new Date();
+     const diffMs = now.getTime() - date.getTime();
+     const diffMins = Math.floor(diffMs / 60000);
+     const diffHours = Math.floor(diffMs / 3600000);
+     const diffDays = Math.floor(diffMs / 86400000);
+ 
+     if (diffMins < 60) return `${diffMins} minutes ago`;
+     if (diffHours < 24) return `${diffHours} hours ago`;
+     if (diffDays === 1) return "Yesterday";
+     if (diffDays < 7) return `${diffDays} days ago`;
+     return date.toLocaleDateString("en-PK", { month: "short", day: "numeric" });
+   };
 
   useEffect(() => {
     if (user) {
@@ -210,48 +224,102 @@ export default function StudentDashboard() {
         ]);
       }
 
-      // Mock upcoming sessions
-      setUpcomingSessions([
-        {
-          id: "1",
-          tutor_name: "Ali Khan",
-          subject: "Mathematics",
-          scheduled_date: "2026-02-03",
-          scheduled_time: "16:00",
-        },
-        {
-          id: "2",
-          tutor_name: "Sara Ahmed",
-          subject: "Physics",
-          scheduled_date: "2026-02-04",
-          scheduled_time: "17:00",
-        },
-      ]);
+      // Fetch real upcoming sessions
+      const { data: studentRecord } = await supabase
+        .from("students")
+        .select("id")
+        .eq("user_id", user?.id)
+        .maybeSingle();
 
-      // Mock recent activity
-      setRecentActivity([
-        {
-          id: "1",
-          type: "session",
-          title: "Session Completed",
-          description: "Mathematics session with Ali Khan",
-          time: "2 hours ago",
-        },
-        {
-          id: "2",
-          type: "message",
-          title: "New Message",
-          description: "Sara Ahmed sent you a message",
-          time: "5 hours ago",
-        },
-        {
-          id: "3",
-          type: "payment",
-          title: "Payment Processed",
-          description: "PKR 2,400 payment successful",
-          time: "Yesterday",
-        },
-      ]);
+      if (studentRecord) {
+        const today = new Date().toISOString().split("T")[0];
+        const { data: sessionsData } = await supabase
+          .from("sessions")
+          .select("id, subject, scheduled_date, scheduled_time, tutor_id, status")
+          .eq("student_id", studentRecord.id)
+          .gte("scheduled_date", today)
+          .in("status", ["Scheduled", "scheduled"])
+          .order("scheduled_date", { ascending: true })
+          .limit(5);
+
+        if (sessionsData && sessionsData.length > 0) {
+          const tutorIds = [...new Set(sessionsData.map((s) => s.tutor_id))];
+          const { data: tutorRecords } = await supabase
+            .from("tutors")
+            .select("id, user_id")
+            .in("id", tutorIds);
+
+          const tutorUserIds = tutorRecords?.map((t) => t.user_id) || [];
+          const { data: tutorProfiles } = await supabase
+            .from("profiles")
+            .select("user_id, first_name, last_name, avatar_url")
+            .in("user_id", tutorUserIds);
+
+          const tutorMap = new Map();
+          tutorRecords?.forEach((t) => {
+            const profile = tutorProfiles?.find((p) => p.user_id === t.user_id);
+            if (profile) tutorMap.set(t.id, profile);
+          });
+
+          setUpcomingSessions(
+            sessionsData.map((session) => {
+              const tutorProfile = tutorMap.get(session.tutor_id);
+              return {
+                id: session.id,
+                tutor_name: tutorProfile
+                  ? `${tutorProfile.first_name} ${tutorProfile.last_name}`
+                  : "Unknown Tutor",
+                tutor_avatar: tutorProfile?.avatar_url,
+                subject: session.subject,
+                scheduled_date: session.scheduled_date,
+                scheduled_time: session.scheduled_time,
+              };
+            })
+          );
+
+          setStats((prev) => ({ ...prev, upcomingSessionsCount: sessionsData.length }));
+        }
+
+        // Fetch recent activity
+        const activities: RecentActivity[] = [];
+
+        const { data: recentSessions } = await supabase
+          .from("sessions")
+          .select("id, subject, completed_at")
+          .eq("student_id", studentRecord.id)
+          .eq("status", "Completed")
+          .order("completed_at", { ascending: false })
+          .limit(3);
+
+        recentSessions?.forEach((session) => {
+          activities.push({
+            id: `session-${session.id}`,
+            type: "session",
+            title: "Session Completed",
+            description: `${session.subject} session completed`,
+            time: session.completed_at ? formatTimeAgo(new Date(session.completed_at)) : "Recently",
+          });
+        });
+
+        const { data: recentPayments } = await supabase
+          .from("payments")
+          .select("id, amount_pkr, created_at, payment_status")
+          .eq("student_id", studentRecord.id)
+          .order("created_at", { ascending: false })
+          .limit(2);
+
+        recentPayments?.forEach((payment) => {
+          activities.push({
+            id: `payment-${payment.id}`,
+            type: "payment",
+            title: payment.payment_status === "Completed" ? "Payment Processed" : "Payment Pending",
+            description: `PKR ${payment.amount_pkr.toLocaleString()} ${payment.payment_status?.toLowerCase()}`,
+            time: formatTimeAgo(new Date(payment.created_at)),
+          });
+        });
+
+        setRecentActivity(activities.slice(0, 5));
+      }
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
