@@ -20,6 +20,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useAvatarUpload } from "@/hooks/useAvatarUpload";
 import {
   User,
   Bell,
@@ -29,6 +30,7 @@ import {
   Save,
   GraduationCap,
   Clock,
+  Loader2,
 } from "lucide-react";
 
 const DAYS_OF_WEEK = [
@@ -66,6 +68,7 @@ export default function TutorSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [fetchingData, setFetchingData] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
 
   // Profile state
@@ -85,6 +88,21 @@ export default function TutorSettings() {
     teachingLevels: [] as string[],
     availabilityDays: [] as string[],
     preferredTimeSlot: "",
+    avatarUrl: "",
+  });
+
+  const { 
+    uploading, 
+    avatarUrl, 
+    setAvatarUrl, 
+    fileInputRef, 
+    handleFileSelect, 
+    triggerFileInput 
+  } = useAvatarUpload({
+    userId: user?.id || "",
+    onSuccess: (url) => {
+      setProfile((prev) => ({ ...prev, avatarUrl: url }));
+    },
   });
 
   // Notification settings
@@ -106,6 +124,7 @@ export default function TutorSettings() {
 
   const fetchProfileData = async () => {
     if (!user) return;
+    setFetchingData(true);
 
     try {
       // Fetch profile
@@ -130,7 +149,9 @@ export default function TutorSettings() {
           email: profileData.email || "",
           phone: profileData.phone || "",
           city: profileData.city || "",
+          avatarUrl: profileData.avatar_url || "",
         }));
+        setAvatarUrl(profileData.avatar_url || null);
       }
 
       if (tutorData) {
@@ -150,6 +171,8 @@ export default function TutorSettings() {
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
+    } finally {
+      setFetchingData(false);
     }
   };
 
@@ -223,6 +246,16 @@ export default function TutorSettings() {
   const userInitials =
     profile.firstName?.[0]?.toUpperCase() + (profile.lastName?.[0]?.toUpperCase() || "");
 
+  if (fetchingData) {
+    return (
+      <DashboardLayout userType="tutor">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout userType="tutor">
       <div className="space-y-6">
@@ -259,16 +292,43 @@ export default function TutorSettings() {
                 <CardDescription>Update your profile picture</CardDescription>
               </CardHeader>
               <CardContent className="flex items-center gap-6">
-                <Avatar className="w-24 h-24">
-                  <AvatarImage src={user?.user_metadata?.avatar_url} />
-                  <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                    {userInitials || "T"}
-                  </AvatarFallback>
-                </Avatar>
+                <div className="relative">
+                  <Avatar className="w-24 h-24">
+                    <AvatarImage src={profile.avatarUrl} />
+                    <AvatarFallback className="text-2xl bg-primary/10 text-primary">
+                      {userInitials || "T"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <button
+                    onClick={triggerFileInput}
+                    disabled={uploading}
+                    className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 disabled:opacity-50"
+                  >
+                    {uploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Camera className="w-4 h-4" />
+                    )}
+                  </button>
+                </div>
                 <div className="space-y-2">
-                  <Button variant="outline">
-                    <Camera className="w-4 h-4 mr-2" />
-                    Change Photo
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  <Button variant="outline" onClick={triggerFileInput} disabled={uploading}>
+                    {uploading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
+                      </>
+                    ) : (
+                      <>
+                        <Camera className="w-4 h-4 mr-2" /> Change Photo
+                      </>
+                    )}
                   </Button>
                   <p className="text-xs text-muted-foreground">
                     JPG, GIF or PNG. Max size 2MB

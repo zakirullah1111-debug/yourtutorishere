@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { User, Bell, Lock, Shield, Camera, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { User, Bell, Lock, Shield, Camera, Save, Loader2 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,18 +17,23 @@ import {
 } from "@/components/ui/select";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useAvatarUpload } from "@/hooks/useAvatarUpload";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function Settings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+
   const [profile, setProfile] = useState({
-    firstName: user?.user_metadata?.first_name || "",
-    lastName: user?.user_metadata?.last_name || "",
-    email: user?.email || "",
-    phone: user?.user_metadata?.phone || "",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
     school: "",
     grade: "",
+    avatarUrl: "",
   });
 
   const [notifications, setNotifications] = useState({
@@ -41,19 +46,158 @@ export default function Settings() {
     smsPayments: false,
   });
 
-  const handleSaveProfile = () => {
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been updated successfully.",
-    });
+  const { 
+    uploading, 
+    avatarUrl, 
+    setAvatarUrl, 
+    fileInputRef, 
+    handleFileSelect, 
+    triggerFileInput 
+  } = useAvatarUpload({
+    userId: user?.id || "",
+    onSuccess: (url) => {
+      setProfile((prev) => ({ ...prev, avatarUrl: url }));
+    },
+  });
+
+  useEffect(() => {
+    if (user) {
+      fetchProfileData();
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (avatarUrl) {
+      setProfile((prev) => ({ ...prev, avatarUrl }));
+    }
+  }, [avatarUrl]);
+
+  const fetchProfileData = async () => {
+    if (!user) return;
+    setLoading(true);
+
+    try {
+      // Fetch profile data
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+
+      // Fetch student data
+      const { data: studentData } = await supabase
+        .from("students")
+        .select("school_name, current_class")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileData) {
+        setProfile({
+          firstName: profileData.first_name || "",
+          lastName: profileData.last_name || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+          school: studentData?.school_name || "",
+          grade: studentData?.current_class || "",
+          avatarUrl: profileData.avatar_url || "",
+        });
+        setAvatarUrl(profileData.avatar_url || null);
+      }
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSaveNotifications = () => {
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSaving(true);
+
+    try {
+      // Update profiles table
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({
+          first_name: profile.firstName,
+          last_name: profile.lastName,
+          phone: profile.phone,
+        })
+        .eq("user_id", user.id);
+
+      if (profileError) throw profileError;
+
+      // Update students table
+      const { error: studentError } = await supabase
+        .from("students")
+        .update({
+          school_name: profile.school,
+          current_class: profile.grade,
+        })
+        .eq("user_id", user.id);
+
+      if (studentError) throw studentError;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+      });
+    } catch (error) {
+      console.error("Error saving profile:", error);
+      toast({
+        title: "Error",
+        description: "Failed to save profile. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveNotifications = async () => {
     toast({
       title: "Preferences Saved",
       description: "Your notification preferences have been updated.",
     });
   };
+
+  const handleChangePassword = async () => {
+    if (!user?.email) return;
+
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
+        redirectTo: `${window.location.origin}/reset-password`,
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Password Reset Email Sent",
+        description: "Check your email for password reset instructions.",
+      });
+    } catch (error) {
+      console.error("Error sending reset email:", error);
+      toast({
+        title: "Error",
+        description: "Failed to send password reset email.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const userInitials =
+    (profile.firstName?.[0] || "").toUpperCase() +
+    (profile.lastName?.[0] || "").toUpperCase();
+
+  if (loading) {
+    return (
+      <DashboardLayout userType="student">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout userType="student">
@@ -90,18 +234,34 @@ export default function Settings() {
                 <div className="flex items-center gap-6">
                   <div className="relative">
                     <Avatar className="w-24 h-24">
-                      <AvatarImage src={user?.user_metadata?.avatar_url} />
+                      <AvatarImage src={profile.avatarUrl} />
                       <AvatarFallback className="text-2xl bg-primary/10 text-primary">
-                        {profile.firstName?.[0]?.toUpperCase()}
-                        {profile.lastName?.[0]?.toUpperCase()}
+                        {userInitials || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <button className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90">
-                      <Camera className="w-4 h-4" />
+                    <button
+                      onClick={triggerFileInput}
+                      disabled={uploading}
+                      className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-lg hover:bg-primary/90 disabled:opacity-50"
+                    >
+                      {uploading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Camera className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   <div>
-                    <Button variant="outline">Upload Photo</Button>
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileSelect}
+                      className="hidden"
+                    />
+                    <Button variant="outline" onClick={triggerFileInput} disabled={uploading}>
+                      {uploading ? "Uploading..." : "Upload Photo"}
+                    </Button>
                     <p className="text-sm text-muted-foreground mt-2">
                       JPG, GIF or PNG. Max size of 2MB.
                     </p>
@@ -164,17 +324,25 @@ export default function Settings() {
                         <SelectValue placeholder="Select grade" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="o-level">O-Level</SelectItem>
-                        <SelectItem value="a-level">A-Level</SelectItem>
-                        <SelectItem value="matric">Matric</SelectItem>
-                        <SelectItem value="intermediate">Intermediate</SelectItem>
-                        <SelectItem value="university">University</SelectItem>
+                        <SelectItem value="O-Level">O-Level</SelectItem>
+                        <SelectItem value="A-Level">A-Level</SelectItem>
+                        <SelectItem value="Matric">Matric</SelectItem>
+                        <SelectItem value="Intermediate">Intermediate</SelectItem>
+                        <SelectItem value="University">University</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
-                <Button onClick={handleSaveProfile}>
-                  <Save className="w-4 h-4 mr-2" /> Save Changes
+                <Button onClick={handleSaveProfile} disabled={saving}>
+                  {saving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" /> Save Changes
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>
@@ -247,21 +415,10 @@ export default function Settings() {
                 <div className="space-y-4">
                   <div>
                     <h4 className="font-medium mb-2">Change Password</h4>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label>Current Password</Label>
-                        <Input type="password" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>New Password</Label>
-                        <Input type="password" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>Confirm New Password</Label>
-                        <Input type="password" />
-                      </div>
-                      <Button>Update Password</Button>
-                    </div>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      We'll send you an email with a link to reset your password.
+                    </p>
+                    <Button onClick={handleChangePassword}>Send Password Reset Email</Button>
                   </div>
                 </div>
               </CardContent>
