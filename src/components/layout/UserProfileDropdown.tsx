@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -9,13 +9,13 @@ import {
   BookOpen,
   GraduationCap,
   ChevronDown,
+  LayoutDashboard,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -212,17 +212,19 @@ export function UserProfileDropdown() {
 
         {/* Menu Items */}
         <div className="p-2">
-          <DropdownMenuItem asChild>
-            <Link to={getDashboardPath()} className="flex items-center gap-2 cursor-pointer">
-              <User className="w-4 h-4" />
-              <span>My Dashboard</span>
-            </Link>
+          <DropdownMenuItem
+            onClick={() => navigate(getDashboardPath())}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <LayoutDashboard className="w-4 h-4" />
+            <span>My Dashboard</span>
           </DropdownMenuItem>
-          <DropdownMenuItem asChild>
-            <Link to={getSettingsPath()} className="flex items-center gap-2 cursor-pointer">
-              <Settings className="w-4 h-4" />
-              <span>Settings</span>
-            </Link>
+          <DropdownMenuItem
+            onClick={() => navigate(getSettingsPath())}
+            className="flex items-center gap-2 cursor-pointer"
+          >
+            <Settings className="w-4 h-4" />
+            <span>Settings</span>
           </DropdownMenuItem>
         </div>
 
