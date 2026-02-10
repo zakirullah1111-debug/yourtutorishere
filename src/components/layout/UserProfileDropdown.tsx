@@ -213,14 +213,14 @@ export function UserProfileDropdown() {
         {/* Menu Items */}
         <div className="p-2">
           <DropdownMenuItem
-            onClick={() => navigate(getDashboardPath())}
+            onSelect={() => navigate(getDashboardPath())}
             className="flex items-center gap-2 cursor-pointer"
           >
             <LayoutDashboard className="w-4 h-4" />
             <span>My Dashboard</span>
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() => navigate(getSettingsPath())}
+            onSelect={() => navigate(getSettingsPath())}
             className="flex items-center gap-2 cursor-pointer"
           >
             <Settings className="w-4 h-4" />
@@ -232,7 +232,7 @@ export function UserProfileDropdown() {
 
         <div className="p-2">
           <DropdownMenuItem
-            onClick={handleSignOut}
+            onSelect={handleSignOut}
             className="flex items-center gap-2 cursor-pointer text-destructive focus:text-destructive"
           >
             <LogOut className="w-4 h-4" />
