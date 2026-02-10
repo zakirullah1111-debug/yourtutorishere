@@ -89,7 +89,7 @@ export default function Settings() {
         .from("students")
         .select("school_name, current_class")
         .eq("user_id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profileData) {
         setProfile({
@@ -127,16 +127,35 @@ export default function Settings() {
 
       if (profileError) throw profileError;
 
-      // Update students table
-      const { error: studentError } = await supabase
+      // Check if student record exists
+      const { data: existingStudent } = await supabase
         .from("students")
-        .update({
-          school_name: profile.school,
-          current_class: profile.grade,
-        })
-        .eq("user_id", user.id);
+        .select("id")
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-      if (studentError) throw studentError;
+      if (existingStudent) {
+        // Update existing student record
+        const { error: studentError } = await supabase
+          .from("students")
+          .update({
+            school_name: profile.school,
+            current_class: profile.grade,
+          })
+          .eq("user_id", user.id);
+        if (studentError) throw studentError;
+      } else {
+        // Create student record if it doesn't exist
+        const { error: studentError } = await supabase
+          .from("students")
+          .insert({
+            user_id: user.id,
+            primary_subject: "General",
+            school_name: profile.school || null,
+            current_class: profile.grade || null,
+          });
+        if (studentError) throw studentError;
+      }
 
       toast({
         title: "Profile Updated",
