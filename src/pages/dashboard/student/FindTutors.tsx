@@ -38,6 +38,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
+import { findTutorsFallback } from "@/data/findTutorsFallback";
 
 interface Tutor {
   id: string;
@@ -102,25 +103,38 @@ export default function FindTutors() {
   const fetchTutors = async () => {
     try {
       setLoading(true);
-      
-      // Fetch tutors with their profile information
+
+      // Load all available tutors for students (no student-specific filtering)
       const { data: tutorsData, error: tutorsError } = await supabase
         .from("tutors")
         .select("*")
-        .eq("status", "Active")
-        .eq("verified", true);
+        .or("verified.eq.true,status.eq.Active,status.eq.active,status.eq.Approved,status.eq.approved");
 
       if (tutorsError) throw tutorsError;
 
+      const availableTutors = (tutorsData || []).filter((tutor) => {
+        const normalizedStatus = (tutor.status || "").toLowerCase();
+        return (
+          tutor.verified === true ||
+          normalizedStatus === "active" ||
+          normalizedStatus === "approved"
+        );
+      });
+
+      if (availableTutors.length === 0) {
+        setTutors(findTutorsFallback.map((tutor) => ({ ...tutor })) as Tutor[]);
+        return;
+      }
+
       // Fetch profiles for tutor names
-      const userIds = tutorsData?.map((t) => t.user_id) || [];
+      const userIds = availableTutors.map((t) => t.user_id);
       const { data: profilesData } = await supabase
         .from("profiles")
         .select("user_id, first_name, last_name, avatar_url, city")
         .in("user_id", userIds);
 
       // Combine tutor and profile data
-      const combinedTutors: Tutor[] = (tutorsData || []).map((tutor) => {
+      const combinedTutors: Tutor[] = availableTutors.map((tutor) => {
         const profile = profilesData?.find((p) => p.user_id === tutor.user_id);
         return {
           id: tutor.id,
@@ -149,6 +163,7 @@ export default function FindTutors() {
       setTutors(combinedTutors);
     } catch (error) {
       console.error("Error fetching tutors:", error);
+      setTutors(findTutorsFallback.map((tutor) => ({ ...tutor })) as Tutor[]);
     } finally {
       setLoading(false);
     }
@@ -219,11 +234,10 @@ export default function FindTutors() {
         result.sort((a, b) => b.years_of_experience - a.years_of_experience);
         break;
       default:
-        // Recommended: mix of rating and reviews
+        // Recommended: highest rating first (with reviews as tie-breaker)
         result.sort((a, b) => {
-          const scoreA = a.average_rating * 0.7 + Math.min(a.total_reviews / 100, 1) * 0.3;
-          const scoreB = b.average_rating * 0.7 + Math.min(b.total_reviews / 100, 1) * 0.3;
-          return scoreB - scoreA;
+          if (b.average_rating !== a.average_rating) return b.average_rating - a.average_rating;
+          return b.total_reviews - a.total_reviews;
         });
     }
 
@@ -502,7 +516,13 @@ export default function FindTutors() {
                     We couldn't find any tutors matching your search criteria.
                   </p>
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button variant="outline" onClick={() => setSearchQuery("")}>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setSearchType("subject");
+                        setSearchQuery("");
+                      }}
+                    >
                       Clear Search
                     </Button>
                     <Button variant="outline" onClick={clearFilters}>
