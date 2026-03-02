@@ -32,6 +32,7 @@ import TutorEarnings from "./pages/dashboard/tutor/Earnings";
 import TutorReviews from "./pages/dashboard/tutor/Reviews";
 import TutorResources from "./pages/dashboard/tutor/Resources";
 import TutorSettings from "./pages/dashboard/tutor/Settings";
+import CompleteProfile from "./pages/dashboard/tutor/CompleteProfile";
 
 const queryClient = new QueryClient();
 
@@ -71,6 +72,7 @@ const App = () => (
             <Route path="/dashboard/tutor/reviews" element={<TutorReviews />} />
             <Route path="/dashboard/tutor/resources" element={<TutorResources />} />
             <Route path="/dashboard/tutor/settings" element={<TutorSettings />} />
+            <Route path="/dashboard/tutor/complete-profile" element={<CompleteProfile />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

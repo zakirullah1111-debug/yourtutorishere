@@ -405,6 +405,8 @@ export type Database = {
           availability_days: string[] | null
           average_rating: number | null
           bio_summary: string | null
+          cnic: string | null
+          country: string | null
           created_at: string
           degree: string
           education_level: string
@@ -412,12 +414,15 @@ export type Database = {
           hourly_rate_pkr: number
           id: string
           languages: string[] | null
+          notification_preferences: Json | null
           preferred_time_slot: string | null
           primary_subject: string
           profile_complete: boolean | null
+          school_of_teaching: string | null
           secondary_subject: string | null
           status: string | null
           teaching_levels: string[]
+          teaching_mode: string | null
           total_hours_taught: number | null
           total_reviews: number | null
           total_students_taught: number | null
@@ -433,6 +438,8 @@ export type Database = {
           availability_days?: string[] | null
           average_rating?: number | null
           bio_summary?: string | null
+          cnic?: string | null
+          country?: string | null
           created_at?: string
           degree: string
           education_level: string
@@ -440,12 +447,15 @@ export type Database = {
           hourly_rate_pkr: number
           id?: string
           languages?: string[] | null
+          notification_preferences?: Json | null
           preferred_time_slot?: string | null
           primary_subject: string
           profile_complete?: boolean | null
+          school_of_teaching?: string | null
           secondary_subject?: string | null
           status?: string | null
           teaching_levels: string[]
+          teaching_mode?: string | null
           total_hours_taught?: number | null
           total_reviews?: number | null
           total_students_taught?: number | null
@@ -461,6 +471,8 @@ export type Database = {
           availability_days?: string[] | null
           average_rating?: number | null
           bio_summary?: string | null
+          cnic?: string | null
+          country?: string | null
           created_at?: string
           degree?: string
           education_level?: string
@@ -468,12 +480,15 @@ export type Database = {
           hourly_rate_pkr?: number
           id?: string
           languages?: string[] | null
+          notification_preferences?: Json | null
           preferred_time_slot?: string | null
           primary_subject?: string
           profile_complete?: boolean | null
+          school_of_teaching?: string | null
           secondary_subject?: string | null
           status?: string | null
           teaching_levels?: string[]
+          teaching_mode?: string | null
           total_hours_taught?: number | null
           total_reviews?: number | null
           total_students_taught?: number | null

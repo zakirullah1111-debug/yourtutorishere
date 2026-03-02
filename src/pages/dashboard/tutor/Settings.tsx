@@ -9,7 +9,6 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -25,49 +24,39 @@ import {
   User,
   Bell,
   Shield,
-  CreditCard,
   Camera,
   Save,
   GraduationCap,
-  Clock,
   Loader2,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 
-const DAYS_OF_WEEK = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
 const SUBJECTS = [
-  "Mathematics",
-  "Physics",
-  "Chemistry",
-  "Biology",
-  "English",
-  "Urdu",
-  "Computer Science",
-  "Accounting",
+  "Mathematics", "Physics", "Chemistry", "Biology",
+  "English", "Urdu", "Computer Science", "History",
+  "Geography", "Islamiat", "Pakistan Studies",
 ];
 
-const TEACHING_LEVELS = [
-  "Primary (1-5)",
-  "Middle (6-8)",
-  "Matric (9-10)",
-  "Intermediate (11-12)",
-  "O-Levels",
-  "A-Levels",
-  "University",
+const LANGUAGES = ["Urdu", "English", "Punjabi", "Sindhi", "Pashto"];
+
+const EDUCATION_LEVELS = ["Bachelor's", "Master's", "PhD", "Other"];
+
+const EXPERIENCE_OPTIONS = [
+  { value: "0", label: "Less than 1 year" },
+  { value: "1", label: "1-2 years" },
+  { value: "3", label: "3-5 years" },
+  { value: "5", label: "5-10 years" },
+  { value: "10", label: "10+ years" },
 ];
 
 export default function TutorSettings() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(false);
+  const [teachingLoading, setTeachingLoading] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
   const [fetchingData, setFetchingData] = useState(true);
   const [activeTab, setActiveTab] = useState("profile");
 
@@ -77,35 +66,26 @@ export default function TutorSettings() {
     lastName: "",
     email: "",
     phone: "",
+    cnic: "",
     city: "",
+    country: "Pakistan",
     bio: "",
-    university: "",
-    degree: "",
-    graduationYear: "",
-    hourlyRate: "",
-    primarySubject: "",
-    secondarySubject: "",
-    teachingLevels: [] as string[],
-    availabilityDays: [] as string[],
-    preferredTimeSlot: "",
     avatarUrl: "",
   });
 
-  const { 
-    uploading, 
-    avatarUrl, 
-    setAvatarUrl, 
-    fileInputRef, 
-    handleFileSelect, 
-    triggerFileInput 
-  } = useAvatarUpload({
-    userId: user?.id || "",
-    onSuccess: (url) => {
-      setProfile((prev) => ({ ...prev, avatarUrl: url }));
-    },
+  // Teaching state
+  const [teaching, setTeaching] = useState({
+    schoolOfTeaching: "",
+    educationLevel: "",
+    university: "",
+    yearsOfExperience: "",
+    subjects: [] as string[],
+    teachingMode: "online",
+    languages: [] as string[],
+    hourlyRate: "",
   });
 
-  // Notification settings
+  // Notification state
   const [notifications, setNotifications] = useState({
     emailNewBooking: true,
     emailSessionReminder: true,
@@ -116,10 +96,31 @@ export default function TutorSettings() {
     pushMessages: true,
   });
 
+  // Password state
+  const [passwords, setPasswords] = useState({
+    current: "",
+    new: "",
+    confirm: "",
+  });
+  const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  const [showCnic, setShowCnic] = useState(false);
+
+  const {
+    uploading,
+    avatarUrl,
+    setAvatarUrl,
+    fileInputRef,
+    handleFileSelect,
+    triggerFileInput,
+  } = useAvatarUpload({
+    userId: user?.id || "",
+    onSuccess: (url) => {
+      setProfile((prev) => ({ ...prev, avatarUrl: url }));
+    },
+  });
+
   useEffect(() => {
-    if (user) {
-      fetchProfileData();
-    }
+    if (user) fetchProfileData();
   }, [user]);
 
   const fetchProfileData = async () => {
@@ -127,19 +128,10 @@ export default function TutorSettings() {
     setFetchingData(true);
 
     try {
-      // Fetch profile
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-
-      // Fetch tutor data
-      const { data: tutorData } = await supabase
-        .from("tutors")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
+      const [{ data: profileData }, { data: tutorData }] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", user.id).single(),
+        supabase.from("tutors").select("*").eq("user_id", user.id).single(),
+      ]);
 
       if (profileData) {
         setProfile((prev) => ({
@@ -155,19 +147,34 @@ export default function TutorSettings() {
       }
 
       if (tutorData) {
+        const allSubjects = [
+          tutorData.primary_subject,
+          tutorData.secondary_subject,
+          ...(tutorData.additional_subjects || []),
+        ].filter(Boolean) as string[];
+
         setProfile((prev) => ({
           ...prev,
           bio: tutorData.bio_summary || "",
-          university: tutorData.university || "",
-          degree: tutorData.degree || "",
-          graduationYear: tutorData.graduation_year?.toString() || "",
-          hourlyRate: tutorData.hourly_rate_pkr?.toString() || "",
-          primarySubject: tutorData.primary_subject || "",
-          secondarySubject: tutorData.secondary_subject || "",
-          teachingLevels: tutorData.teaching_levels || [],
-          availabilityDays: tutorData.availability_days || [],
-          preferredTimeSlot: tutorData.preferred_time_slot || "",
+          cnic: (tutorData as any).cnic || "",
+          country: (tutorData as any).country || "Pakistan",
         }));
+
+        setTeaching({
+          schoolOfTeaching: (tutorData as any).school_of_teaching || "",
+          educationLevel: tutorData.education_level || "",
+          university: tutorData.university || "",
+          yearsOfExperience: tutorData.years_of_experience?.toString() || "",
+          subjects: allSubjects,
+          teachingMode: (tutorData as any).teaching_mode || "online",
+          languages: tutorData.languages || [],
+          hourlyRate: tutorData.hourly_rate_pkr?.toString() || "",
+        });
+
+        const notifPrefs = (tutorData as any).notification_preferences;
+        if (notifPrefs && typeof notifPrefs === "object") {
+          setNotifications((prev) => ({ ...prev, ...notifPrefs }));
+        }
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -178,11 +185,10 @@ export default function TutorSettings() {
 
   const handleProfileSave = async () => {
     if (!user) return;
-    setLoading(true);
+    setProfileLoading(true);
 
     try {
-      // Update profiles table
-      await supabase
+      const { error: profileError } = await supabase
         .from("profiles")
         .update({
           first_name: profile.firstName,
@@ -192,59 +198,167 @@ export default function TutorSettings() {
         })
         .eq("user_id", user.id);
 
-      // Update tutors table
-      await supabase
+      if (profileError) throw profileError;
+
+      const { error: tutorError } = await supabase
         .from("tutors")
         .update({
           bio_summary: profile.bio,
-          university: profile.university,
-          degree: profile.degree,
-          graduation_year: parseInt(profile.graduationYear),
-          hourly_rate_pkr: parseInt(profile.hourlyRate),
-          primary_subject: profile.primarySubject,
-          secondary_subject: profile.secondarySubject,
-          teaching_levels: profile.teachingLevels,
-          availability_days: profile.availabilityDays,
-          preferred_time_slot: profile.preferredTimeSlot,
-        })
+          cnic: profile.cnic,
+          country: profile.country,
+        } as any)
         .eq("user_id", user.id);
 
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been saved successfully.",
-      });
+      if (tutorError) throw tutorError;
+
+      toast({ title: "Profile updated successfully" });
     } catch (error) {
       console.error("Error saving profile:", error);
       toast({
-        title: "Error",
-        description: "Failed to save profile. Please try again.",
+        title: "Something went wrong",
+        description: "Please try again.",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setProfileLoading(false);
     }
   };
 
-  const toggleTeachingLevel = (level: string) => {
-    setProfile((prev) => ({
+  const handleTeachingSave = async () => {
+    if (!user) return;
+    setTeachingLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from("tutors")
+        .update({
+          primary_subject: teaching.subjects[0] || "",
+          secondary_subject: teaching.subjects[1] || null,
+          additional_subjects: teaching.subjects.slice(2),
+          education_level: teaching.educationLevel,
+          university: teaching.university,
+          years_of_experience: parseInt(teaching.yearsOfExperience) || 0,
+          hourly_rate_pkr: parseInt(teaching.hourlyRate) || 0,
+          languages: teaching.languages,
+          teaching_mode: teaching.teachingMode,
+          school_of_teaching: teaching.schoolOfTeaching,
+        } as any)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast({ title: "Teaching information updated successfully" });
+    } catch (error) {
+      console.error("Error saving teaching info:", error);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setTeachingLoading(false);
+    }
+  };
+
+  const handleNotificationsSave = async () => {
+    if (!user) return;
+    setNotifLoading(true);
+
+    try {
+      const { error } = await supabase
+        .from("tutors")
+        .update({
+          notification_preferences: notifications,
+        } as any)
+        .eq("user_id", user.id);
+
+      if (error) throw error;
+
+      toast({ title: "Preferences saved" });
+    } catch (error) {
+      console.error("Error saving notifications:", error);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setNotifLoading(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    const errs: Record<string, string> = {};
+    if (!passwords.current) errs.current = "Current password is required";
+    if (!passwords.new) errs.new = "New password is required";
+    else if (passwords.new.length < 8) errs.new = "Password must be at least 8 characters";
+    if (!passwords.confirm) errs.confirm = "Please confirm your password";
+    else if (passwords.new !== passwords.confirm) errs.confirm = "Passwords do not match";
+
+    setPasswordErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    setPasswordLoading(true);
+
+    try {
+      // Verify current password by re-authenticating
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: profile.email,
+        password: passwords.current,
+      });
+
+      if (signInError) {
+        setPasswordErrors({ current: "Current password is incorrect" });
+        setPasswordLoading(false);
+        return;
+      }
+
+      const { error } = await supabase.auth.updateUser({
+        password: passwords.new,
+      });
+
+      if (error) throw error;
+
+      setPasswords({ current: "", new: "", confirm: "" });
+      setPasswordErrors({});
+      toast({ title: "Password updated successfully" });
+    } catch (error) {
+      console.error("Error changing password:", error);
+      toast({
+        title: "Something went wrong",
+        description: "Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setPasswordLoading(false);
+    }
+  };
+
+  const toggleSubject = (subject: string) => {
+    setTeaching((prev) => ({
       ...prev,
-      teachingLevels: prev.teachingLevels.includes(level)
-        ? prev.teachingLevels.filter((l) => l !== level)
-        : [...prev.teachingLevels, level],
+      subjects: prev.subjects.includes(subject)
+        ? prev.subjects.filter((s) => s !== subject)
+        : [...prev.subjects, subject],
     }));
   };
 
-  const toggleAvailabilityDay = (day: string) => {
-    setProfile((prev) => ({
+  const toggleLanguage = (lang: string) => {
+    setTeaching((prev) => ({
       ...prev,
-      availabilityDays: prev.availabilityDays.includes(day)
-        ? prev.availabilityDays.filter((d) => d !== day)
-        : [...prev.availabilityDays, day],
+      languages: prev.languages.includes(lang)
+        ? prev.languages.filter((l) => l !== lang)
+        : [...prev.languages, lang],
     }));
+  };
+
+  const maskCnic = (cnic: string) => {
+    if (!cnic || cnic.length < 5) return cnic;
+    return cnic.slice(0, 1) + "****-*******-" + cnic.slice(-1);
   };
 
   const userInitials =
-    profile.firstName?.[0]?.toUpperCase() + (profile.lastName?.[0]?.toUpperCase() || "");
+    (profile.firstName?.[0] || "") + (profile.lastName?.[0] || "");
 
   if (fetchingData) {
     return (
@@ -284,7 +398,7 @@ export default function TutorSettings() {
             </TabsTrigger>
           </TabsList>
 
-          {/* Profile Tab */}
+          {/* ═══════════ PROFILE TAB ═══════════ */}
           <TabsContent value="profile" className="space-y-6">
             <Card>
               <CardHeader>
@@ -321,18 +435,12 @@ export default function TutorSettings() {
                   />
                   <Button variant="outline" onClick={triggerFileInput} disabled={uploading}>
                     {uploading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
-                      </>
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...</>
                     ) : (
-                      <>
-                        <Camera className="w-4 h-4 mr-2" /> Change Photo
-                      </>
+                      <><Camera className="w-4 h-4 mr-2" /> Change Photo</>
                     )}
                   </Button>
-                  <p className="text-xs text-muted-foreground">
-                    JPG, GIF or PNG. Max size 2MB
-                  </p>
+                  <p className="text-xs text-muted-foreground">JPG, GIF or PNG. Max size 2MB</p>
                 </div>
               </CardContent>
             </Card>
@@ -349,9 +457,7 @@ export default function TutorSettings() {
                     <Input
                       id="firstName"
                       value={profile.firstName}
-                      onChange={(e) =>
-                        setProfile({ ...profile, firstName: e.target.value })
-                      }
+                      onChange={(e) => setProfile({ ...profile, firstName: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -359,18 +465,14 @@ export default function TutorSettings() {
                     <Input
                       id="lastName"
                       value={profile.lastName}
-                      onChange={(e) =>
-                        setProfile({ ...profile, lastName: e.target.value })
-                      }
+                      onChange={(e) => setProfile({ ...profile, lastName: e.target.value })}
                     />
                   </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="email">Email</Label>
                   <Input id="email" value={profile.email} disabled />
-                  <p className="text-xs text-muted-foreground">
-                    Contact support to change your email
-                  </p>
+                  <p className="text-xs text-muted-foreground">Contact support to change your email</p>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
@@ -379,9 +481,30 @@ export default function TutorSettings() {
                       id="phone"
                       value={profile.phone}
                       onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-                      placeholder="+92 300 1234567"
+                      placeholder="03XX-XXXXXXX"
                     />
                   </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="cnic">CNIC / National ID</Label>
+                    <div className="relative">
+                      <Input
+                        id="cnic"
+                        value={showCnic ? profile.cnic : maskCnic(profile.cnic)}
+                        onChange={(e) => setProfile({ ...profile, cnic: e.target.value })}
+                        readOnly={!showCnic}
+                        placeholder="XXXXX-XXXXXXX-X"
+                      />
+                      <button
+                        type="button"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowCnic(!showCnic)}
+                      >
+                        {showCnic ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="city">City</Label>
                     <Input
@@ -389,6 +512,14 @@ export default function TutorSettings() {
                       value={profile.city}
                       onChange={(e) => setProfile({ ...profile, city: e.target.value })}
                       placeholder="Lahore"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="country">Country</Label>
+                    <Input
+                      id="country"
+                      value={profile.country}
+                      onChange={(e) => setProfile({ ...profile, country: e.target.value })}
                     />
                   </div>
                 </div>
@@ -405,135 +536,90 @@ export default function TutorSettings() {
               </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Education</CardTitle>
-                <CardDescription>Your academic qualifications</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="university">University / Institution</Label>
-                  <Input
-                    id="university"
-                    value={profile.university}
-                    onChange={(e) => setProfile({ ...profile, university: e.target.value })}
-                    placeholder="LUMS, NUST, etc."
-                  />
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="degree">Degree</Label>
-                    <Input
-                      id="degree"
-                      value={profile.degree}
-                      onChange={(e) => setProfile({ ...profile, degree: e.target.value })}
-                      placeholder="BSc Mathematics"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="graduationYear">Graduation Year</Label>
-                    <Input
-                      id="graduationYear"
-                      type="number"
-                      value={profile.graduationYear}
-                      onChange={(e) =>
-                        setProfile({ ...profile, graduationYear: e.target.value })
-                      }
-                      placeholder="2022"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
             <div className="flex justify-end">
-              <Button onClick={handleProfileSave} disabled={loading}>
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Saving..." : "Save Changes"}
+              <Button onClick={handleProfileSave} disabled={profileLoading}>
+                {profileLoading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" /> Save Changes</>
+                )}
               </Button>
             </div>
           </TabsContent>
 
-          {/* Teaching Tab */}
+          {/* ═══════════ TEACHING TAB ═══════════ */}
           <TabsContent value="teaching" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Subjects & Expertise</CardTitle>
-                <CardDescription>What subjects do you teach?</CardDescription>
+                <CardTitle>School & Education</CardTitle>
+                <CardDescription>Your teaching institution and qualifications</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>School of Teaching</Label>
+                  <Input
+                    value={teaching.schoolOfTeaching}
+                    onChange={(e) => setTeaching({ ...teaching, schoolOfTeaching: e.target.value })}
+                    placeholder="Current or most recent school/institute"
+                  />
+                </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Primary Subject</Label>
+                    <Label>Education Level</Label>
                     <Select
-                      value={profile.primarySubject}
-                      onValueChange={(value) =>
-                        setProfile({ ...profile, primarySubject: value })
-                      }
+                      value={teaching.educationLevel}
+                      onValueChange={(v) => setTeaching({ ...teaching, educationLevel: v })}
                     >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select subject" />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue placeholder="Select level" /></SelectTrigger>
                       <SelectContent>
-                        {SUBJECTS.map((subject) => (
-                          <SelectItem key={subject} value={subject}>
-                            {subject}
-                          </SelectItem>
+                        {EDUCATION_LEVELS.map((l) => (
+                          <SelectItem key={l} value={l}>{l}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Secondary Subject</Label>
-                    <Select
-                      value={profile.secondarySubject}
-                      onValueChange={(value) =>
-                        setProfile({ ...profile, secondarySubject: value })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select subject (optional)" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SUBJECTS.map((subject) => (
-                          <SelectItem key={subject} value={subject}>
-                            {subject}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Label>Institution / University</Label>
+                    <Input
+                      value={teaching.university}
+                      onChange={(e) => setTeaching({ ...teaching, university: e.target.value })}
+                      placeholder="LUMS, NUST, etc."
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Hourly Rate (PKR)</Label>
-                  <Input
-                    type="number"
-                    value={profile.hourlyRate}
-                    onChange={(e) => setProfile({ ...profile, hourlyRate: e.target.value })}
-                    placeholder="1500"
-                  />
+                  <Label>Years of Experience</Label>
+                  <Select
+                    value={teaching.yearsOfExperience}
+                    onValueChange={(v) => setTeaching({ ...teaching, yearsOfExperience: v })}
+                  >
+                    <SelectTrigger><SelectValue placeholder="Select experience" /></SelectTrigger>
+                    <SelectContent>
+                      {EXPERIENCE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Teaching Levels</CardTitle>
-                <CardDescription>Which grade levels do you teach?</CardDescription>
+                <CardTitle>Subjects You Teach</CardTitle>
+                <CardDescription>Click to add or remove subjects</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {TEACHING_LEVELS.map((level) => (
-                    <div key={level} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={level}
-                        checked={profile.teachingLevels.includes(level)}
-                        onCheckedChange={() => toggleTeachingLevel(level)}
-                      />
-                      <label htmlFor={level} className="text-sm">
-                        {level}
-                      </label>
-                    </div>
+                <div className="flex flex-wrap gap-2">
+                  {SUBJECTS.map((subject) => (
+                    <Badge
+                      key={subject}
+                      variant={teaching.subjects.includes(subject) ? "default" : "outline"}
+                      className="cursor-pointer px-3 py-1.5 text-sm transition-colors"
+                      onClick={() => toggleSubject(subject)}
+                    >
+                      {subject}
+                    </Badge>
                   ))}
                 </div>
               </CardContent>
@@ -541,58 +627,76 @@ export default function TutorSettings() {
 
             <Card>
               <CardHeader>
-                <CardTitle>Availability</CardTitle>
-                <CardDescription>Set your available days and preferred time</CardDescription>
+                <CardTitle>Teaching Mode & Languages</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <Label>Available Days</Label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {DAYS_OF_WEEK.map((day) => (
-                      <div key={day} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={day}
-                          checked={profile.availabilityDays.includes(day)}
-                          onCheckedChange={() => toggleAvailabilityDay(day)}
-                        />
-                        <label htmlFor={day} className="text-sm">
-                          {day}
-                        </label>
-                      </div>
+              <CardContent className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Teaching Mode</Label>
+                  <div className="grid grid-cols-3 gap-3">
+                    {[
+                      { value: "online", label: "🌐 Online Only" },
+                      { value: "in-person", label: "🏠 In-Person Only" },
+                      { value: "both", label: "✅ Both" },
+                    ].map((mode) => (
+                      <Button
+                        key={mode.value}
+                        type="button"
+                        variant={teaching.teachingMode === mode.value ? "default" : "outline"}
+                        className="h-auto py-3"
+                        onClick={() => setTeaching({ ...teaching, teachingMode: mode.value })}
+                      >
+                        {mode.label}
+                      </Button>
                     ))}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Preferred Time Slot</Label>
-                  <Select
-                    value={profile.preferredTimeSlot}
-                    onValueChange={(value) =>
-                      setProfile({ ...profile, preferredTimeSlot: value })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select time slot" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="morning">Morning (9 AM - 12 PM)</SelectItem>
-                      <SelectItem value="afternoon">Afternoon (2 PM - 5 PM)</SelectItem>
-                      <SelectItem value="evening">Evening (5 PM - 9 PM)</SelectItem>
-                      <SelectItem value="flexible">Flexible</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Languages of Instruction</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {LANGUAGES.map((lang) => (
+                      <Badge
+                        key={lang}
+                        variant={teaching.languages.includes(lang) ? "default" : "outline"}
+                        className="cursor-pointer px-3 py-1.5 text-sm transition-colors"
+                        onClick={() => toggleLanguage(lang)}
+                      >
+                        {lang}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>Hourly Rate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <Label>Rate (PKR per hour)</Label>
+                  <Input
+                    type="number"
+                    value={teaching.hourlyRate}
+                    onChange={(e) => setTeaching({ ...teaching, hourlyRate: e.target.value })}
+                    placeholder="1500"
+                  />
                 </div>
               </CardContent>
             </Card>
 
             <div className="flex justify-end">
-              <Button onClick={handleProfileSave} disabled={loading}>
-                <Save className="w-4 h-4 mr-2" />
-                {loading ? "Saving..." : "Save Changes"}
+              <Button onClick={handleTeachingSave} disabled={teachingLoading}>
+                {teachingLoading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" /> Save Teaching Info</>
+                )}
               </Button>
             </div>
           </TabsContent>
 
-          {/* Notifications Tab */}
+          {/* ═══════════ NOTIFICATIONS TAB ═══════════ */}
           <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
@@ -601,10 +705,10 @@ export default function TutorSettings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  { key: "emailNewBooking", label: "New session bookings" },
-                  { key: "emailSessionReminder", label: "Session reminders" },
-                  { key: "emailPayment", label: "Payment notifications" },
-                  { key: "emailReview", label: "New reviews" },
+                  { key: "emailNewBooking", label: "Email me when a student books a session" },
+                  { key: "emailSessionReminder", label: "Email me for session reminders" },
+                  { key: "emailPayment", label: "Email me for payment notifications" },
+                  { key: "emailReview", label: "Email me when I receive a new review" },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <Label htmlFor={item.key}>{item.label}</Label>
@@ -627,9 +731,9 @@ export default function TutorSettings() {
               </CardHeader>
               <CardContent className="space-y-4">
                 {[
-                  { key: "pushNewBooking", label: "New bookings" },
-                  { key: "pushSessionReminder", label: "Session starting soon" },
-                  { key: "pushMessages", label: "New messages" },
+                  { key: "pushNewBooking", label: "Push notifications for new bookings" },
+                  { key: "pushSessionReminder", label: "Push notifications for session reminders" },
+                  { key: "pushMessages", label: "Push notifications for new messages" },
                 ].map((item) => (
                   <div key={item.key} className="flex items-center justify-between">
                     <Label htmlFor={item.key}>{item.label}</Label>
@@ -644,9 +748,19 @@ export default function TutorSettings() {
                 ))}
               </CardContent>
             </Card>
+
+            <div className="flex justify-end">
+              <Button onClick={handleNotificationsSave} disabled={notifLoading}>
+                {notifLoading ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
+                ) : (
+                  <><Save className="w-4 h-4 mr-2" /> Save Notification Preferences</>
+                )}
+              </Button>
+            </div>
           </TabsContent>
 
-          {/* Security Tab */}
+          {/* ═══════════ SECURITY TAB ═══════════ */}
           <TabsContent value="security" className="space-y-6">
             <Card>
               <CardHeader>
@@ -656,20 +770,68 @@ export default function TutorSettings() {
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="currentPassword">Current Password</Label>
-                  <Input id="currentPassword" type="password" />
+                  <Input
+                    id="currentPassword"
+                    type="password"
+                    value={passwords.current}
+                    onChange={(e) => {
+                      setPasswords({ ...passwords, current: e.target.value });
+                      if (passwordErrors.current) {
+                        setPasswordErrors((prev) => { const n = { ...prev }; delete n.current; return n; });
+                      }
+                    }}
+                  />
+                  {passwordErrors.current && (
+                    <p className="text-sm text-destructive">{passwordErrors.current}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="newPassword">New Password</Label>
-                  <Input id="newPassword" type="password" />
+                  <Input
+                    id="newPassword"
+                    type="password"
+                    value={passwords.new}
+                    onChange={(e) => {
+                      setPasswords({ ...passwords, new: e.target.value });
+                      if (passwordErrors.new) {
+                        setPasswordErrors((prev) => { const n = { ...prev }; delete n.new; return n; });
+                      }
+                    }}
+                  />
+                  {passwordErrors.new && (
+                    <p className="text-sm text-destructive">{passwordErrors.new}</p>
+                  )}
+                  <p className="text-xs text-muted-foreground">Minimum 8 characters</p>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="confirmPassword">Confirm New Password</Label>
-                  <Input id="confirmPassword" type="password" />
+                  <Input
+                    id="confirmPassword"
+                    type="password"
+                    value={passwords.confirm}
+                    onChange={(e) => {
+                      setPasswords({ ...passwords, confirm: e.target.value });
+                      if (passwordErrors.confirm) {
+                        setPasswordErrors((prev) => { const n = { ...prev }; delete n.confirm; return n; });
+                      }
+                    }}
+                  />
+                  {passwordErrors.confirm && (
+                    <p className="text-sm text-destructive">{passwordErrors.confirm}</p>
+                  )}
                 </div>
-                <Button>Update Password</Button>
+                <Button onClick={handlePasswordChange} disabled={passwordLoading}>
+                  {passwordLoading ? (
+                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...</>
+                  ) : (
+                    "Update Password"
+                  )}
+                </Button>
               </CardContent>
             </Card>
 
+            {/* Two-Factor Authentication — Hidden for now, can be re-enabled later */}
+            {/* 
             <Card>
               <CardHeader>
                 <CardTitle>Two-Factor Authentication</CardTitle>
@@ -687,6 +849,7 @@ export default function TutorSettings() {
                 </div>
               </CardContent>
             </Card>
+            */}
 
             <Card className="border-destructive">
               <CardHeader>
