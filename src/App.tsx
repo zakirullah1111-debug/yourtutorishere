@@ -28,6 +28,7 @@ import StudentSettings from "./pages/dashboard/student/Settings";
 import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
 import MyStudents from "./pages/dashboard/tutor/MyStudents";
 import TutorSchedule from "./pages/dashboard/tutor/Schedule";
+import TutorMessages from "./pages/dashboard/tutor/Messages";
 import TutorEarnings from "./pages/dashboard/tutor/Earnings";
 import TutorReviews from "./pages/dashboard/tutor/Reviews";
 import TutorResources from "./pages/dashboard/tutor/Resources";
@@ -68,6 +69,7 @@ const App = () => (
             <Route path="/dashboard/tutor" element={<TutorDashboard />} />
             <Route path="/dashboard/tutor/students" element={<MyStudents />} />
             <Route path="/dashboard/tutor/schedule" element={<TutorSchedule />} />
+            <Route path="/dashboard/tutor/messages" element={<TutorMessages />} />
             <Route path="/dashboard/tutor/earnings" element={<TutorEarnings />} />
             <Route path="/dashboard/tutor/reviews" element={<TutorReviews />} />
             <Route path="/dashboard/tutor/resources" element={<TutorResources />} />

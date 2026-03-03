@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -14,6 +14,7 @@ import {
   Grid3X3,
   List,
   X,
+  MessageCircle,
   ChevronDown,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
@@ -39,6 +40,8 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { findTutorsFallback } from "@/data/findTutorsFallback";
+import { useMessaging } from "@/hooks/useMessaging";
+import { useToast } from "@/hooks/use-toast";
 
 interface Tutor {
   id: string;
@@ -81,6 +84,9 @@ const SUBJECTS = [
 ];
 
 export default function FindTutors() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const { getOrCreateConversation } = useMessaging("student");
   const [tutors, setTutors] = useState<Tutor[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchType, setSearchType] = useState<SearchType>("subject");
@@ -254,6 +260,13 @@ export default function FindTutors() {
       }
       return newFavorites;
     });
+  };
+
+  const handleMessageTutor = async (tutorUserId: string) => {
+    const convId = await getOrCreateConversation(tutorUserId);
+    if (convId) {
+      navigate(`/dashboard/student/messages?conversation=${convId}`);
+    }
   };
 
   const clearFilters = () => {
@@ -620,6 +633,14 @@ export default function FindTutors() {
                           <Button variant="outline" className="flex-1" asChild>
                             <Link to={`/dashboard/student/tutor/${tutor.id}`}>View Profile</Link>
                           </Button>
+                          <Button
+                            variant="outline"
+                            className="flex-1"
+                            onClick={() => handleMessageTutor(tutor.user_id)}
+                          >
+                            <MessageCircle className="w-4 h-4 mr-1" />
+                            Message
+                          </Button>
                           <Button className="flex-1">Book Demo</Button>
                         </div>
                       </CardContent>
@@ -695,6 +716,13 @@ export default function FindTutors() {
                             <div className="flex gap-2">
                               <Button variant="outline" asChild>
                                 <Link to={`/dashboard/student/tutor/${tutor.id}`}>View Profile</Link>
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleMessageTutor(tutor.user_id)}
+                              >
+                                <MessageCircle className="w-4 h-4 mr-1" />
+                                Message
                               </Button>
                               <Button>Book Demo Class</Button>
                             </div>

@@ -18,6 +18,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
+import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -66,6 +67,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const unreadCount = useUnreadMessages(userType);
 
   const navItems = userType === "student" ? studentNavItems : tutorNavItems;
 
@@ -131,6 +133,11 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
               >
                 {item.icon}
                 <span className="font-medium">{item.label}</span>
+                {item.label === "Messages" && unreadCount > 0 && (
+                  <span className="ml-auto px-2 py-0.5 bg-destructive text-destructive-foreground text-xs rounded-full">
+                    {unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}
