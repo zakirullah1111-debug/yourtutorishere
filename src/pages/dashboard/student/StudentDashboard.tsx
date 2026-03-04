@@ -211,17 +211,7 @@ export default function StudentDashboard() {
           }))
         );
       } else {
-        // Fallback subjects if none in database
-        setSubjects([
-          { name: "Mathematics", emoji: "📐", tutorCount: 45, color: "from-blue-500 to-cyan-500" },
-          { name: "Physics", emoji: "⚛️", tutorCount: 38, color: "from-purple-500 to-pink-500" },
-          { name: "Chemistry", emoji: "🧪", tutorCount: 32, color: "from-green-500 to-teal-500" },
-          { name: "Biology", emoji: "🧬", tutorCount: 28, color: "from-red-500 to-orange-500" },
-          { name: "English", emoji: "📝", tutorCount: 55, color: "from-primary to-purple-500" },
-          { name: "Urdu", emoji: "✍️", tutorCount: 42, color: "from-amber-500 to-yellow-500" },
-          { name: "Computer Science", emoji: "💻", tutorCount: 35, color: "from-indigo-500 to-blue-500" },
-          { name: "Economics", emoji: "📊", tutorCount: 25, color: "from-emerald-500 to-green-500" },
-        ]);
+        setSubjects([]);
       }
 
       // Fetch real upcoming sessions
