@@ -5,6 +5,7 @@ import { GraduationCap, Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown, Loade
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { checkTutorProfileComplete } from "@/lib/fetchProfileWithRetry";
 import { z } from "zod";
 
 const signupSchema = z.object({
@@ -117,14 +118,12 @@ const SignupPage = () => {
       description: "Your account has been created. Redirecting to your dashboard...",
     });
 
-    // Auto-redirect based on role after a brief delay to show the success message
-    setTimeout(() => {
-      if (formData.role === "student") {
-        navigate("/dashboard/student");
-      } else if (formData.role === "tutor") {
-        navigate("/dashboard/tutor");
+    // Auto-redirect based on role
+    setTimeout(async () => {
+      if (formData.role === "tutor") {
+        navigate("/dashboard/tutor/complete-profile");
       } else {
-        navigate("/");
+        navigate("/dashboard/student");
       }
     }, 1500);
   };

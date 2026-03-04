@@ -5,6 +5,7 @@ import { GraduationCap, Mail, Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { checkTutorProfileComplete } from "@/lib/fetchProfileWithRetry";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -27,24 +28,25 @@ const LoginPage = () => {
 
   // Redirect if already logged in
   useEffect(() => {
-    if (!loading && user) {
-      redirectBasedOnRole(userRole);
+    if (!loading && user && userRole) {
+      redirectBasedOnRole(userRole, user.id);
     }
   }, [user, loading, userRole, navigate]);
 
-  const redirectBasedOnRole = (role: string | null) => {
-    switch (role) {
-      case "student":
-        navigate("/dashboard/student");
-        break;
-      case "tutor":
-        navigate("/dashboard/tutor");
-        break;
-      case "admin":
-        navigate("/dashboard/admin");
-        break;
-      default:
-        navigate("/");
+  const redirectBasedOnRole = async (role: string | null, userId?: string) => {
+    if (role === "tutor" && userId) {
+      const isComplete = await checkTutorProfileComplete(userId);
+      if (!isComplete) {
+        navigate("/dashboard/tutor/complete-profile");
+        return;
+      }
+      navigate("/dashboard/tutor");
+    } else if (role === "student") {
+      navigate("/dashboard/student");
+    } else if (role === "admin") {
+      navigate("/dashboard/admin");
+    } else {
+      navigate("/");
     }
   };
 
@@ -99,7 +101,7 @@ const LoginPage = () => {
     });
 
     // Redirect based on role
-    redirectBasedOnRole(role || null);
+    await redirectBasedOnRole(role || null, user?.id);
   };
 
   if (loading) {

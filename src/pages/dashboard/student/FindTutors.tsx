@@ -39,7 +39,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
-import { findTutorsFallback } from "@/data/findTutorsFallback";
+
 import { useMessaging } from "@/hooks/useMessaging";
 import { useToast } from "@/hooks/use-toast";
 
@@ -110,25 +110,18 @@ export default function FindTutors() {
     try {
       setLoading(true);
 
-      // Load all available tutors for students (no student-specific filtering)
       const { data: tutorsData, error: tutorsError } = await supabase
         .from("tutors")
         .select("*")
-        .or("verified.eq.true,status.eq.Active,status.eq.active,status.eq.Approved,status.eq.approved");
+        .or("verified.eq.true,profile_complete.eq.true");
 
       if (tutorsError) throw tutorsError;
 
-      const availableTutors = (tutorsData || []).filter((tutor) => {
-        const normalizedStatus = (tutor.status || "").toLowerCase();
-        return (
-          tutor.verified === true ||
-          normalizedStatus === "active" ||
-          normalizedStatus === "approved"
-        );
-      });
+      const availableTutors = tutorsData || [];
 
       if (availableTutors.length === 0) {
-        setTutors(findTutorsFallback.map((tutor) => ({ ...tutor })) as Tutor[]);
+        setTutors([]);
+        setLoading(false);
         return;
       }
 
@@ -169,7 +162,7 @@ export default function FindTutors() {
       setTutors(combinedTutors);
     } catch (error) {
       console.error("Error fetching tutors:", error);
-      setTutors(findTutorsFallback.map((tutor) => ({ ...tutor })) as Tutor[]);
+      setTutors([]);
     } finally {
       setLoading(false);
     }

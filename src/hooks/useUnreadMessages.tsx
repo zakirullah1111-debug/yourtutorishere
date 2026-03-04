@@ -42,7 +42,7 @@ export function useUnreadMessages(userType: "student" | "tutor") {
 
   // Update document title
   useEffect(() => {
-    document.title = count > 0 ? `(${count}) YouT utor - Messages` : "YouT utor";
+    document.title = count > 0 ? `(${count}) Your-Tutor - Messages` : "Your-Tutor";
   }, [count]);
 
   return count;

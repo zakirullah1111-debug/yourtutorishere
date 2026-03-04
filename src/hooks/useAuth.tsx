@@ -2,6 +2,7 @@ import { useState, useEffect, createContext, useContext, ReactNode } from "react
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { fetchProfileWithRetry, fetchUserRoleWithRetry } from "@/lib/fetchProfileWithRetry";
 
 interface AuthContextType {
   user: User | null;
@@ -31,13 +32,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         
-        // Defer role fetching with setTimeout
         if (session?.user) {
           setTimeout(() => {
             fetchUserRole(session.user.id);
@@ -48,7 +47,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -63,19 +61,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const fetchUserRole = async (userId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error("Error fetching user role:", error);
-        setUserRole("student");
-        return;
-      }
-
-      setUserRole((data?.role as "student" | "tutor" | "admin" | "moderator") || "student");
+      const role = await fetchUserRoleWithRetry(userId);
+      setUserRole(role as "student" | "tutor" | "admin" | "moderator");
     } catch (error) {
       console.error("Error fetching user role:", error);
       setUserRole("student");
@@ -104,29 +91,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error };
       }
 
-      // If signup successful and we have a user, create their role
       if (data.user) {
-        // Create user role
-        const { error: roleError } = await supabase
-          .from("user_roles")
-          .insert({
-            user_id: data.user.id,
-            role: metadata.role,
-          });
-
-        if (roleError) {
-          console.error("Error creating user role:", roleError);
+        // Wait for the database trigger to create profile & role
+        const profile = await fetchProfileWithRetry(data.user.id);
+        if (!profile) {
+          console.warn("Profile not found after retries, continuing anyway");
         }
 
-        // Also create a student/tutor record if needed
+        // Also ensure role exists (trigger should create it)
+        const role = await fetchUserRoleWithRetry(data.user.id);
+        setUserRole(role as "student" | "tutor" | "admin" | "moderator");
+
+        // Create student record if needed
         if (metadata.role === "student") {
           const { error: studentError } = await supabase
             .from("students")
             .insert({
               user_id: data.user.id,
-              primary_subject: "Mathematics", // Default, can be updated later
+              primary_subject: "Mathematics",
             });
-          if (studentError) {
+          if (studentError && !studentError.message.includes("duplicate")) {
             console.error("Error creating student record:", studentError);
           }
         }
@@ -149,17 +133,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { error };
       }
 
-      // Fetch user role for redirect
       if (data.user) {
-        const { data: roleData } = await supabase
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", data.user.id)
-          .single();
-
-        const role = roleData?.role as string;
-        setUserRole(role as "student" | "tutor" | "admin" | "moderator" | null);
-        
+        const role = await fetchUserRoleWithRetry(data.user.id);
+        setUserRole(role as "student" | "tutor" | "admin" | "moderator");
         return { error: null, role };
       }
 
