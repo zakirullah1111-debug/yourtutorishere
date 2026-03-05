@@ -14,6 +14,7 @@ interface ConversationListProps {
   onSelect: (id: string) => void;
   loading: boolean;
   userType: "student" | "tutor";
+  isMobile?: boolean;
 }
 
 function formatTime(dateStr: string): string {
@@ -52,6 +53,7 @@ export function ConversationList({
   onSelect,
   loading,
   userType,
+  isMobile,
 }: ConversationListProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -62,16 +64,18 @@ export function ConversationList({
   const getUnread = (c: Conversation) =>
     userType === "student" ? c.student_unread_count : c.tutor_unread_count;
 
+  const containerClass = isMobile ? "w-full h-full flex flex-col" : "w-80 border-r flex flex-col";
+
   if (loading) {
     return (
-      <div className="w-80 border-r flex flex-col">
+      <div className={containerClass}>
         <div className="p-4 border-b">
           <Skeleton className="h-10 w-full" />
         </div>
         <div className="p-2 space-y-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-3 p-3">
-              <Skeleton className="w-12 h-12 rounded-full" />
+              <Skeleton className="w-12 h-12 rounded-full shrink-0" />
               <div className="flex-1 space-y-2">
                 <Skeleton className="h-4 w-3/4" />
                 <Skeleton className="h-3 w-1/2" />
@@ -84,7 +88,7 @@ export function ConversationList({
   }
 
   return (
-    <div className="w-80 border-r flex flex-col">
+    <div className={containerClass}>
       <div className="p-4 border-b">
         <h2 className="text-lg font-bold mb-3">Messages</h2>
         <div className="relative">
@@ -93,7 +97,7 @@ export function ConversationList({
             placeholder="Search conversations..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-10 min-h-[44px]"
           />
         </div>
       </div>
@@ -108,7 +112,7 @@ export function ConversationList({
                     : "No messages yet. Students will appear here once they reach out."}
                 </p>
                 {userType === "student" && (
-                  <Button asChild size="sm">
+                  <Button asChild size="sm" className={isMobile ? "w-full" : ""}>
                     <Link to="/dashboard/student/find-tutors">Find Tutors</Link>
                   </Button>
                 )}
@@ -124,11 +128,11 @@ export function ConversationList({
               <button
                 key={conv.id}
                 onClick={() => onSelect(conv.id)}
-                className={`w-full p-4 flex items-start gap-3 hover:bg-muted transition-colors text-left ${
+                className={`w-full p-4 flex items-start gap-3 hover:bg-muted transition-colors text-left min-h-[72px] ${
                   activeConversationId === conv.id ? "bg-muted" : ""
                 }`}
               >
-                <Avatar className="w-12 h-12">
+                <Avatar className="w-12 h-12 shrink-0">
                   <AvatarImage src={conv.other_user_avatar || undefined} />
                   <AvatarFallback className="bg-primary/10 text-primary">
                     {getInitials(conv.other_user_name)}
@@ -148,7 +152,7 @@ export function ConversationList({
                   </p>
                 </div>
                 {unread > 0 && (
-                  <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full shrink-0">
+                  <span className="px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full shrink-0 min-w-[20px] text-center">
                     {unread}
                   </span>
                 )}

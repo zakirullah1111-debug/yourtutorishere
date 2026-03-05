@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Send, Paperclip, X, Download, FileText, MessageSquare } from "lucide-react";
+import { Send, Paperclip, X, Download, FileText, MessageSquare, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,6 +14,8 @@ interface ChatWindowProps {
   sending: boolean;
   onSendMessage: (conversationId: string, content: string | null, fileUrl?: string | null, fileName?: string | null, fileType?: string | null) => Promise<boolean>;
   onUploadFile: (file: File) => Promise<{ url: string; name: string; type: string } | null>;
+  isMobile?: boolean;
+  onBack?: () => void;
 }
 
 function formatMessageTime(dateStr: string): string {
@@ -40,7 +42,6 @@ function getInitials(name: string): string {
   return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 }
 
-// Group messages by date
 function groupByDate(messages: Message[]): { date: string; messages: Message[] }[] {
   const groups: { date: string; messages: Message[] }[] = [];
   let currentDate = "";
@@ -65,6 +66,8 @@ export function ChatWindow({
   sending,
   onSendMessage,
   onUploadFile,
+  isMobile,
+  onBack,
 }: ChatWindowProps) {
   const { user } = useAuth();
   const [newMessage, setNewMessage] = useState("");
@@ -124,10 +127,7 @@ export function ChatWindow({
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    if (file.size > 10 * 1024 * 1024) {
-      return; // Hook handles the toast
-    }
+    if (file.size > 10 * 1024 * 1024) return;
 
     setPendingFile(file);
     if (file.type.startsWith("image/")) {
@@ -137,8 +137,6 @@ export function ChatWindow({
     } else {
       setPendingFilePreview(null);
     }
-
-    // Reset input
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
@@ -151,7 +149,7 @@ export function ChatWindow({
 
   if (!conversation) {
     return (
-      <div className="flex-1 flex items-center justify-center flex-col gap-3">
+      <div className="flex-1 flex items-center justify-center flex-col gap-3 h-full">
         <MessageSquare className="w-12 h-12 text-muted-foreground" />
         <p className="text-muted-foreground">Select a conversation to start chatting</p>
       </div>
@@ -161,17 +159,25 @@ export function ChatWindow({
   const messageGroups = groupByDate(messages);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0">
+    <div className="flex-1 flex flex-col min-w-0 h-full">
       {/* Header */}
-      <div className="border-b py-4 px-6 flex items-center gap-3 shrink-0">
-        <Avatar className="w-10 h-10">
+      <div className="border-b py-3 px-4 md:py-4 md:px-6 flex items-center gap-3 shrink-0">
+        {isMobile && onBack && (
+          <button
+            onClick={onBack}
+            className="shrink-0 p-2 -ml-2 rounded-lg hover:bg-muted min-w-[44px] min-h-[44px] flex items-center justify-center"
+          >
+            <ArrowLeft className="w-5 h-5" />
+          </button>
+        )}
+        <Avatar className="w-9 h-9 md:w-10 md:h-10 shrink-0">
           <AvatarImage src={conversation.other_user_avatar || undefined} />
-          <AvatarFallback className="bg-primary/10 text-primary">
+          <AvatarFallback className="bg-primary/10 text-primary text-sm">
             {getInitials(conversation.other_user_name)}
           </AvatarFallback>
         </Avatar>
-        <div>
-          <h3 className="font-semibold">{conversation.other_user_name}</h3>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-semibold truncate">{conversation.other_user_name}</h3>
         </div>
       </div>
 
@@ -206,13 +212,12 @@ export function ChatWindow({
                       className={`flex mb-2 ${isMe ? "justify-end" : "justify-start"}`}
                     >
                       <div
-                        className={`max-w-[70%] rounded-2xl px-4 py-2 ${
+                        className={`max-w-[75%] md:max-w-[70%] rounded-2xl px-4 py-2 ${
                           isMe
                             ? "bg-primary text-primary-foreground rounded-br-md"
                             : "bg-muted rounded-bl-md"
                         }`}
                       >
-                        {/* File content */}
                         {msg.file_url && msg.file_type === "image" && (
                           <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="block mb-1">
                             <img
@@ -237,13 +242,9 @@ export function ChatWindow({
                             <Download className="w-4 h-4 shrink-0 ml-auto" />
                           </a>
                         )}
-
-                        {/* Text content */}
                         {msg.content && (
-                          <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                          <p className="text-sm md:text-sm whitespace-pre-wrap">{msg.content}</p>
                         )}
-
-                        {/* Timestamp + read status */}
                         <div className={`flex items-center gap-1 mt-1 ${isMe ? "justify-end" : ""}`}>
                           <p className={`text-xs ${isMe ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                             {formatMessageTime(msg.created_at)}
@@ -283,7 +284,7 @@ export function ChatWindow({
       )}
 
       {/* Input */}
-      <div className="p-4 border-t shrink-0">
+      <div className="p-3 md:p-4 border-t shrink-0" style={{ paddingBottom: `max(0.75rem, env(safe-area-inset-bottom))` }}>
         <div className="flex items-end gap-2">
           <input
             ref={fileInputRef}
@@ -295,7 +296,7 @@ export function ChatWindow({
           <Button
             variant="ghost"
             size="icon"
-            className="shrink-0"
+            className="shrink-0 min-w-[44px] min-h-[44px]"
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip className="w-5 h-5" />
@@ -308,13 +309,13 @@ export function ChatWindow({
             onInput={handleTextareaInput}
             onKeyDown={handleKeyDown}
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            style={{ minHeight: "40px", maxHeight: "120px" }}
+            className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            style={{ minHeight: "44px", maxHeight: "120px", fontSize: "16px" }}
           />
           <Button
             onClick={handleSend}
             disabled={(!newMessage.trim() && !pendingFile) || sending || uploading}
-            className="shrink-0"
+            className="shrink-0 min-w-[44px] min-h-[44px]"
           >
             {sending || uploading ? (
               <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
