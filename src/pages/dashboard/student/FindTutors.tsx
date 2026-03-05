@@ -622,19 +622,19 @@ export default function FindTutors() {
                           </div>
                         </div>
 
-                        <div className="flex gap-2 mt-4">
-                          <Button variant="outline" className="flex-1" asChild>
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          <Button variant="outline" className="flex-1 min-h-[44px] text-[13px] sm:text-sm" asChild>
                             <Link to={`/dashboard/student/tutor/${tutor.id}`}>View Profile</Link>
                           </Button>
                           <Button
                             variant="outline"
-                            className="flex-1"
+                            className="flex-1 min-h-[44px] text-[13px] sm:text-sm"
                             onClick={() => handleMessageTutor(tutor.user_id)}
                           >
                             <MessageCircle className="w-4 h-4 mr-1" />
                             Message
                           </Button>
-                          <Button className="flex-1">Book Demo</Button>
+                          <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm">Book Demo</Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -706,18 +706,19 @@ export default function FindTutors() {
                               </span>
                               <span className="text-sm text-muted-foreground">/hour</span>
                             </div>
-                            <div className="flex gap-2">
-                              <Button variant="outline" asChild>
+                            <div className="flex flex-wrap gap-2">
+                              <Button variant="outline" className="flex-1 sm:flex-none min-h-[44px] text-[13px] sm:text-sm" asChild>
                                 <Link to={`/dashboard/student/tutor/${tutor.id}`}>View Profile</Link>
                               </Button>
                               <Button
                                 variant="outline"
+                                className="flex-1 sm:flex-none min-h-[44px] text-[13px] sm:text-sm"
                                 onClick={() => handleMessageTutor(tutor.user_id)}
                               >
                                 <MessageCircle className="w-4 h-4 mr-1" />
                                 Message
                               </Button>
-                              <Button>Book Demo Class</Button>
+                              <Button className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm">Book Demo Class</Button>
                             </div>
                           </div>
                         </div>
