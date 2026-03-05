@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -41,6 +42,15 @@ const SUBJECTS = [
 const LANGUAGES = ["Urdu", "English", "Punjabi", "Sindhi", "Pashto"];
 
 const EDUCATION_LEVELS = ["Bachelor's", "Master's", "PhD", "Other"];
+
+const MATH_LEVELS = [
+  { key: "foundations", label: "Foundations" },
+  { key: "pre-algebra", label: "Pre-Algebra" },
+  { key: "algebra", label: "Algebra" },
+  { key: "geometry-trigonometry", label: "Geometry & Trigonometry" },
+  { key: "pre-calculus", label: "Pre-Calculus" },
+  { key: "calculus-beyond", label: "Calculus & Beyond" },
+];
 
 const EXPERIENCE_OPTIONS = [
   { value: "0", label: "Less than 1 year" },
@@ -83,6 +93,8 @@ export default function TutorSettings() {
     teachingMode: "online",
     languages: [] as string[],
     hourlyRate: "",
+    teachesMathByLevel: false,
+    mathLevels: [] as string[],
   });
 
   // Notification state
@@ -169,6 +181,8 @@ export default function TutorSettings() {
           teachingMode: (tutorData as any).teaching_mode || "online",
           languages: tutorData.languages || [],
           hourlyRate: tutorData.hourly_rate_pkr?.toString() || "",
+          teachesMathByLevel: Array.isArray((tutorData as any).math_levels) && (tutorData as any).math_levels.length > 0,
+          mathLevels: (tutorData as any).math_levels || [],
         });
 
         const notifPrefs = (tutorData as any).notification_preferences;
@@ -242,6 +256,7 @@ export default function TutorSettings() {
           languages: teaching.languages,
           teaching_mode: teaching.teachingMode,
           school_of_teaching: teaching.schoolOfTeaching,
+          math_levels: teaching.teachesMathByLevel ? teaching.mathLevels : null,
         } as any)
         .eq("user_id", user.id);
 
@@ -604,6 +619,49 @@ export default function TutorSettings() {
               </CardContent>
             </Card>
 
+            {/* Math by Level (Talking in Math) */}
+            {teaching.subjects.includes("Mathematics") && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Talking in Math</CardTitle>
+                  <CardDescription>Offer level-based math tutoring</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <Label>Do you teach Math by Level?</Label>
+                    <Switch
+                      checked={teaching.teachesMathByLevel}
+                      onCheckedChange={(checked) =>
+                        setTeaching((prev) => ({ ...prev, teachesMathByLevel: checked, mathLevels: checked ? prev.mathLevels : [] }))
+                      }
+                    />
+                  </div>
+                  {teaching.teachesMathByLevel && (
+                    <div className="space-y-2 pt-2">
+                      {MATH_LEVELS.map((level) => (
+                        <div key={level.key} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`settings-math-${level.key}`}
+                            checked={teaching.mathLevels.includes(level.key)}
+                            onCheckedChange={() => {
+                              setTeaching((prev) => ({
+                                ...prev,
+                                mathLevels: prev.mathLevels.includes(level.key)
+                                  ? prev.mathLevels.filter((l) => l !== level.key)
+                                  : [...prev.mathLevels, level.key],
+                              }));
+                            }}
+                          />
+                          <label htmlFor={`settings-math-${level.key}`} className="text-sm font-medium cursor-pointer">
+                            {level.label}
+                          </label>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
             <Card>
               <CardHeader>
                 <CardTitle>Subjects You Teach</CardTitle>

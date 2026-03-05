@@ -491,6 +491,7 @@ export type Database = {
           hourly_rate_pkr: number
           id: string
           languages: string[] | null
+          math_levels: string[] | null
           notification_preferences: Json | null
           preferred_time_slot: string | null
           primary_subject: string
@@ -524,6 +525,7 @@ export type Database = {
           hourly_rate_pkr: number
           id?: string
           languages?: string[] | null
+          math_levels?: string[] | null
           notification_preferences?: Json | null
           preferred_time_slot?: string | null
           primary_subject: string
@@ -557,6 +559,7 @@ export type Database = {
           hourly_rate_pkr?: number
           id?: string
           languages?: string[] | null
+          math_levels?: string[] | null
           notification_preferences?: Json | null
           preferred_time_slot?: string | null
           primary_subject?: string
@@ -603,6 +606,20 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      get_math_level_tutor_counts: {
+        Args: never
+        Returns: {
+          math_level: string
+          tutor_count: number
+        }[]
+      }
+      get_subject_tutor_counts: {
+        Args: never
+        Returns: {
+          subject: string
+          tutor_count: number
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

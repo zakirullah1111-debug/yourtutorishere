@@ -1,6 +1,9 @@
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { supabase } from "@/integrations/supabase/client";
 
 const subjectCategories = [
   {
@@ -8,32 +11,54 @@ const subjectCategories = [
     emoji: "🔬",
     subjects: ["Physics", "Chemistry", "Biology", "Math", "Statistics", "ICT", "Combined Sciences", "Psychology"],
     color: "from-blue-500 to-cyan-500",
-    tutorCount: 485,
   },
   {
     name: "Languages",
     emoji: "💬",
-    subjects: ["English", "Urdu", "Arabic", "Chinese", "French", "Sindhi", "Spoken Urdu for Beginners"],
+    subjects: ["English", "Urdu"],
     color: "from-primary to-purple-500",
-    tutorCount: 415,
   },
   {
     name: "Business",
     emoji: "💼",
     subjects: ["Economics", "Business Studies", "Accounting & Finance"],
     color: "from-accent to-orange-500",
-    tutorCount: 215,
   },
   {
     name: "Humanities",
     emoji: "📚",
     subjects: ["History", "Islamiyat", "Pak Studies", "Sociology", "Education", "Law", "ESP/Business English", "Art", "Quran Recitation"],
     color: "from-success to-emerald-500",
-    tutorCount: 445,
   },
 ];
 
 export function SubjectsSection() {
+  const [subjectCounts, setSubjectCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      try {
+        const { data, error } = await supabase.rpc("get_subject_tutor_counts");
+        if (!error && data) {
+          const counts: Record<string, number> = {};
+          (data as { subject: string; tutor_count: number }[]).forEach((row) => {
+            counts[row.subject] = Number(row.tutor_count);
+          });
+          setSubjectCounts(counts);
+        }
+      } catch (e) {
+        console.error("Error fetching subject counts:", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCounts();
+  }, []);
+
+  const getCategoryCount = (subjects: string[]) =>
+    subjects.reduce((sum, s) => sum + (subjectCounts[s] || 0), 0);
+
   return (
     <section className="section-padding bg-muted/30">
       <div className="container mx-auto container-padding">
@@ -73,7 +98,11 @@ export function SubjectsSection() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-foreground">{category.name}</h3>
-                    <p className="text-sm text-muted-foreground">{category.tutorCount}+ tutors</p>
+                    {loading ? (
+                      <Skeleton className="h-4 w-20 mt-1" />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{getCategoryCount(category.subjects)} tutors</p>
+                    )}
                   </div>
                 </div>
                 <Link

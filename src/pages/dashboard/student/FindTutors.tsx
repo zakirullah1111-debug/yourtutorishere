@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -64,6 +64,7 @@ interface Tutor {
   verified: boolean;
   teaching_levels: string[];
   languages?: string[];
+  math_levels?: string[];
 }
 
 type SearchType = "tutor_name" | "subject";
@@ -85,6 +86,7 @@ const SUBJECTS = [
 
 export default function FindTutors() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
   const { getOrCreateConversation } = useMessaging("student");
   const [tutors, setTutors] = useState<Tutor[]>([]);
@@ -95,12 +97,26 @@ export default function FindTutors() {
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [mathLevelFilter, setMathLevelFilter] = useState<string>("");
 
   // Filters
   const [priceRange, setPriceRange] = useState<[number, number]>([500, 2000]);
   const [minRating, setMinRating] = useState<number>(0);
   const [experienceFilter, setExperienceFilter] = useState<string>("all");
   const [educationFilter, setEducationFilter] = useState<string>("all");
+
+  // Apply URL params on mount
+  useEffect(() => {
+    const subjectParam = searchParams.get("subject");
+    const mathLevelParam = searchParams.get("math_level");
+    if (subjectParam) {
+      setSearchType("subject");
+      setSearchQuery(subjectParam);
+    }
+    if (mathLevelParam) {
+      setMathLevelFilter(mathLevelParam);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     fetchTutors();
@@ -156,6 +172,7 @@ export default function FindTutors() {
           teaching_levels: tutor.teaching_levels || [],
           languages: tutor.languages || ["English", "Urdu"],
           bio_summary: tutor.bio_summary,
+          math_levels: (tutor as any).math_levels || [],
         };
       });
 
@@ -218,6 +235,11 @@ export default function FindTutors() {
       result = result.filter((t) => t.education_level === educationFilter);
     }
 
+    // Math level filter
+    if (mathLevelFilter) {
+      result = result.filter((t) => t.math_levels?.includes(mathLevelFilter));
+    }
+
     // Sort
     switch (sortBy) {
       case "price_low":
@@ -233,7 +255,6 @@ export default function FindTutors() {
         result.sort((a, b) => b.years_of_experience - a.years_of_experience);
         break;
       default:
-        // Recommended: highest rating first (with reviews as tie-breaker)
         result.sort((a, b) => {
           if (b.average_rating !== a.average_rating) return b.average_rating - a.average_rating;
           return b.total_reviews - a.total_reviews;
@@ -241,7 +262,7 @@ export default function FindTutors() {
     }
 
     return result;
-  }, [tutors, searchQuery, searchType, priceRange, minRating, experienceFilter, educationFilter, sortBy]);
+  }, [tutors, searchQuery, searchType, priceRange, minRating, experienceFilter, educationFilter, sortBy, mathLevelFilter]);
 
   const toggleFavorite = (tutorId: string) => {
     setFavorites((prev) => {

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import {
   Select,
@@ -28,6 +30,15 @@ const SUBJECTS = [
 const LANGUAGES = ["Urdu", "English", "Punjabi", "Sindhi", "Pashto"];
 
 const EDUCATION_LEVELS = ["Bachelor's", "Master's", "PhD", "Other"];
+
+const MATH_LEVELS = [
+  { key: "foundations", label: "Foundations" },
+  { key: "pre-algebra", label: "Pre-Algebra" },
+  { key: "algebra", label: "Algebra" },
+  { key: "geometry-trigonometry", label: "Geometry & Trigonometry" },
+  { key: "pre-calculus", label: "Pre-Calculus" },
+  { key: "calculus-beyond", label: "Calculus & Beyond" },
+];
 
 const EXPERIENCE_OPTIONS = [
   { value: "0", label: "Less than 1 year" },
@@ -59,6 +70,8 @@ export default function CompleteProfile() {
     teachingMode: "",
     languages: [] as string[],
     hourlyRate: "",
+    teachesMathByLevel: false,
+    mathLevels: [] as string[],
   });
 
   const updateField = (field: string, value: string) => {
@@ -72,11 +85,11 @@ export default function CompleteProfile() {
     }
   };
 
-  const toggleChip = (field: "subjects" | "languages", value: string) => {
+  const toggleChip = (field: "subjects" | "languages" | "mathLevels", value: string) => {
     setForm((prev) => ({
       ...prev,
       [field]: prev[field].includes(value)
-        ? prev[field].filter((v) => v !== value)
+        ? prev[field].filter((v: string) => v !== value)
         : [...prev[field], value],
     }));
     if (errors[field]) {
@@ -162,7 +175,8 @@ export default function CompleteProfile() {
           profile_complete: true,
           verified: true,
           status: "Active",
-        }, { onConflict: "user_id" });
+          math_levels: form.teachesMathByLevel ? form.mathLevels : null,
+        } as any, { onConflict: "user_id" });
 
       if (tutorError) throw tutorError;
 
@@ -385,6 +399,38 @@ export default function CompleteProfile() {
               </div>
               <FieldError field="languages" />
             </div>
+
+            {/* Math by Level (Talking in Math) */}
+            {form.subjects.includes("Mathematics") && (
+              <div className="space-y-4 p-4 rounded-lg border border-primary/20 bg-primary/5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-base">Do you teach Math by Level? (Talking in Math)</Label>
+                    <p className="text-xs text-muted-foreground mt-1">Select if you offer level-based math tutoring</p>
+                  </div>
+                  <Switch
+                    checked={form.teachesMathByLevel}
+                    onCheckedChange={(checked) => setForm((prev) => ({ ...prev, teachesMathByLevel: checked, mathLevels: checked ? prev.mathLevels : [] }))}
+                  />
+                </div>
+                {form.teachesMathByLevel && (
+                  <div className="space-y-2 pt-2">
+                    {MATH_LEVELS.map((level) => (
+                      <div key={level.key} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`math-${level.key}`}
+                          checked={form.mathLevels.includes(level.key)}
+                          onCheckedChange={() => toggleChip("mathLevels", level.key)}
+                        />
+                        <label htmlFor={`math-${level.key}`} className="text-sm font-medium cursor-pointer">
+                          {level.label}
+                        </label>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Hourly Rate */}
             <div className="space-y-2">
