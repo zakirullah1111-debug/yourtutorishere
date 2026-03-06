@@ -20,7 +20,7 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const { user, loading, userRole } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -33,6 +33,11 @@ export function Header() {
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = isMobileMenuOpen ? "hidden" : "";
+    return () => { document.body.style.overflow = ""; };
+  }, [isMobileMenuOpen]);
 
   return (
     <header
@@ -102,52 +107,92 @@ export function Header() {
           </button>
         </nav>
 
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
+      </div>
+
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            {/* Backdrop */}
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: "auto" }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
-              className="lg:hidden mt-4 pb-4 border-t border-border"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.25 }}
+              className="fixed inset-0 z-[9998] bg-black/50 lg:hidden"
+              onClick={() => setIsMobileMenuOpen(false)}
+            />
+            {/* Panel */}
+            <motion.div
+              initial={{ x: "100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "100%" }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="fixed top-0 right-0 z-[9999] h-screen w-4/5 max-w-[320px] bg-background shadow-[-4px_0_24px_rgba(0,0,0,0.15)] overflow-y-auto lg:hidden"
             >
-              <div className="flex flex-col gap-2 pt-4">
+              {/* Header */}
+              <div className="flex items-center justify-between px-4 py-5 border-b border-border">
+                <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
+                    <GraduationCap className="w-6 h-6 text-white" />
+                  </div>
+                  <span className="text-xl font-bold text-foreground">
+                    Your<span className="gradient-text">-Tutor</span>
+                  </span>
+                </Link>
+                <button
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="p-2 rounded-lg hover:bg-muted transition-colors"
+                >
+                  <X className="w-5 h-5 text-muted-foreground" />
+                </button>
+              </div>
+
+              {/* Nav Links */}
+              <div className="py-2">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     to={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
-                      "px-4 py-3 rounded-lg text-sm font-medium transition-colors",
+                      "block px-6 py-3.5 text-base font-medium transition-colors border-b border-border/30",
                       location.pathname === link.href
                         ? "text-primary bg-primary/10"
-                        : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                        : "text-foreground hover:bg-primary/5 hover:text-primary"
                     )}
                   >
                     {link.name}
                   </Link>
                 ))}
-                <div className="flex flex-col gap-2 pt-4 border-t border-border mt-2">
-                  {!loading && user ? (
-                    <div className="px-2">
-                      <UserProfileDropdown />
-                    </div>
-                  ) : (
-                    <>
-                      <Button variant="outline" asChild className="w-full">
-                        <Link to="/login">Log in</Link>
-                      </Button>
-                      <Button variant="gradient" asChild className="w-full">
-                        <Link to="/signup">Get Started</Link>
-                      </Button>
-                    </>
-                  )}
-                </div>
+              </div>
+
+              {/* Divider */}
+              <div className="border-t border-border mx-4 my-2" />
+
+              {/* CTA Buttons */}
+              <div className="px-6 py-4 flex flex-col gap-2">
+                {!loading && user ? (
+                  <Button variant="gradient" asChild className="w-full h-11 rounded-lg font-semibold">
+                    <Link to={userRole === "tutor" ? "/dashboard/tutor" : "/dashboard/student"} onClick={() => setIsMobileMenuOpen(false)}>
+                      Go to Dashboard →
+                    </Link>
+                  </Button>
+                ) : (
+                  <>
+                    <Button variant="outline" asChild className="w-full h-11 rounded-lg border-primary text-primary">
+                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Log In</Link>
+                    </Button>
+                    <Button variant="gradient" asChild className="w-full h-11 rounded-lg font-semibold">
+                      <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>Sign Up Free</Link>
+                    </Button>
+                  </>
+                )}
               </div>
             </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
+          </>
+        )}
+      </AnimatePresence>
     </header>
   );
 }
