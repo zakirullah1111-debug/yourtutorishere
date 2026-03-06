@@ -23,6 +23,7 @@ import StudentMessages from "./pages/dashboard/student/Messages";
 import StudentProgress from "./pages/dashboard/student/Progress";
 import StudentPayments from "./pages/dashboard/student/Payments";
 import StudentSettings from "./pages/dashboard/student/Settings";
+import TutorProfile from "./pages/dashboard/student/TutorProfile";
 
 // Tutor Dashboard Pages
 import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
@@ -64,6 +65,7 @@ const App = () => (
             <Route path="/dashboard/student/progress" element={<StudentProgress />} />
             <Route path="/dashboard/student/payments" element={<StudentPayments />} />
             <Route path="/dashboard/student/settings" element={<StudentSettings />} />
+            <Route path="/dashboard/student/tutor/:tutorId" element={<TutorProfile />} />
             
             {/* Tutor Dashboard Routes */}
             <Route path="/dashboard/tutor" element={<TutorDashboard />} />
