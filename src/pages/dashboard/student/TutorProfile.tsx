@@ -482,25 +482,22 @@ export default function TutorProfile() {
           </motion.div>
         )}
 
-        {/* Coming Soon Modal */}
-        <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Rocket className="w-5 h-5 text-primary" /> Coming Very Soon!
-              </DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-muted-foreground">
-              Live demo booking is almost ready. For now, message the tutor directly to arrange a session at a time that works for both of you.
-            </p>
-            <div className="flex gap-2 mt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setComingSoonOpen(false)}>Close</Button>
-              <Button className="flex-1" onClick={() => { setComingSoonOpen(false); handleMessage(); }}>
-                <MessageCircle className="w-4 h-4 mr-2" /> Message Tutor
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Booking Modal */}
+        {tutor && (
+          <BookingModal
+            open={bookingOpen}
+            onOpenChange={setBookingOpen}
+            tutor={{
+              id: tutor.id,
+              user_id: tutor.user_id,
+              first_name: tutor.first_name,
+              last_name: tutor.last_name,
+              avatar_url: tutor.avatar_url,
+              education_level: tutor.education_level,
+              university: tutor.university,
+            }}
+          />
+        )}
 
         {/* SECTION 3 — Teaching Details */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
