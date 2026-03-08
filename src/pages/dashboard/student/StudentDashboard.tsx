@@ -363,7 +363,7 @@ export default function StudentDashboard() {
       icon: Calendar,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
-      link: "/dashboard/student/sessions",
+      link: "/dashboard/student/bookings",
     },
     {
       label: "Hours Completed",
