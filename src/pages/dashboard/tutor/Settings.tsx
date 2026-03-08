@@ -772,7 +772,7 @@ export default function TutorSettings() {
             </Card>
 
             <div className="flex justify-end">
-              <Button onClick={handleTeachingSave} disabled={teachingLoading}>
+              <Button onClick={handleTeachingSave} disabled={teachingLoading} className="w-full sm:w-auto min-h-[44px]">
                 {teachingLoading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                 ) : (
