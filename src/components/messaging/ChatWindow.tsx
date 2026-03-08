@@ -88,13 +88,16 @@ export function ChatWindow({
 
   const handleSend = async () => {
     if (!conversation) return;
-    if (!newMessage.trim() && !pendingFile) return;
+    const trimmedMessage = newMessage.trim().slice(0, 5000);
+    if (!trimmedMessage && !pendingFile) return;
 
     let fileUrl: string | null = null;
     let fileName: string | null = null;
     let fileType: string | null = null;
 
     if (pendingFile) {
+      // Validate file size
+      if (pendingFile.size > 10 * 1024 * 1024) return;
       setUploading(true);
       const result = await onUploadFile(pendingFile);
       setUploading(false);
@@ -104,7 +107,7 @@ export function ChatWindow({
       fileType = result.type;
     }
 
-    const content = newMessage.trim() || null;
+    const content = trimmedMessage || null;
     const success = await onSendMessage(conversation.id, content, fileUrl, fileName, fileType);
 
     if (success) {
@@ -305,9 +308,10 @@ export function ChatWindow({
             ref={textareaRef}
             placeholder="Type a message..."
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => setNewMessage(e.target.value.slice(0, 5000))}
             onInput={handleTextareaInput}
             onKeyDown={handleKeyDown}
+            maxLength={5000}
             rows={1}
             className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             style={{ minHeight: "44px", maxHeight: "120px", fontSize: "16px" }}

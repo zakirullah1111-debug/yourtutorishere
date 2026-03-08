@@ -4,15 +4,23 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin",
 };
+
+function isValidUUID(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T00:00:00");
   return d.toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+    weekday: "long", year: "numeric", month: "long", day: "numeric",
   });
 }
 
@@ -24,28 +32,16 @@ function formatTime(timeStr: string): string {
 }
 
 function buildCancelEmailHtml({
-  recipientName,
-  mainMessage,
-  formattedDate,
-  formattedTime,
-  formattedEndTime,
-  otherPartyName,
-  otherPartyRole,
-  ctaUrl,
-  ctaLabel,
-  footerNote,
+  recipientName, mainMessage, formattedDate, formattedTime, formattedEndTime,
+  otherPartyName, otherPartyRole, ctaUrl, ctaLabel, footerNote,
 }: {
-  recipientName: string;
-  mainMessage: string;
-  formattedDate: string;
-  formattedTime: string;
-  formattedEndTime: string;
-  otherPartyName: string;
-  otherPartyRole: string;
-  ctaUrl: string;
-  ctaLabel: string;
-  footerNote: string;
+  recipientName: string; mainMessage: string; formattedDate: string;
+  formattedTime: string; formattedEndTime: string; otherPartyName: string;
+  otherPartyRole: string; ctaUrl: string; ctaLabel: string; footerNote: string;
 }) {
+  const safeRecipient = escapeHtml(recipientName);
+  const safeOtherParty = escapeHtml(otherPartyName);
+  
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,sans-serif;">
@@ -58,11 +54,11 @@ function buildCancelEmailHtml({
   </td></tr>
   <tr><td style="padding:32px;">
     <h2 style="color:#1a1a2e;margin:0 0 12px;font-size:20px;">Session Cancelled ❌</h2>
-    <p style="color:#4a4a68;font-size:15px;line-height:1.6;">Hi ${recipientName}, ${mainMessage}</p>
+    <p style="color:#4a4a68;font-size:15px;line-height:1.6;">Hi ${safeRecipient}, ${mainMessage}</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fef2f2;border-radius:8px;margin:24px 0;padding:20px;">
       <tr><td style="padding:8px 20px;"><span style="color:#dc2626;font-weight:bold;">📅 Date</span><br><span style="color:#1a1a2e;">${formattedDate}</span></td></tr>
       <tr><td style="padding:8px 20px;"><span style="color:#dc2626;font-weight:bold;">⏰ Time</span><br><span style="color:#1a1a2e;">${formattedTime} – ${formattedEndTime} (PKT)</span></td></tr>
-      <tr><td style="padding:8px 20px;"><span style="color:#dc2626;font-weight:bold;">${otherPartyRole}</span><br><span style="color:#1a1a2e;">${otherPartyName}</span></td></tr>
+      <tr><td style="padding:8px 20px;"><span style="color:#dc2626;font-weight:bold;">${otherPartyRole}</span><br><span style="color:#1a1a2e;">${safeOtherParty}</span></td></tr>
     </table>
     <p style="color:#4a4a68;font-size:14px;">${footerNote}</p>
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:16px 0;">
@@ -111,9 +107,28 @@ Deno.serve(async (req) => {
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    const { booking_id, reason } = await req.json();
+    const body = await req.json();
+    const { booking_id, reason } = body;
 
-    // Step 2 — Fetch booking with user details
+    // Step 2 — Validate inputs
+    if (!booking_id) {
+      return new Response(JSON.stringify({ error: "Missing required field: booking_id" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    if (!isValidUUID(booking_id)) {
+      return new Response(JSON.stringify({ error: "Invalid booking_id format" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Sanitize reason (optional, max 500 chars, strip HTML)
+    const sanitizedReason = reason
+      ? String(reason).replace(/<[^>]*>/g, "").trim().slice(0, 500)
+      : null;
+
+    // Step 3 — Fetch booking
     const { data: booking, error: bookingErr } = await adminClient
       .from("demo_bookings")
       .select("*")
@@ -122,8 +137,7 @@ Deno.serve(async (req) => {
 
     if (bookingErr || !booking) {
       return new Response(JSON.stringify({ error: "Booking not found" }), {
-        status: 404,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
@@ -138,7 +152,7 @@ Deno.serve(async (req) => {
     const studentName = studentProfile ? `${studentProfile.first_name} ${studentProfile.last_name}`.trim() : "Student";
     const tutorName = tutorProfile ? `${tutorProfile.first_name} ${tutorProfile.last_name}`.trim() : "Tutor";
 
-    // Step 3 — Verify ownership
+    // Step 4 — Verify ownership
     if (booking.student_id !== userId) {
       return new Response(
         JSON.stringify({ error: "You can only cancel your own bookings." }),
@@ -146,7 +160,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Step 4 — Verify cancellable
+    // Step 5 — Verify cancellable
     if (booking.status !== "confirmed") {
       return new Response(
         JSON.stringify({ error: "This booking cannot be cancelled." }),
@@ -162,12 +176,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Step 5 — Update booking
+    // Step 6 — Update booking
     const { error: updateErr } = await adminClient
       .from("demo_bookings")
       .update({
         status: "cancelled_by_student",
-        cancellation_reason: reason || null,
+        cancellation_reason: sanitizedReason,
         cancelled_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -175,106 +189,80 @@ Deno.serve(async (req) => {
 
     if (updateErr) throw updateErr;
 
-    // Step 6 — Format display values
+    // Step 7 — Format display values
     const formattedDate = formatDate(booking.scheduled_date);
     const timeStr = booking.scheduled_time.slice(0, 5);
     const formattedTime = formatTime(timeStr);
     const formattedEndTime = formatTime(booking.end_time.slice(0, 5));
 
-    // Step 7 — Notification for student
-    await adminClient.from("notifications").insert({
-      user_id: booking.student_id,
-      type: "booking_cancelled",
-      title: "Session Cancelled",
-      message: `Your session with ${tutorName} on ${formattedDate} at ${formattedTime} has been cancelled.`,
-      related_booking_id: booking_id,
-      action_url: "/dashboard/student/bookings",
-    });
+    // Step 8 — Notifications (non-blocking)
+    await Promise.allSettled([
+      adminClient.from("notifications").insert({
+        user_id: booking.student_id,
+        type: "booking_cancelled",
+        title: "Session Cancelled",
+        message: `Your session with ${tutorName} on ${formattedDate} at ${formattedTime} has been cancelled.`,
+        related_booking_id: booking_id,
+        action_url: "/dashboard/student/bookings",
+      }),
+      adminClient.from("notifications").insert({
+        user_id: booking.tutor_id,
+        type: "booking_cancelled",
+        title: "Session Cancelled by Student",
+        message: `${studentName} cancelled their demo session scheduled for ${formattedDate} at ${formattedTime}.`,
+        related_booking_id: booking_id,
+        action_url: "/dashboard/tutor/bookings",
+      }),
+    ]);
 
-    // Step 8 — Notification for tutor
-    await adminClient.from("notifications").insert({
-      user_id: booking.tutor_id,
-      type: "booking_cancelled",
-      title: "Session Cancelled by Student",
-      message: `${studentName} cancelled their demo session scheduled for ${formattedDate} at ${formattedTime}.`,
-      related_booking_id: booking_id,
-      action_url: "/dashboard/tutor/bookings",
-    });
-
-    // Step 9 — Email to student
+    // Step 9 — Emails (non-blocking)
     const resendKey = Deno.env.get("RESEND_API_KEY");
-    if (resendKey && studentProfile?.email) {
-      try {
-        await fetch("https://api.resend.com/emails", {
+    if (resendKey) {
+      Promise.allSettled([
+        studentProfile?.email ? fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Your-Tutor <onboarding@resend.dev>",
             to: studentProfile.email,
             subject: "❌ Session Cancelled — Your-Tutor",
             html: buildCancelEmailHtml({
-              recipientName: studentName,
-              mainMessage: "your session has been cancelled.",
-              formattedDate,
-              formattedTime,
-              formattedEndTime,
-              otherPartyName: tutorName,
-              otherPartyRole: "👨‍🏫 Tutor",
-              ctaUrl: "/dashboard/student/find-tutors",
-              ctaLabel: "Book Another Session",
+              recipientName: studentName, mainMessage: "your session has been cancelled.",
+              formattedDate, formattedTime, formattedEndTime,
+              otherPartyName: tutorName, otherPartyRole: "👨‍🏫 Tutor",
+              ctaUrl: "/dashboard/student/find-tutors", ctaLabel: "Book Another Session",
               footerNote: "We hope to see you back soon!",
             }),
           }),
-        });
-      } catch (e) {
-        console.error("Failed to send student cancel email:", e);
-      }
-    }
-
-    // Step 10 — Email to tutor
-    if (resendKey && tutorProfile?.email) {
-      try {
-        await fetch("https://api.resend.com/emails", {
+        }).catch(() => {}) : Promise.resolve(),
+        tutorProfile?.email ? fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Your-Tutor <onboarding@resend.dev>",
             to: tutorProfile.email,
             subject: "📋 Session Cancelled — Your-Tutor",
             html: buildCancelEmailHtml({
-              recipientName: tutorName,
-              mainMessage: `${studentName} has cancelled their session.`,
-              formattedDate,
-              formattedTime,
-              formattedEndTime,
-              otherPartyName: studentName,
-              otherPartyRole: "🎓 Student",
-              ctaUrl: "/dashboard/tutor/bookings",
-              ctaLabel: "View Your Schedule",
+              recipientName: tutorName, mainMessage: `${studentName} has cancelled their session.`,
+              formattedDate, formattedTime, formattedEndTime,
+              otherPartyName: studentName, otherPartyRole: "🎓 Student",
+              ctaUrl: "/dashboard/tutor/bookings", ctaLabel: "View Your Schedule",
               footerNote: "This time slot is now available for other students.",
             }),
           }),
-        });
-      } catch (e) {
-        console.error("Failed to send tutor cancel email:", e);
-      }
+        }).catch(() => {}) : Promise.resolve(),
+      ]);
     }
 
-    // Step 11 — Return success
+    // Step 10 — Return success
     return new Response(
       JSON.stringify({ success: true }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("cancel-booking error:", err);
+    // Never expose internal error details
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }

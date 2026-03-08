@@ -4,6 +4,9 @@ const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "X-Content-Type-Options": "nosniff",
+  "X-Frame-Options": "DENY",
+  "Referrer-Policy": "strict-origin",
 };
 
 function formatDate(dateStr: string): string {
@@ -31,6 +34,23 @@ function addMinutes(timeStr: string, mins: number): string {
   return `${newH.toString().padStart(2, "0")}:${newM.toString().padStart(2, "0")}:00`;
 }
 
+// Input validation
+function isValidUUID(str: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str);
+}
+
+function isValidDate(str: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(str) && !isNaN(Date.parse(str));
+}
+
+function isValidTime(str: string): boolean {
+  return /^\d{2}:\d{2}(:\d{2})?$/.test(str);
+}
+
+function escapeHtml(str: string): string {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 function buildEmailHtml({
   recipientName,
   mainMessage,
@@ -56,6 +76,10 @@ function buildEmailHtml({
   dashboardLabel: string;
   noteText: string;
 }) {
+  // Escape all user-provided values
+  const safeRecipient = escapeHtml(recipientName);
+  const safeOtherParty = escapeHtml(otherPartyName);
+  
   return `<!DOCTYPE html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"></head>
 <body style="margin:0;padding:0;background-color:#f4f4f7;font-family:Arial,sans-serif;">
@@ -68,11 +92,11 @@ function buildEmailHtml({
   </td></tr>
   <tr><td style="padding:32px;">
     <h2 style="color:#1a1a2e;margin:0 0 12px;font-size:20px;">Session Confirmed! 🎉</h2>
-    <p style="color:#4a4a68;font-size:15px;line-height:1.6;">Hi ${recipientName}, ${mainMessage}</p>
+    <p style="color:#4a4a68;font-size:15px;line-height:1.6;">Hi ${safeRecipient}, ${mainMessage}</p>
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8f6ff;border-radius:8px;margin:24px 0;padding:20px;">
       <tr><td style="padding:8px 20px;"><span style="color:#7C3AED;font-weight:bold;">📅 Date</span><br><span style="color:#1a1a2e;">${formattedDate}</span></td></tr>
       <tr><td style="padding:8px 20px;"><span style="color:#7C3AED;font-weight:bold;">⏰ Time</span><br><span style="color:#1a1a2e;">${formattedTime} – ${formattedEndTime} (PKT)</span></td></tr>
-      <tr><td style="padding:8px 20px;"><span style="color:#7C3AED;font-weight:bold;">${otherPartyRole}</span><br><span style="color:#1a1a2e;">${otherPartyName}</span></td></tr>
+      <tr><td style="padding:8px 20px;"><span style="color:#7C3AED;font-weight:bold;">${otherPartyRole}</span><br><span style="color:#1a1a2e;">${safeOtherParty}</span></td></tr>
       <tr><td style="padding:8px 20px;"><span style="color:#7C3AED;font-weight:bold;">⏱ Duration</span><br><span style="color:#1a1a2e;">30 minutes</span></td></tr>
       <tr><td style="padding:8px 20px;"><span style="color:#7C3AED;font-weight:bold;">💰 Cost</span><br><span style="color:#1a1a2e;">Free</span></td></tr>
     </table>
@@ -129,9 +153,56 @@ Deno.serve(async (req) => {
     // Service role client for cross-user inserts
     const adminClient = createClient(supabaseUrl, serviceRoleKey);
 
-    const { tutor_id, scheduled_date, scheduled_time } = await req.json();
+    const body = await req.json();
+    const { tutor_id, scheduled_date, scheduled_time } = body;
 
-    // Step 2 — Fetch tutor data
+    // Step 2 — Validate inputs
+    if (!tutor_id || !scheduled_date || !scheduled_time) {
+      return new Response(
+        JSON.stringify({ error: "Missing required fields: tutor_id, scheduled_date, scheduled_time" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isValidUUID(tutor_id)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid tutor_id format" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isValidDate(scheduled_date)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid date format. Use YYYY-MM-DD" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isValidTime(scheduled_time)) {
+      return new Response(
+        JSON.stringify({ error: "Invalid time format. Use HH:MM" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Prevent booking in the past
+    const bookingDate = new Date(`${scheduled_date}T${scheduled_time}`);
+    if (bookingDate < new Date()) {
+      return new Response(
+        JSON.stringify({ error: "Cannot book a session in the past" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Prevent self-booking
+    if (tutor_id === userId) {
+      return new Response(
+        JSON.stringify({ error: "Cannot book a session with yourself" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Step 3 — Fetch tutor data
     const { data: tutor, error: tutorErr } = await adminClient
       .from("profiles")
       .select("first_name, last_name, email")
@@ -146,7 +217,7 @@ Deno.serve(async (req) => {
     }
     const tutorName = `${tutor.first_name} ${tutor.last_name}`.trim();
 
-    // Step 3 — Fetch student data
+    // Step 4 — Fetch student data
     const { data: student, error: studentErr } = await adminClient
       .from("profiles")
       .select("first_name, last_name, email")
@@ -161,7 +232,7 @@ Deno.serve(async (req) => {
     }
     const studentName = `${student.first_name} ${student.last_name}`.trim();
 
-    // Step 4 — Check slot availability
+    // Step 5 — Check slot availability
     const { data: existing } = await adminClient
       .from("demo_bookings")
       .select("id")
@@ -181,14 +252,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Step 5 — Generate meeting room
+    // Step 6 — Generate meeting room
     const roomId = `yoututor-${crypto.randomUUID()}`;
     const meetingUrl = `https://meet.jit.si/${roomId}`;
 
-    // Step 6 — Calculate end time
+    // Step 7 — Calculate end time
     const endTime = addMinutes(scheduled_time, 30);
 
-    // Step 7 — Insert booking
+    // Step 8 — Insert booking
     const { data: booking, error: bookingErr } = await adminClient
       .from("demo_bookings")
       .insert({
@@ -217,41 +288,38 @@ Deno.serve(async (req) => {
       throw bookingErr;
     }
 
-    // Step 8 — Format display values
+    // Step 9 — Format display values
     const formattedDate = formatDate(scheduled_date);
     const formattedTime = formatTime(scheduled_time);
     const formattedEndTime = formatTime(endTime.slice(0, 5));
 
-    // Step 9 — Notification for student
-    await adminClient.from("notifications").insert({
-      user_id: userId,
-      type: "booking_confirmed",
-      title: "Demo Session Confirmed! 🎉",
-      message: `Your session with ${tutorName} on ${formattedDate} at ${formattedTime} is confirmed.`,
-      related_booking_id: booking.id,
-      action_url: "/dashboard/student/bookings",
-    });
+    // Step 10 — Notifications (non-blocking)
+    await Promise.allSettled([
+      adminClient.from("notifications").insert({
+        user_id: userId,
+        type: "booking_confirmed",
+        title: "Demo Session Confirmed! 🎉",
+        message: `Your session with ${tutorName} on ${formattedDate} at ${formattedTime} is confirmed.`,
+        related_booking_id: booking.id,
+        action_url: "/dashboard/student/bookings",
+      }),
+      adminClient.from("notifications").insert({
+        user_id: tutor_id,
+        type: "booking_confirmed",
+        title: "New Session Booked! 📅",
+        message: `${studentName} booked a demo on ${formattedDate} at ${formattedTime}.`,
+        related_booking_id: booking.id,
+        action_url: "/dashboard/tutor/bookings",
+      }),
+    ]);
 
-    // Step 10 — Notification for tutor
-    await adminClient.from("notifications").insert({
-      user_id: tutor_id,
-      type: "booking_confirmed",
-      title: "New Session Booked! 📅",
-      message: `${studentName} booked a demo on ${formattedDate} at ${formattedTime}.`,
-      related_booking_id: booking.id,
-      action_url: "/dashboard/tutor/bookings",
-    });
-
-    // Step 11 — Email to student
+    // Step 11 — Emails (non-blocking, booking is primary)
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (resendKey) {
-      try {
-        await fetch("https://api.resend.com/emails", {
+      Promise.allSettled([
+        fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Your-Tutor <onboarding@resend.dev>",
             to: student.email,
@@ -259,33 +327,18 @@ Deno.serve(async (req) => {
             html: buildEmailHtml({
               recipientName: studentName,
               mainMessage: "your demo session has been successfully booked.",
-              formattedDate,
-              formattedTime,
-              formattedEndTime,
-              otherPartyName: tutorName,
-              otherPartyRole: "👨‍🏫 Tutor",
+              formattedDate, formattedTime, formattedEndTime,
+              otherPartyName: tutorName, otherPartyRole: "👨‍🏫 Tutor",
               meetingUrl,
               dashboardUrl: "/dashboard/student/bookings",
               dashboardLabel: "View My Sessions",
-              noteText:
-                "The Join button activates 15 minutes before your session. You can also find this link anytime in your dashboard under My Sessions.",
+              noteText: "The Join button activates 15 minutes before your session.",
             }),
           }),
-        });
-      } catch (e) {
-        console.error("Failed to send student email:", e);
-      }
-    }
-
-    // Step 12 — Email to tutor
-    if (resendKey) {
-      try {
-        await fetch("https://api.resend.com/emails", {
+        }).catch(() => {}),
+        fetch("https://api.resend.com/emails", {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${resendKey}`,
-            "Content-Type": "application/json",
-          },
+          headers: { Authorization: `Bearer ${resendKey}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Your-Tutor <onboarding@resend.dev>",
             to: tutor.email,
@@ -293,24 +346,19 @@ Deno.serve(async (req) => {
             html: buildEmailHtml({
               recipientName: tutorName,
               mainMessage: `${studentName} has booked a demo session with you.`,
-              formattedDate,
-              formattedTime,
-              formattedEndTime,
-              otherPartyName: studentName,
-              otherPartyRole: "🎓 Student",
+              formattedDate, formattedTime, formattedEndTime,
+              otherPartyName: studentName, otherPartyRole: "🎓 Student",
               meetingUrl,
               dashboardUrl: "/dashboard/tutor/bookings",
               dashboardLabel: "View My Schedule",
               noteText: "Be ready 5 minutes before your session starts.",
             }),
           }),
-        });
-      } catch (e) {
-        console.error("Failed to send tutor email:", e);
-      }
+        }).catch(() => {}),
+      ]);
     }
 
-    // Step 13 — Return success
+    // Step 12 — Return success
     return new Response(
       JSON.stringify({
         success: true,
@@ -321,9 +369,9 @@ Deno.serve(async (req) => {
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (err) {
-    console.error("create-booking error:", err);
+    // Never expose internal error details
     return new Response(
-      JSON.stringify({ error: "Internal server error" }),
+      JSON.stringify({ error: "Something went wrong. Please try again." }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
