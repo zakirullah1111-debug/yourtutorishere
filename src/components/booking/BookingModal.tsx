@@ -300,8 +300,11 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
 
                 {/* Week header */}
                 <div className="grid grid-cols-7 gap-1 mb-1">
-                  {weekDays.map(d => (
-                    <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
+                  {weekDaysFull.map((d, i) => (
+                    <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">
+                      <span className="hidden sm:inline">{d}</span>
+                      <span className="sm:hidden">{weekDaysShort[i]}</span>
+                    </div>
                   ))}
                 </div>
 
