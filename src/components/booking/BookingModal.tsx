@@ -425,11 +425,11 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                       </div>
                     )}
 
-                    <div className="flex gap-2 mt-6">
-                      <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                      <Button variant="outline" className="w-full sm:flex-1 min-h-[44px]" onClick={() => setStep(1)}>
                         <ChevronLeft className="mr-1 h-4 w-4" /> Back
                       </Button>
-                      <Button className="flex-1" disabled={!selectedSlot} onClick={() => setStep(3)}>
+                      <Button className="w-full sm:flex-1 min-h-[44px]" disabled={!selectedSlot} onClick={() => setStep(3)}>
                         Confirm Booking <ChevronRight className="ml-1 h-4 w-4" />
                       </Button>
                     </div>
