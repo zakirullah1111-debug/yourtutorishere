@@ -53,6 +53,13 @@ interface TutorData {
   last_name: string;
   avatar_url: string | null;
   city: string | null;
+  demo_video_type: string | null;
+  demo_video_url: string | null;
+  demo_video_title: string | null;
+  demo_video_thumbnail: string | null;
+  demo_video_duration: string | null;
+  live_demo_enabled: boolean;
+  live_demo_price: number | null;
 }
 
 interface Review {
