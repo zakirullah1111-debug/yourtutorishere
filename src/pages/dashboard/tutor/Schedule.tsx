@@ -295,7 +295,8 @@ export default function Schedule() {
                           : "text-muted-foreground"
                       }`}
                     >
-                      {day.day}
+                      <span className="sm:hidden">{day.day.slice(0, 3)}</span>
+                      <span className="hidden sm:inline">{day.day}</span>
                     </span>
                     <Badge
                       variant={day.sessions > 0 ? "default" : "secondary"}
