@@ -685,9 +685,15 @@ export default function TutorProfile() {
           <Button variant="outline" className="flex-1 min-h-[44px] text-sm" onClick={handleMessage}>
             <MessageCircle className="mr-1.5 h-4 w-4" /> Message
           </Button>
-          <Button className="flex-1 min-h-[44px] text-sm" onClick={() => toast({ title: "Coming Soon", description: "Demo booking is under development." })}>
-            Book Demo
-          </Button>
+          {tutor.demo_video_url ? (
+            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => document.getElementById("demo-video")?.scrollIntoView({ behavior: "smooth" })}>
+              <Play className="mr-1.5 h-4 w-4" /> Watch Demo
+            </Button>
+          ) : (
+            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setComingSoonOpen(true)}>
+              Book Demo
+            </Button>
+          )}
         </div>
       </div>
     </DashboardLayout>
