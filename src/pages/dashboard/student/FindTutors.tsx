@@ -777,6 +777,18 @@ export default function FindTutors() {
           </div>
         </div>
       </div>
+      {requestDemoTutor && (
+        <RequestDemoModal
+          open={!!requestDemoTutor}
+          onOpenChange={(v) => { if (!v) setRequestDemoTutor(null); }}
+          tutor={{
+            user_id: requestDemoTutor.user_id,
+            first_name: requestDemoTutor.first_name,
+            last_name: requestDemoTutor.last_name,
+            avatar_url: requestDemoTutor.avatar_url || null,
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }
