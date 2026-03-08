@@ -486,19 +486,16 @@ export default function TutorProfile() {
           </motion.div>
         )}
 
-        {/* Booking Modal */}
+        {/* Request Demo Modal */}
         {tutor && (
-          <BookingModal
+          <RequestDemoModal
             open={bookingOpen}
             onOpenChange={setBookingOpen}
             tutor={{
-              id: tutor.id,
               user_id: tutor.user_id,
               first_name: tutor.first_name,
               last_name: tutor.last_name,
               avatar_url: tutor.avatar_url,
-              education_level: tutor.education_level,
-              university: tutor.university,
             }}
           />
         )}
