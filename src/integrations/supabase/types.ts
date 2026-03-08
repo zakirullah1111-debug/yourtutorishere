@@ -277,6 +277,13 @@ export type Database = {
             referencedRelation: "tutors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "payments_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       profiles: {
@@ -377,6 +384,13 @@ export type Database = {
             referencedRelation: "tutors"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "reviews_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors_public"
+            referencedColumns: ["id"]
+          },
         ]
       }
       sessions: {
@@ -453,6 +467,13 @@ export type Database = {
             columns: ["tutor_id"]
             isOneToOne: false
             referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sessions_tutor_id_fkey"
+            columns: ["tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors_public"
             referencedColumns: ["id"]
           },
         ]
@@ -545,6 +566,13 @@ export type Database = {
             columns: ["assigned_tutor_id"]
             isOneToOne: false
             referencedRelation: "tutors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_assigned_tutor_id_fkey"
+            columns: ["assigned_tutor_id"]
+            isOneToOne: false
+            referencedRelation: "tutors_public"
             referencedColumns: ["id"]
           },
         ]
@@ -758,7 +786,126 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      tutors_public: {
+        Row: {
+          active_students: number | null
+          additional_subjects: string[] | null
+          availability_days: string[] | null
+          average_rating: number | null
+          bio_summary: string | null
+          country: string | null
+          created_at: string | null
+          degree: string | null
+          demo_video_duration: string | null
+          demo_video_thumbnail: string | null
+          demo_video_title: string | null
+          demo_video_type: string | null
+          demo_video_url: string | null
+          education_level: string | null
+          graduation_year: number | null
+          hourly_rate_pkr: number | null
+          id: string | null
+          languages: string[] | null
+          live_demo_enabled: boolean | null
+          live_demo_price: number | null
+          math_levels: string[] | null
+          preferred_time_slot: string | null
+          primary_subject: string | null
+          profile_complete: boolean | null
+          school_of_teaching: string | null
+          secondary_subject: string | null
+          status: string | null
+          teaching_levels: string[] | null
+          teaching_mode: string | null
+          total_hours_taught: number | null
+          total_reviews: number | null
+          total_students_taught: number | null
+          university: string | null
+          updated_at: string | null
+          user_id: string | null
+          verified: boolean | null
+          years_of_experience: number | null
+        }
+        Insert: {
+          active_students?: number | null
+          additional_subjects?: string[] | null
+          availability_days?: string[] | null
+          average_rating?: number | null
+          bio_summary?: string | null
+          country?: string | null
+          created_at?: string | null
+          degree?: string | null
+          demo_video_duration?: string | null
+          demo_video_thumbnail?: string | null
+          demo_video_title?: string | null
+          demo_video_type?: string | null
+          demo_video_url?: string | null
+          education_level?: string | null
+          graduation_year?: number | null
+          hourly_rate_pkr?: number | null
+          id?: string | null
+          languages?: string[] | null
+          live_demo_enabled?: boolean | null
+          live_demo_price?: number | null
+          math_levels?: string[] | null
+          preferred_time_slot?: string | null
+          primary_subject?: string | null
+          profile_complete?: boolean | null
+          school_of_teaching?: string | null
+          secondary_subject?: string | null
+          status?: string | null
+          teaching_levels?: string[] | null
+          teaching_mode?: string | null
+          total_hours_taught?: number | null
+          total_reviews?: number | null
+          total_students_taught?: number | null
+          university?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+          years_of_experience?: number | null
+        }
+        Update: {
+          active_students?: number | null
+          additional_subjects?: string[] | null
+          availability_days?: string[] | null
+          average_rating?: number | null
+          bio_summary?: string | null
+          country?: string | null
+          created_at?: string | null
+          degree?: string | null
+          demo_video_duration?: string | null
+          demo_video_thumbnail?: string | null
+          demo_video_title?: string | null
+          demo_video_type?: string | null
+          demo_video_url?: string | null
+          education_level?: string | null
+          graduation_year?: number | null
+          hourly_rate_pkr?: number | null
+          id?: string | null
+          languages?: string[] | null
+          live_demo_enabled?: boolean | null
+          live_demo_price?: number | null
+          math_levels?: string[] | null
+          preferred_time_slot?: string | null
+          primary_subject?: string | null
+          profile_complete?: boolean | null
+          school_of_teaching?: string | null
+          secondary_subject?: string | null
+          status?: string | null
+          teaching_levels?: string[] | null
+          teaching_mode?: string | null
+          total_hours_taught?: number | null
+          total_reviews?: number | null
+          total_students_taught?: number | null
+          university?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+          verified?: boolean | null
+          years_of_experience?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       get_math_level_tutor_counts: {
