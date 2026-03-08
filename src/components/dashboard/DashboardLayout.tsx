@@ -1,4 +1,6 @@
 import { ReactNode, useState } from "react";
+import { useSessionLinkDelivery } from "@/hooks/useSessionLinkDelivery";
+import { JoinSessionPopup } from "@/components/dashboard/JoinSessionPopup";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
