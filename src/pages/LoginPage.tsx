@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { checkTutorProfileComplete } from "@/lib/fetchProfileWithRetry";
+import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
 const loginSchema = z.object({
@@ -75,7 +76,10 @@ const LoginPage = () => {
 
     setIsLoading(true);
 
-    const { error, role } = await signIn(email, password);
+    const result = await signIn(email, password);
+    const { error, role } = result;
+    // Get user data directly from supabase to avoid state timing issues
+    const { data } = await supabase.auth.getUser();
 
     if (error) {
       let errorMessage = "Login failed. Please try again.";
@@ -100,8 +104,9 @@ const LoginPage = () => {
       description: "You have successfully logged in.",
     });
 
-    // Redirect based on role
-    await redirectBasedOnRole(role || null, user?.id);
+    // Redirect based on role — use data.user.id since state may not be updated yet
+    const loggedInUserId = data.user?.id || user?.id;
+    await redirectBasedOnRole(role || null, loggedInUserId);
   };
 
   if (loading) {

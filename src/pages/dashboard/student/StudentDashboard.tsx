@@ -135,7 +135,7 @@ export default function StudentDashboard() {
         setIsNewUser(!hasCompletedSessions);
         
         setStats({
-          upcomingSessionsCount: 3,
+          upcomingSessionsCount: 0,
           totalHoursCompleted: studentData.total_hours_completed || 0,
           currentGradeAverage: studentData.current_grade_average || 0,
           activeTutorsCount: studentData.assigned_tutor_id ? 1 : 0,
@@ -216,15 +216,49 @@ export default function StudentDashboard() {
         setSubjects([]);
       }
 
-      // Fetch real upcoming sessions
+      // Fetch real upcoming sessions (from sessions table)
       const { data: studentRecord } = await supabase
         .from("students")
         .select("id")
         .eq("user_id", user?.id)
         .maybeSingle();
 
-      if (studentRecord) {
-        const today = new Date().toISOString().split("T")[0];
+      // Also fetch upcoming demo_bookings
+      const today = new Date().toISOString().split("T")[0];
+      const { data: demoBookings } = await supabase
+        .from("demo_bookings")
+        .select("id, scheduled_date, scheduled_time, tutor_id")
+        .eq("student_id", user?.id)
+        .eq("status", "confirmed")
+        .gte("scheduled_date", today)
+        .order("scheduled_date", { ascending: true })
+        .limit(5);
+
+      if (demoBookings && demoBookings.length > 0) {
+        const tutorUserIds = [...new Set(demoBookings.map(b => b.tutor_id))];
+        const { data: tutorProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, first_name, last_name, avatar_url")
+          .in("user_id", tutorUserIds);
+
+        const profileMap = new Map((tutorProfiles || []).map(p => [p.user_id, p]));
+
+        setUpcomingSessions(
+          demoBookings.map(b => {
+            const prof = profileMap.get(b.tutor_id);
+            return {
+              id: b.id,
+              tutor_name: prof ? `${prof.first_name} ${prof.last_name}`.trim() : "Tutor",
+              tutor_avatar: prof?.avatar_url,
+              subject: "Demo Session",
+              scheduled_date: b.scheduled_date,
+              scheduled_time: b.scheduled_time,
+            };
+          })
+        );
+
+        setStats(prev => ({ ...prev, upcomingSessionsCount: demoBookings.length }));
+      } else if (studentRecord) {
         const { data: sessionsData } = await supabase
           .from("sessions")
           .select("id, subject, scheduled_date, scheduled_time, tutor_id, status")
@@ -241,15 +275,15 @@ export default function StudentDashboard() {
             .select("id, user_id")
             .in("id", tutorIds);
 
-          const tutorUserIds = tutorRecords?.map((t) => t.user_id) || [];
-          const { data: tutorProfiles } = await supabase
+          const tutorUserIds2 = tutorRecords?.map((t) => t.user_id) || [];
+          const { data: tutorProfiles2 } = await supabase
             .from("profiles")
             .select("user_id, first_name, last_name, avatar_url")
-            .in("user_id", tutorUserIds);
+            .in("user_id", tutorUserIds2);
 
           const tutorMap = new Map();
           tutorRecords?.forEach((t) => {
-            const profile = tutorProfiles?.find((p) => p.user_id === t.user_id);
+            const profile = tutorProfiles2?.find((p) => p.user_id === t.user_id);
             if (profile) tutorMap.set(t.id, profile);
           });
 
@@ -271,6 +305,9 @@ export default function StudentDashboard() {
 
           setStats((prev) => ({ ...prev, upcomingSessionsCount: sessionsData.length }));
         }
+      }
+
+      if (studentRecord) {
 
         // Fetch recent activity
         const activities: RecentActivity[] = [];
@@ -326,7 +363,7 @@ export default function StudentDashboard() {
       icon: Calendar,
       color: "text-blue-500",
       bgColor: "bg-blue-500/10",
-      link: "/dashboard/student/sessions",
+      link: "/dashboard/student/bookings",
     },
     {
       label: "Hours Completed",

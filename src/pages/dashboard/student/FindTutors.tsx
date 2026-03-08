@@ -132,7 +132,8 @@ export default function FindTutors() {
       const { data: tutorsData, error: tutorsError } = await supabase
         .from("tutors")
         .select("*")
-        .or("verified.eq.true,profile_complete.eq.true");
+        .eq("verified", true)
+        .eq("profile_complete", true);
 
       if (tutorsError) throw tutorsError;
 
