@@ -36,9 +36,12 @@ const priceRanges = ["Any Price", "PKR 500-800", "PKR 800-1000", "PKR 1000-1500"
 const avatarColors = ["bg-primary", "bg-success", "bg-accent", "bg-indigo-500", "bg-emerald-500", "bg-pink-500"];
 
 const TutorsPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [tutors, setTutors] = useState<PublicTutor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestDemoTutor, setRequestDemoTutor] = useState<PublicTutor | null>(null);
 
   useEffect(() => {
     async function fetchTutors() {
