@@ -295,7 +295,7 @@ function CategoryBlock({
           <Link
             key={subject}
             to={`/tutors?subject=${encodeURIComponent(subject)}`}
-            className="bg-card rounded-xl p-4 border border-border hover:border-primary hover:shadow-md transition-all group"
+            className="bg-card rounded-xl p-4 border border-border hover:border-primary hover:shadow-md transition-all group min-h-[56px]"
           >
             <div className="flex items-center justify-between">
               <div>
