@@ -752,6 +752,22 @@ export default function TutorSettings() {
                 )}
               </Button>
             </div>
+
+            {/* Demo Video Section */}
+            {user && (
+              <DemoVideoSection
+                userId={user.id}
+                initialData={{
+                  demo_video_type: demoVideoData.demo_video_type,
+                  demo_video_url: demoVideoData.demo_video_url,
+                  demo_video_title: demoVideoData.demo_video_title,
+                  demo_video_thumbnail: demoVideoData.demo_video_thumbnail,
+                  demo_video_duration: demoVideoData.demo_video_duration,
+                  live_demo_enabled: demoVideoData.live_demo_enabled,
+                  live_demo_price: demoVideoData.live_demo_price,
+                }}
+              />
+            )}
           </TabsContent>
 
           {/* ═══════════ NOTIFICATIONS TAB ═══════════ */}
