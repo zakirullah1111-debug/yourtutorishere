@@ -54,6 +54,7 @@ const studentNavItems: NavItem[] = [
 const tutorNavItems: NavItem[] = [
   { label: "Dashboard", path: "/dashboard/tutor", icon: <Home className="w-5 h-5" /> },
   { label: "My Students", path: "/dashboard/tutor/students", icon: <Users className="w-5 h-5" /> },
+  { label: "Bookings", path: "/dashboard/tutor/bookings", icon: <Calendar className="w-5 h-5" /> },
   { label: "Schedule", path: "/dashboard/tutor/schedule", icon: <Calendar className="w-5 h-5" /> },
   { label: "Messages", path: "/dashboard/tutor/messages", icon: <MessageSquare className="w-5 h-5" /> },
   { label: "Earnings", path: "/dashboard/tutor/earnings", icon: <CreditCard className="w-5 h-5" /> },

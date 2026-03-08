@@ -80,6 +80,7 @@ const App = () => (
             <Route path="/dashboard/tutor/resources" element={<TutorResources />} />
             <Route path="/dashboard/tutor/settings" element={<TutorSettings />} />
             <Route path="/dashboard/tutor/complete-profile" element={<CompleteProfile />} />
+            <Route path="/dashboard/tutor/bookings" element={<TutorBookings />} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
