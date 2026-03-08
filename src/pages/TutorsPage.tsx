@@ -231,8 +231,18 @@ const TutorsPage = () => {
                       </div>
 
                       <div className="flex gap-2 sm:gap-3">
-                        <Button variant="gradient" className="flex-1 min-h-[44px] text-sm" asChild>
-                          <Link to="/signup">Book Demo</Link>
+                        <Button
+                          variant="gradient"
+                          className="flex-1 min-h-[44px] text-sm"
+                          onClick={() => {
+                            if (user) {
+                              setRequestDemoTutor(tutor);
+                            } else {
+                              navigate("/signup");
+                            }
+                          }}
+                        >
+                          Book Demo
                         </Button>
                         <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                           <MessageSquare className="w-4 h-4" />
