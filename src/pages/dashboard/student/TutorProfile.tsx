@@ -21,6 +21,7 @@ import {
   Calendar,
   Rocket,
 } from "lucide-react";
+import { BookingModal } from "@/components/booking/BookingModal";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -95,6 +96,7 @@ export default function TutorProfile() {
   const [bioExpanded, setBioExpanded] = useState(false);
   const [demoVideoSignedUrl, setDemoVideoSignedUrl] = useState<string | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
+  const [bookingOpen, setBookingOpen] = useState(false);
 
   useEffect(() => {
     if (tutorId) fetchTutorData();
@@ -309,7 +311,7 @@ export default function TutorProfile() {
                     <Button variant="outline" onClick={handleMessage}>
                       <MessageCircle className="mr-2 h-4 w-4" /> Message
                     </Button>
-                    <Button variant="default" onClick={() => toast({ title: "Coming Soon", description: "Demo booking is under development." })}>
+                    <Button variant="default" onClick={() => setBookingOpen(true)}>
                       <BookOpen className="mr-2 h-4 w-4" /> Book Demo Session
                     </Button>
                   </div>
@@ -321,7 +323,7 @@ export default function TutorProfile() {
                 <Button variant="outline" className="flex-1 min-h-[44px]" onClick={handleMessage}>
                   <MessageCircle className="mr-2 h-4 w-4" /> Message
                 </Button>
-                <Button className="flex-1 min-h-[44px]" onClick={() => toast({ title: "Coming Soon", description: "Demo booking is under development." })}>
+                <Button className="flex-1 min-h-[44px]" onClick={() => setBookingOpen(true)}>
                   <BookOpen className="mr-2 h-4 w-4" /> Book Demo
                 </Button>
               </div>
@@ -469,7 +471,7 @@ export default function TutorProfile() {
                     <MessageCircle className="w-4 h-4 mr-2" /> Message Tutor
                   </Button>
                   {tutor.live_demo_enabled && (
-                    <Button className="w-full" onClick={() => setComingSoonOpen(true)}>
+                    <Button className="w-full" onClick={() => setBookingOpen(true)}>
                       <Calendar className="w-4 h-4 mr-2" />
                       Book Live Demo — {tutor.live_demo_price === 0 ? "Free" : tutor.live_demo_price ? `PKR ${tutor.live_demo_price.toLocaleString()}` : "Free"}
                     </Button>
@@ -480,25 +482,22 @@ export default function TutorProfile() {
           </motion.div>
         )}
 
-        {/* Coming Soon Modal */}
-        <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Rocket className="w-5 h-5 text-primary" /> Coming Very Soon!
-              </DialogTitle>
-            </DialogHeader>
-            <p className="text-sm text-muted-foreground">
-              Live demo booking is almost ready. For now, message the tutor directly to arrange a session at a time that works for both of you.
-            </p>
-            <div className="flex gap-2 mt-2">
-              <Button variant="outline" className="flex-1" onClick={() => setComingSoonOpen(false)}>Close</Button>
-              <Button className="flex-1" onClick={() => { setComingSoonOpen(false); handleMessage(); }}>
-                <MessageCircle className="w-4 h-4 mr-2" /> Message Tutor
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
+        {/* Booking Modal */}
+        {tutor && (
+          <BookingModal
+            open={bookingOpen}
+            onOpenChange={setBookingOpen}
+            tutor={{
+              id: tutor.id,
+              user_id: tutor.user_id,
+              first_name: tutor.first_name,
+              last_name: tutor.last_name,
+              avatar_url: tutor.avatar_url,
+              education_level: tutor.education_level,
+              university: tutor.university,
+            }}
+          />
+        )}
 
         {/* SECTION 3 — Teaching Details */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
@@ -690,7 +689,7 @@ export default function TutorProfile() {
               <Play className="mr-1.5 h-4 w-4" /> Watch Demo
             </Button>
           ) : (
-            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setComingSoonOpen(true)}>
+            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setBookingOpen(true)}>
               Book Demo
             </Button>
           )}
