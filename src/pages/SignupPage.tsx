@@ -117,6 +117,7 @@ const SignupPage = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      setFormData(prev => ({ ...prev, password: "" })); // Clear sensitive data
       setIsLoading(false);
       return;
     }
