@@ -63,6 +63,14 @@ const SignupPage = () => {
         password: formData.password,
         level: formData.level,
       });
+      
+      // Additional password policy check
+      const policyErrors = validatePasswordPolicy(formData.password);
+      if (policyErrors.length > 0) {
+        setErrors({ password: policyErrors[0] });
+        return false;
+      }
+      
       setErrors({});
       return true;
     } catch (error) {
