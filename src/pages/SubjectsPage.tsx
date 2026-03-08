@@ -280,7 +280,7 @@ function CategoryBlock({
             {category.emoji}
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-foreground">{category.name}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground">{category.name}</h2>
             {loading ? (
               <Skeleton className="h-5 w-32 mt-1" />
             ) : (
