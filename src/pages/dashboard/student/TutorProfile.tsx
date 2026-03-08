@@ -21,6 +21,7 @@ import {
   Calendar,
   Rocket,
 } from "lucide-react";
+import { BookingModal } from "@/components/booking/BookingModal";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
