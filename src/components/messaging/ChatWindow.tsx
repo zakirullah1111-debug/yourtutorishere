@@ -308,9 +308,10 @@ export function ChatWindow({
             ref={textareaRef}
             placeholder="Type a message..."
             value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
+            onChange={(e) => setNewMessage(e.target.value.slice(0, 5000))}
             onInput={handleTextareaInput}
             onKeyDown={handleKeyDown}
+            maxLength={5000}
             rows={1}
             className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-base ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             style={{ minHeight: "44px", maxHeight: "120px", fontSize: "16px" }}
