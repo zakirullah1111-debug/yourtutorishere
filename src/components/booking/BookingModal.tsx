@@ -322,7 +322,7 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                         disabled={!available}
                         onClick={() => { setSelectedDate(date); setSelectedSlot(null); setSlotWarning(null); }}
                         className={cn(
-                          "relative h-10 w-full rounded-lg text-sm transition-colors flex flex-col items-center justify-center",
+                          "relative h-10 min-h-[44px] w-full rounded-lg text-sm transition-colors flex flex-col items-center justify-center",
                           isSelected ? "bg-primary text-primary-foreground font-bold" :
                           available ? "hover:bg-primary/10 text-foreground cursor-pointer" :
                           isPast ? "text-muted-foreground/40 cursor-default" :
