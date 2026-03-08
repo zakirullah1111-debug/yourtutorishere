@@ -178,25 +178,25 @@ export default function MySessions() {
   return (
     <DashboardLayout userType="student">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">My Sessions</h1>
             <p className="text-muted-foreground">Manage your tutoring sessions</p>
           </div>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto min-h-[44px]">
             <Link to="/dashboard/student/find-tutors">Book New Session</Link>
           </Button>
         </div>
 
         <Tabs defaultValue="upcoming">
-          <TabsList>
-            <TabsTrigger value="upcoming">
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="upcoming" className="text-xs sm:text-sm">
               Upcoming ({filterSessionsByStatus("upcoming").length})
             </TabsTrigger>
-            <TabsTrigger value="completed">
+            <TabsTrigger value="completed" className="text-xs sm:text-sm">
               Past ({filterSessionsByStatus("completed").length})
             </TabsTrigger>
-            <TabsTrigger value="cancelled">
+            <TabsTrigger value="cancelled" className="text-xs sm:text-sm">
               Cancelled ({filterSessionsByStatus("cancelled").length})
             </TabsTrigger>
           </TabsList>
