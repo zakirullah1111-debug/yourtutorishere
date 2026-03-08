@@ -362,7 +362,7 @@ export default function TutorSettings() {
       setPasswordErrors({});
       toast({ title: "Password updated successfully" });
     } catch (error) {
-      console.error("Error changing password:", error);
+      console.error("Password update failed");
       toast({
         title: "Something went wrong",
         description: "Please try again.",
