@@ -75,12 +75,12 @@ export default function MyTutors() {
   return (
     <DashboardLayout userType="student">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">My Tutors</h1>
             <p className="text-muted-foreground">Manage your current tutors</p>
           </div>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto min-h-[44px]">
             <Link to="/dashboard/student/find-tutors">Find New Tutor</Link>
           </Button>
         </div>
