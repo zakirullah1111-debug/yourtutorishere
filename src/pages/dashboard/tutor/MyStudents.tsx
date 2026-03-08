@@ -80,7 +80,7 @@ export default function MyStudents() {
           const userIds = studentsData.map((s) => s.user_id);
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("user_id, first_name, last_name, email")
+            .select("user_id, first_name, last_name")
             .in("user_id", userIds);
 
           const mappedStudents: Student[] = studentsData.map((student) => {
