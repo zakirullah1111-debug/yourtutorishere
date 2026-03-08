@@ -182,7 +182,7 @@ const SubjectsPage = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="bg-primary/5 rounded-3xl p-8 border border-primary/10"
+                className="bg-primary/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-primary/10"
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
