@@ -100,8 +100,9 @@ const LoginPage = () => {
       description: "You have successfully logged in.",
     });
 
-    // Redirect based on role
-    await redirectBasedOnRole(role || null, user?.id);
+    // Redirect based on role — use data.user.id since state may not be updated yet
+    const loggedInUserId = data.user?.id || user?.id;
+    await redirectBasedOnRole(role || null, loggedInUserId);
   };
 
   if (loading) {
