@@ -217,14 +217,14 @@ const TutorsPage = () => {
                         <span className="text-sm text-muted-foreground">{tutor.experience}</span>
                       </div>
 
-                      <div className="flex gap-3">
-                        <Button variant="gradient" className="flex-1" asChild>
+                      <div className="flex gap-2 sm:gap-3">
+                        <Button variant="gradient" className="flex-1 min-h-[44px] text-sm" asChild>
                           <Link to="/signup">Book Demo</Link>
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                           <MessageSquare className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                           <Heart className="w-4 h-4" />
                         </Button>
                       </div>

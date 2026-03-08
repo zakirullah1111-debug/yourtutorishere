@@ -193,7 +193,8 @@ export default function Payments() {
           </TabsContent>
 
           <TabsContent value="history" className="mt-4">
-            <Card>
+            {/* Desktop table */}
+            <Card className="hidden md:block">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -231,6 +232,28 @@ export default function Payments() {
                 </div>
               </CardContent>
             </Card>
+            {/* Mobile card layout */}
+            <div className="md:hidden space-y-3">
+              {paymentHistory.map((payment) => (
+                <Card key={payment.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold">{payment.tutorName}</h4>
+                      {getStatusBadge(payment.status)}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
+                      <span>{formatDate(payment.date)}</span>
+                      <span className="text-right">{payment.method}</span>
+                      <span>{payment.sessions} sessions</span>
+                      <span className="text-right font-medium text-foreground">PKR {payment.amount.toLocaleString()}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-full min-h-[44px]">
+                      <Download className="w-4 h-4 mr-1" /> Download Receipt
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
 
           <TabsContent value="methods" className="mt-4 space-y-4">

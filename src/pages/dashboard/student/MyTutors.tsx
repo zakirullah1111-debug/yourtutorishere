@@ -156,11 +156,11 @@ export default function MyTutors() {
                       )}
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button variant="outline" size="sm" className="flex-1 sm:flex-none min-h-[44px]">
                         <MessageSquare className="w-4 h-4 mr-1" /> Message
                       </Button>
-                      <Button size="sm">
+                      <Button size="sm" className="flex-1 sm:flex-none min-h-[44px]">
                         <Video className="w-4 h-4 mr-1" /> Book Session
                       </Button>
                     </div>

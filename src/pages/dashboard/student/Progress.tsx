@@ -72,13 +72,13 @@ export default function Progress() {
   return (
     <DashboardLayout userType="student">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">My Progress</h1>
             <p className="text-muted-foreground">Track your learning journey</p>
           </div>
           <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40 min-h-[44px]">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

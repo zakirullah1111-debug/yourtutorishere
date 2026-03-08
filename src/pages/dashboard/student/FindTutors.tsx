@@ -467,7 +467,7 @@ export default function FindTutors() {
           <div className="flex items-center gap-4">
             {/* Sort */}
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48 min-h-[44px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>

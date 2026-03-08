@@ -631,32 +631,34 @@ export default function StudentDashboard() {
                     {upcomingSessions.map((session) => (
                       <div
                         key={session.id}
-                        className="flex items-center justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
+                        className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between p-4 rounded-xl bg-muted/50 hover:bg-muted transition-colors"
                       >
-                        <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-3">
                           <Avatar>
                             <AvatarImage src={session.tutor_avatar} />
                             <AvatarFallback className="bg-primary/10 text-primary">
                               {session.tutor_name.split(" ").map((n) => n[0]).join("")}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <p className="font-medium">{session.tutor_name}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{session.tutor_name}</p>
                             <p className="text-sm text-muted-foreground">{session.subject}</p>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium">
-                            {new Date(session.scheduled_date).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            })}
-                          </p>
-                          <p className="text-sm text-muted-foreground">{session.scheduled_time}</p>
+                        <div className="flex items-center justify-between sm:gap-4">
+                          <div className="text-left sm:text-right">
+                            <p className="text-sm font-medium">
+                              {new Date(session.scheduled_date).toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              })}
+                            </p>
+                            <p className="text-sm text-muted-foreground">{session.scheduled_time}</p>
+                          </div>
+                          <Button size="sm" variant="outline" className="min-h-[44px]">
+                            <Video className="w-4 h-4 mr-1" /> Join
+                          </Button>
                         </div>
-                        <Button size="sm" variant="outline">
-                          <Video className="w-4 h-4 mr-1" /> Join
-                        </Button>
                       </div>
                     ))}
                   </div>

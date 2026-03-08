@@ -111,22 +111,22 @@ export default function MySessions() {
   const SessionCard = ({ session }: { session: Session }) => (
     <Card className="hover:shadow-md transition-shadow">
       <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
             <Avatar>
               <AvatarImage src={session.tutorAvatar} />
               <AvatarFallback className="bg-primary/10 text-primary">
                 {session.tutorName.split(" ").map((n) => n[0]).join("")}
               </AvatarFallback>
             </Avatar>
-            <div>
-              <h4 className="font-medium">{session.tutorName}</h4>
+            <div className="min-w-0">
+              <h4 className="font-medium truncate">{session.tutorName}</h4>
               <p className="text-sm text-muted-foreground">{session.subject}</p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4 text-sm">
-            <div className="text-right">
+          <div className="flex flex-wrap items-center gap-3 text-sm">
+            <div>
               <p className="font-medium">{formatDate(session.date)}</p>
               <p className="text-muted-foreground">{session.time}</p>
             </div>
@@ -135,15 +135,17 @@ export default function MySessions() {
               <span>{session.duration} min</span>
             </div>
             {getStatusBadge(session.status)}
+          </div>
 
+          <div className="flex flex-wrap gap-2">
             {session.status === "upcoming" && (
-              <div className="flex items-center gap-2">
-                <Button size="sm" className="gap-1">
+              <>
+                <Button size="sm" className="gap-1 min-h-[44px] flex-1 sm:flex-none">
                   <Video className="w-4 h-4" /> Join
                 </Button>
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                    <Button variant="ghost" size="icon" className="h-[44px] w-[44px]">
                       <MoreVertical className="w-4 h-4" />
                     </Button>
                   </DropdownMenuTrigger>
@@ -152,20 +154,20 @@ export default function MySessions() {
                     <DropdownMenuItem className="text-destructive">Cancel</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
-              </div>
+              </>
             )}
 
             {session.status === "completed" && (
-              <div className="flex items-center gap-2">
+              <>
                 {session.hasRecording && (
-                  <Button variant="outline" size="sm" className="gap-1">
+                  <Button variant="outline" size="sm" className="gap-1 min-h-[44px]">
                     <Play className="w-4 h-4" /> Recording
                   </Button>
                 )}
-                <Button variant="outline" size="sm" className="gap-1">
+                <Button variant="outline" size="sm" className="gap-1 min-h-[44px]">
                   <Star className="w-4 h-4" /> Rate
                 </Button>
-              </div>
+              </>
             )}
           </div>
         </div>
