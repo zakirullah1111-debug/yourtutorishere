@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { format, parseISO, isAfter, addMinutes } from "date-fns";
 import {
   Calendar, Clock, Timer, CreditCard, Video, MessageCircle, Search,
-  Star, AlertTriangle, Loader2, X as XIcon,
+  Star, AlertTriangle, Loader2, X as XIcon, Inbox,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -31,7 +31,8 @@ interface Booking {
   cancelled_at: string | null;
   review_prompted: boolean | null;
   created_at: string | null;
-  // joined from profiles + tutors
+  request_message: string | null;
+  rejected_reason: string | null;
   tutor_name: string;
   tutor_avatar: string | null;
   tutor_education: string;
@@ -39,7 +40,7 @@ interface Booking {
   tutor_user_id: string;
 }
 
-type Tab = "upcoming" | "past" | "cancelled";
+type Tab = "pending" | "upcoming" | "past" | "cancelled";
 
 export default function StudentBookings() {
   const { user } = useAuth();
@@ -48,7 +49,7 @@ export default function StudentBookings() {
   const navigate = useNavigate();
   const { getOrCreateConversation } = useMessaging("student");
 
-  const [tab, setTab] = useState<Tab>("upcoming");
+  const [tab, setTab] = useState<Tab>("pending");
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
@@ -58,7 +59,6 @@ export default function StudentBookings() {
   const [reviewLoading, setReviewLoading] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
 
-  // Tick every 30s for join button state
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(interval);
@@ -72,7 +72,7 @@ export default function StudentBookings() {
         .from("demo_bookings")
         .select("*")
         .eq("student_id", user.id)
-        .order("scheduled_date", { ascending: true });
+        .order("created_at", { ascending: false });
 
       if (!rawBookings || rawBookings.length === 0) {
         setBookings([]);
@@ -80,7 +80,6 @@ export default function StudentBookings() {
         return;
       }
 
-      // Get unique tutor_ids (these are user_ids in demo_bookings)
       const tutorUserIds = [...new Set(rawBookings.map(b => b.tutor_id))];
 
       const [profilesRes, tutorsRes] = await Promise.all([
@@ -106,47 +105,25 @@ export default function StudentBookings() {
 
       setBookings(mapped);
 
-      // Check existing reviews for past bookings
+      // Check existing reviews
       const reviewedBookingIds = mapped
         .filter(b => b.status === "completed" || b.review_prompted)
         .map(b => b.id);
       
       if (reviewedBookingIds.length > 0) {
-        // Find student record id
-        const { data: studentRec } = await supabase
-          .from("students")
-          .select("id")
-          .eq("user_id", user.id)
-          .maybeSingle();
-
+        const { data: studentRec } = await supabase.from("students").select("id").eq("user_id", user.id).maybeSingle();
         if (studentRec) {
-          const { data: existingReviews } = await supabase
-            .from("reviews")
-            .select("rating, comment, tutor_id")
-            .eq("student_id", studentRec.id);
-
+          const { data: existingReviews } = await supabase.from("reviews").select("rating, comment, tutor_id").eq("student_id", studentRec.id);
           if (existingReviews && existingReviews.length > 0) {
-            // Map reviews to bookings by matching tutor
-            const reviewedTutorIds = new Set(existingReviews.map(r => r.tutor_id));
-            
-            // Get tutor user_id -> tutor record id mapping
-            const tutorUserIds = [...new Set(mapped.map(b => b.tutor_user_id))];
-            const { data: tutorRecs } = await supabase
-              .from("tutors")
-              .select("id, user_id")
-              .in("user_id", tutorUserIds);
-
+            const tutorUserIdsForReview = [...new Set(mapped.map(b => b.tutor_user_id))];
+            const { data: tutorRecs } = await supabase.from("tutors").select("id, user_id").in("user_id", tutorUserIdsForReview);
             const userToTutorId = new Map((tutorRecs || []).map(t => [t.user_id, t.id]));
-
-            // Pre-populate reviewData for bookings that have reviews
             const preReviewData: Record<string, { rating: number; comment: string; submitted: boolean }> = {};
             for (const b of mapped) {
               const tutorRecId = userToTutorId.get(b.tutor_user_id);
               if (tutorRecId) {
                 const review = existingReviews.find(r => r.tutor_id === tutorRecId);
-                if (review) {
-                  preReviewData[b.id] = { rating: review.rating, comment: review.comment || "", submitted: true };
-                }
+                if (review) preReviewData[b.id] = { rating: review.rating, comment: review.comment || "", submitted: true };
               }
             }
             setReviewData(prev => ({ ...prev, ...preReviewData }));
@@ -162,17 +139,11 @@ export default function StudentBookings() {
 
   useEffect(() => { fetchBookings(); }, [fetchBookings]);
 
-  // Realtime subscription
   useEffect(() => {
     if (!user) return;
     const channel = supabase
       .channel("student-bookings")
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "demo_bookings",
-        filter: `student_id=eq.${user.id}`,
-      }, () => { fetchBookings(); })
+      .on("postgres_changes", { event: "*", schema: "public", table: "demo_bookings", filter: `student_id=eq.${user.id}` }, () => { fetchBookings(); })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchBookings]);
@@ -183,36 +154,29 @@ export default function StudentBookings() {
     return `${h % 12 || 12}:${m.toString().padStart(2, "0")} ${ampm}`;
   };
 
-  const getSessionDatetime = (b: Booking) => {
-    return parseISO(`${b.scheduled_date}T${b.scheduled_time}`);
-  };
-
-  const getEndDatetime = (b: Booking) => {
-    return parseISO(`${b.scheduled_date}T${b.end_time}`);
-  };
+  const getSessionDatetime = (b: Booking) => parseISO(`${b.scheduled_date}T${b.scheduled_time}`);
+  const getEndDatetime = (b: Booking) => parseISO(`${b.scheduled_date}T${b.end_time}`);
 
   const isJoinable = (b: Booking) => {
     const start = getSessionDatetime(b);
     const end = getEndDatetime(b);
-    const joinWindow = addMinutes(start, -15);
-    const graceEnd = addMinutes(end, 30);
-    return isAfter(now, joinWindow) && !isAfter(now, graceEnd);
+    return isAfter(now, addMinutes(start, -15)) && !isAfter(now, addMinutes(end, 30));
   };
 
-  const isPastGrace = (b: Booking) => {
-    const end = getEndDatetime(b);
-    return isAfter(now, addMinutes(end, 30));
-  };
+  const isPastGrace = (b: Booking) => isAfter(now, addMinutes(getEndDatetime(b), 30));
 
-  // Filter bookings by tab
+  const pendingCount = bookings.filter(b => b.status === "pending").length;
+
   const filtered = bookings.filter(b => {
+    if (tab === "pending") return b.status === "pending";
     if (tab === "upcoming") return b.status === "confirmed" && !isPastGrace(b);
     if (tab === "past") return b.status === "completed" || (b.status === "confirmed" && isPastGrace(b));
-    if (tab === "cancelled") return b.status === "cancelled_by_student";
+    if (tab === "cancelled") return b.status === "cancelled_by_student" || b.status === "rejected";
     return false;
   });
 
   const sortedFiltered = [...filtered].sort((a, b) => {
+    if (tab === "pending") return (b.created_at || "").localeCompare(a.created_at || "");
     if (tab === "upcoming") return `${a.scheduled_date}${a.scheduled_time}`.localeCompare(`${b.scheduled_date}${b.scheduled_time}`);
     return `${b.scheduled_date}${b.scheduled_time}`.localeCompare(`${a.scheduled_date}${a.scheduled_time}`);
   });
@@ -246,38 +210,17 @@ export default function StudentBookings() {
     }
     setReviewLoading(booking.id);
     try {
-      // Find tutor record id
-      const { data: tutorRec } = await supabase
-        .from("tutors")
-        .select("id")
-        .eq("user_id", booking.tutor_user_id)
-        .single();
-
-      // Find student record id
-      const { data: studentRec } = await supabase
-        .from("students")
-        .select("id")
-        .eq("user_id", user!.id)
-        .single();
-
+      const { data: tutorRec } = await supabase.from("tutors").select("id").eq("user_id", booking.tutor_user_id).single();
+      const { data: studentRec } = await supabase.from("students").select("id").eq("user_id", user!.id).single();
       if (!tutorRec || !studentRec) {
         toast({ title: "Review failed", description: "Profile not found.", variant: "destructive" });
         return;
       }
-
       const { error: reviewErr } = await supabase.from("reviews").insert({
-        tutor_id: tutorRec.id,
-        student_id: studentRec.id,
-        session_id: null,
-        rating: data.rating,
-        comment: data.comment || null,
+        tutor_id: tutorRec.id, student_id: studentRec.id, session_id: null, rating: data.rating, comment: data.comment || null,
       });
-
       if (reviewErr) throw reviewErr;
-
-      // Mark review_prompted
       await supabase.from("demo_bookings").update({ review_prompted: true }).eq("id", booking.id);
-
       setReviewData(prev => ({ ...prev, [booking.id]: { ...prev[booking.id], submitted: true } }));
       toast({ title: "Thanks for your feedback! ⭐" });
       fetchBookings();
@@ -298,7 +241,8 @@ export default function StudentBookings() {
     }
   };
 
-  const tabs: { key: Tab; label: string; icon: React.ReactNode }[] = [
+  const tabs: { key: Tab; label: string; icon: React.ReactNode; badge?: number }[] = [
+    { key: "pending", label: "Pending", icon: <Inbox className="h-4 w-4" />, badge: pendingCount },
     { key: "upcoming", label: "Upcoming", icon: <Calendar className="h-4 w-4" /> },
     { key: "past", label: "Past", icon: <Star className="h-4 w-4" /> },
     { key: "cancelled", label: "Cancelled", icon: <XIcon className="h-4 w-4" /> },
@@ -310,22 +254,23 @@ export default function StudentBookings() {
         <h1 className="text-2xl font-bold text-foreground">My Sessions</h1>
         <p className="text-sm text-muted-foreground mb-6">Manage your demo sessions</p>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6 bg-muted/50 rounded-lg p-1">
+        <div className="flex gap-1 mb-6 bg-muted/50 rounded-lg p-1 overflow-x-auto">
           {tabs.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-md text-sm font-medium transition-colors ${
+              className={`flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium transition-colors whitespace-nowrap ${
                 tab === t.key ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
               }`}
             >
               {t.icon} {t.label}
+              {t.badge && t.badge > 0 ? (
+                <span className="ml-1 bg-primary text-primary-foreground text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">{t.badge}</span>
+              ) : null}
             </button>
           ))}
         </div>
 
-        {/* Content */}
         {loading ? (
           <div className="space-y-4">
             {[1, 2].map(i => (
@@ -342,7 +287,6 @@ export default function StudentBookings() {
             {sortedFiltered.map(booking => (
               <Card key={booking.id}>
                 <CardContent className="p-5">
-                  {/* Tutor info */}
                   <div className="flex items-center gap-3 mb-4">
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={booking.tutor_avatar || undefined} />
@@ -350,31 +294,60 @@ export default function StudentBookings() {
                         {booking.tutor_name.split(" ").map(n => n[0]).join("").toUpperCase()}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
+                    <div className="flex-1">
                       <p className="font-semibold text-foreground">{booking.tutor_name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {booking.tutor_education} · {booking.tutor_university}
+                        {tab === "pending" && booking.created_at
+                          ? `Sent ${format(parseISO(booking.created_at), "MMM d, yyyy 'at' h:mm a")}`
+                          : `${booking.tutor_education} · ${booking.tutor_university}`}
                       </p>
                     </div>
+                    {tab === "pending" && (
+                      <Badge className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-0">⏳ Pending</Badge>
+                    )}
                   </div>
 
-                  {/* Session details */}
-                  <div className="space-y-1.5 text-sm mb-4">
-                    <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> {format(parseISO(booking.scheduled_date), "EEEE, MMMM d, yyyy")}</div>
-                    <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {formatTime12(booking.scheduled_time)} – {formatTime12(booking.end_time)} (PKT)</div>
-                    <div className="flex items-center gap-2"><Timer className="h-4 w-4 text-primary" /> 30 minutes · <CreditCard className="h-4 w-4 text-primary" /> Free</div>
-                    <div className="flex items-center gap-2">
-                      Status: {booking.status === "confirmed" ? (
-                        <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">✅ Confirmed</Badge>
-                      ) : booking.status === "cancelled_by_student" ? (
-                        <Badge variant="destructive">Cancelled</Badge>
-                      ) : (
-                        <Badge variant="secondary">Completed</Badge>
+                  {/* Pending request details */}
+                  {tab === "pending" && (
+                    <div className="space-y-3">
+                      {booking.request_message && (
+                        <div className="p-3 rounded-lg bg-muted/50 text-sm">
+                          <p className="text-xs font-medium text-muted-foreground mb-1">Your message:</p>
+                          {booking.request_message}
+                        </div>
+                      )}
+                      <p className="text-sm text-muted-foreground">
+                        Waiting for {booking.tutor_name} to approve your request and suggest a date & time.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Session details for confirmed/completed/cancelled */}
+                  {tab !== "pending" && booking.scheduled_date !== "1970-01-01" && (
+                    <div className="space-y-1.5 text-sm mb-4">
+                      <div className="flex items-center gap-2"><Calendar className="h-4 w-4 text-primary" /> {format(parseISO(booking.scheduled_date), "EEEE, MMMM d, yyyy")}</div>
+                      <div className="flex items-center gap-2"><Clock className="h-4 w-4 text-primary" /> {formatTime12(booking.scheduled_time)} – {formatTime12(booking.end_time)} (PKT)</div>
+                      <div className="flex items-center gap-2"><Timer className="h-4 w-4 text-primary" /> 30 minutes · <CreditCard className="h-4 w-4 text-primary" /> Free</div>
+                      <div className="flex items-center gap-2">
+                        Status: {booking.status === "confirmed" ? (
+                          <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-0">✅ Confirmed</Badge>
+                        ) : booking.status === "cancelled_by_student" ? (
+                          <Badge variant="destructive">Cancelled</Badge>
+                        ) : booking.status === "rejected" ? (
+                          <Badge variant="destructive">Declined by tutor</Badge>
+                        ) : (
+                          <Badge variant="secondary">Completed</Badge>
+                        )}
+                      </div>
+                      {tab === "upcoming" && !isJoinable(booking) && (
+                        <p className="text-xs text-muted-foreground mt-2 italic">
+                          🔗 Your session link will arrive at session time.
+                        </p>
                       )}
                     </div>
-                  </div>
+                  )}
 
-                  {/* Action buttons — Upcoming */}
+                  {/* Upcoming actions */}
                   {tab === "upcoming" && (
                     <>
                       <div className="flex gap-2">
@@ -397,21 +370,12 @@ export default function StudentBookings() {
                         </Button>
                       </div>
 
-                      {/* Cancel */}
                       {cancellingId === booking.id ? (
                         <div className="mt-3 p-3 rounded-lg border border-destructive/20 bg-destructive/5 space-y-2">
                           <p className="text-sm font-medium text-foreground">Cancel this session?</p>
-                          <Textarea
-                            placeholder="Reason (optional): e.g. Schedule conflict, emergency..."
-                            value={cancelReason}
-                            onChange={e => setCancelReason(e.target.value)}
-                            className="text-sm"
-                            rows={2}
-                          />
+                          <Textarea placeholder="Reason (optional)..." value={cancelReason} onChange={e => setCancelReason(e.target.value)} className="text-sm" rows={2} />
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" className="flex-1" onClick={() => { setCancellingId(null); setCancelReason(""); }}>
-                              Keep Session
-                            </Button>
+                            <Button variant="outline" size="sm" className="flex-1" onClick={() => { setCancellingId(null); setCancelReason(""); }}>Keep Session</Button>
                             <Button variant="destructive" size="sm" className="flex-1" disabled={cancelLoading} onClick={() => handleCancel(booking.id)}>
                               {cancelLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
                               Yes, Cancel
@@ -426,7 +390,7 @@ export default function StudentBookings() {
                     </>
                   )}
 
-                  {/* Past tab — review */}
+                  {/* Past — review */}
                   {tab === "past" && (
                     <>
                       {booking.review_prompted || reviewData[booking.id]?.submitted ? (
@@ -443,15 +407,13 @@ export default function StudentBookings() {
                               <button
                                 key={star}
                                 onClick={() => setReviewData(prev => ({
-                                  ...prev,
-                                  [booking.id]: { ...prev[booking.id], rating: star, comment: prev[booking.id]?.comment || "", submitted: false },
+                                  ...prev, [booking.id]: { ...prev[booking.id], rating: star, comment: prev[booking.id]?.comment || "", submitted: false },
                                 }))}
                                 className="p-0.5"
                               >
                                 <Star className={`h-7 w-7 transition-colors ${
                                   (reviewData[booking.id]?.rating || 0) >= star
-                                    ? "fill-yellow-400 text-yellow-400"
-                                    : "text-muted-foreground hover:text-yellow-400"
+                                    ? "fill-yellow-400 text-yellow-400" : "text-muted-foreground hover:text-yellow-400"
                                 }`} />
                               </button>
                             ))}
@@ -461,11 +423,9 @@ export default function StudentBookings() {
                             maxLength={500}
                             value={reviewData[booking.id]?.comment || ""}
                             onChange={e => setReviewData(prev => ({
-                              ...prev,
-                              [booking.id]: { ...prev[booking.id], rating: prev[booking.id]?.rating || 0, comment: e.target.value, submitted: false },
+                              ...prev, [booking.id]: { ...prev[booking.id], rating: prev[booking.id]?.rating || 0, comment: e.target.value, submitted: false },
                             }))}
-                            className="text-sm"
-                            rows={2}
+                            className="text-sm" rows={2}
                           />
                           <div className="flex gap-2">
                             <Button size="sm" disabled={reviewLoading === booking.id} onClick={() => handleReview(booking)}>
@@ -474,21 +434,19 @@ export default function StudentBookings() {
                             </Button>
                             <Button variant="ghost" size="sm" onClick={() => {
                               setReviewData(prev => { const copy = { ...prev }; delete copy[booking.id]; return copy; });
-                            }}>
-                              Skip for now
-                            </Button>
+                            }}>Skip for now</Button>
                           </div>
                         </div>
                       )}
                     </>
                   )}
 
-                  {/* Cancelled tab */}
+                  {/* Cancelled/rejected */}
                   {tab === "cancelled" && (
                     <div className="space-y-2 mt-2">
-                      {booking.cancellation_reason && (
+                      {(booking.cancellation_reason || booking.rejected_reason) && (
                         <p className="text-sm text-muted-foreground">
-                          <span className="font-medium">Reason:</span> {booking.cancellation_reason}
+                          <span className="font-medium">Reason:</span> {booking.cancellation_reason || booking.rejected_reason}
                         </p>
                       )}
                       {booking.cancelled_at && (
@@ -512,12 +470,19 @@ export default function StudentBookings() {
 }
 
 function EmptyState({ tab, navigate }: { tab: Tab; navigate: (path: string) => void }) {
+  if (tab === "pending") return (
+    <div className="text-center py-16">
+      <Inbox className="h-14 w-14 text-primary/40 mx-auto mb-4" />
+      <p className="text-lg font-medium text-foreground">No pending requests</p>
+      <p className="text-sm text-muted-foreground mt-1 mb-6">Send a demo request to a tutor to get started!</p>
+      <Button onClick={() => navigate("/dashboard/student/find-tutors")}>Find a Tutor →</Button>
+    </div>
+  );
   if (tab === "upcoming") return (
     <div className="text-center py-16">
       <Calendar className="h-14 w-14 text-primary/40 mx-auto mb-4" />
       <p className="text-lg font-medium text-foreground">No upcoming sessions</p>
-      <p className="text-sm text-muted-foreground mt-1 mb-6">Find a tutor and book your first free 30-minute demo!</p>
-      <Button onClick={() => navigate("/dashboard/student/find-tutors")}>Find a Tutor →</Button>
+      <p className="text-sm text-muted-foreground mt-1">Approved demo requests will appear here with the confirmed date and time.</p>
     </div>
   );
   if (tab === "past") return (
