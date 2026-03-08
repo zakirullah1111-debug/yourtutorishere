@@ -86,7 +86,7 @@ const ForgotPasswordPage = () => {
                 </div>
                 {error && <p className="text-sm text-destructive mt-1">{error}</p>}
               </div>
-              <Button type="submit" variant="gradient" size="xl" className="w-full" disabled={isLoading}>
+              <Button type="submit" variant="gradient" size="xl" className="w-full min-h-[48px]" disabled={isLoading}>
                 {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Sending...</> : "Send Reset Link"}
               </Button>
             </form>

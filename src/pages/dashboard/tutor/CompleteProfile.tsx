@@ -467,7 +467,7 @@ export default function CompleteProfile() {
 
         {/* Submit */}
         <Button
-          className="w-full h-12 text-base"
+          className="w-full h-12 min-h-[48px] text-base"
           onClick={handleSubmit}
           disabled={loading}
         >
