@@ -52,7 +52,7 @@ export function StatsSection() {
                 <div className={`w-16 h-16 ${stat.color} rounded-2xl flex items-center justify-center mx-auto mb-4`}>
                   <stat.icon className="w-8 h-8" />
                 </div>
-                <p className="text-3xl md:text-4xl font-bold text-foreground mb-1">
+                <p className="text-2xl sm:text-3xl md:text-4xl font-bold text-foreground mb-1">
                   {stat.value}
                 </p>
                 <p className="text-muted-foreground text-sm md:text-base">
