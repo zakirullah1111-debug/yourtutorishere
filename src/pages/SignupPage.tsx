@@ -149,7 +149,7 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-subtle flex">
+    <div className="min-h-[100dvh] gradient-subtle flex">
       {/* Left Side - Branding */}
       <div className="hidden lg:flex flex-1 gradient-bg items-center justify-center p-12">
         <div className="text-center text-white max-w-md">
