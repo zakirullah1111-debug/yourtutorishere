@@ -111,6 +111,7 @@ const LoginPage = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      setPassword(""); // Clear sensitive form data
       setIsLoading(false);
       return;
     }
