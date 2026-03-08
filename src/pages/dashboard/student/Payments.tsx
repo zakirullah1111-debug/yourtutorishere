@@ -145,10 +145,10 @@ export default function Payments() {
         </div>
 
         <Tabs defaultValue="upcoming">
-          <TabsList>
-            <TabsTrigger value="upcoming">Upcoming Payments</TabsTrigger>
-            <TabsTrigger value="history">Payment History</TabsTrigger>
-            <TabsTrigger value="methods">Payment Methods</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="upcoming" className="text-xs sm:text-sm">Upcoming</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
+            <TabsTrigger value="methods" className="text-xs sm:text-sm">Methods</TabsTrigger>
           </TabsList>
 
           <TabsContent value="upcoming" className="mt-4 space-y-4">
