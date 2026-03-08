@@ -39,6 +39,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
+import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
 
 import { useMessaging } from "@/hooks/useMessaging";
 import { useToast } from "@/hooks/use-toast";
@@ -101,6 +102,7 @@ export default function FindTutors() {
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [mathLevelFilter, setMathLevelFilter] = useState<string>("");
+  const [requestDemoTutor, setRequestDemoTutor] = useState<Tutor | null>(null);
 
   // Filters
   const [priceRange, setPriceRange] = useState<[number, number]>([500, 2000]);
@@ -667,8 +669,8 @@ export default function FindTutors() {
                               <Link to={`/dashboard/student/tutor/${tutor.id}#demo-video`}>▶ Watch Demo</Link>
                             </Button>
                           ) : tutor.live_demo_enabled ? (
-                            <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm" asChild>
-                              <Link to={`/dashboard/student/tutor/${tutor.id}`}>📅 Book Demo</Link>
+                            <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm" onClick={() => setRequestDemoTutor(tutor)}>
+                              📅 Book Demo
                             </Button>
                           ) : null}
                         </div>
@@ -759,8 +761,8 @@ export default function FindTutors() {
                                   <Link to={`/dashboard/student/tutor/${tutor.id}#demo-video`}>▶ Watch Demo</Link>
                                 </Button>
                               ) : tutor.live_demo_enabled ? (
-                                <Button className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm" asChild>
-                                  <Link to={`/dashboard/student/tutor/${tutor.id}`}>📅 Book Demo</Link>
+                                <Button className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm" onClick={() => setRequestDemoTutor(tutor)}>
+                                  📅 Book Demo
                                 </Button>
                               ) : null}
                             </div>
@@ -775,6 +777,18 @@ export default function FindTutors() {
           </div>
         </div>
       </div>
+      {requestDemoTutor && (
+        <RequestDemoModal
+          open={!!requestDemoTutor}
+          onOpenChange={(v) => { if (!v) setRequestDemoTutor(null); }}
+          tutor={{
+            user_id: requestDemoTutor.user_id,
+            first_name: requestDemoTutor.first_name,
+            last_name: requestDemoTutor.last_name,
+            avatar_url: requestDemoTutor.avatar_url || null,
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }
