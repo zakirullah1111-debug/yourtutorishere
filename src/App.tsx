@@ -24,6 +24,7 @@ import StudentProgress from "./pages/dashboard/student/Progress";
 import StudentPayments from "./pages/dashboard/student/Payments";
 import StudentSettings from "./pages/dashboard/student/Settings";
 import TutorProfile from "./pages/dashboard/student/TutorProfile";
+import StudentBookings from "./pages/dashboard/student/Bookings";
 
 // Tutor Dashboard Pages
 import TutorDashboard from "./pages/dashboard/tutor/TutorDashboard";
