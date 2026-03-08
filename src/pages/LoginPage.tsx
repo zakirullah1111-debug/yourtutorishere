@@ -75,7 +75,10 @@ const LoginPage = () => {
 
     setIsLoading(true);
 
-    const { error, role } = await signIn(email, password);
+    const result = await signIn(email, password);
+    const { error, role } = result;
+    // Get user data directly from supabase to avoid state timing issues
+    const { data } = await supabase.auth.getUser();
 
     if (error) {
       let errorMessage = "Login failed. Please try again.";
