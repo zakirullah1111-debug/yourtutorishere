@@ -46,9 +46,9 @@ export function useAvatarUpload({ userId, onSuccess }: UseAvatarUploadOptions) {
     setUploading(true);
 
     try {
-      // Create unique filename
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${userId}/avatar-${Date.now()}.${fileExt}`;
+      // Create unique filename using UUID - never preserve original filename
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const fileName = `${userId}/${crypto.randomUUID()}.${fileExt}`;
 
       // Delete old avatar if exists
       const { data: existingFiles } = await supabase.storage
