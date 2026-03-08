@@ -100,7 +100,7 @@ export function HeroSection() {
             </motion.div>
 
             {/* Headline */}
-            <h1 className="text-display-3 md:text-display-2 lg:text-display-1 font-extrabold text-foreground mb-6 text-balance">
+            <h1 className="text-[1.75rem] sm:text-display-3 md:text-display-2 lg:text-display-1 font-extrabold text-foreground mb-6 text-balance">
               Learn From{" "}
               <span className="gradient-text">Anywhere</span>{" "}
               You Feel Comfortable

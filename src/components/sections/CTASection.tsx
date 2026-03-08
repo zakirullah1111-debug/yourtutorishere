@@ -11,7 +11,7 @@ export function CTASection() {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="relative overflow-hidden gradient-bg rounded-3xl p-8 md:p-16 text-center"
+          className="relative overflow-hidden gradient-bg rounded-2xl sm:rounded-3xl p-6 sm:p-8 md:p-16 text-center"
         >
           {/* Decorative Elements */}
           <div className="absolute top-0 left-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2" />
