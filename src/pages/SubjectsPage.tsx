@@ -272,7 +272,7 @@ function CategoryBlock({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className={`${category.bgColor} rounded-3xl p-8`}
+      className={`${category.bgColor} rounded-2xl sm:rounded-3xl p-5 sm:p-8`}
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
