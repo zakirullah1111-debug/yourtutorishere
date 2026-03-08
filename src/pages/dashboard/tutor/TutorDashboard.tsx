@@ -350,29 +350,31 @@ export default function TutorDashboard() {
                 upcomingSessions.map((session) => (
                   <div
                     key={session.id}
-                    className="flex items-center justify-between p-4 bg-muted/50 rounded-xl"
+                    className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between p-4 bg-muted/50 rounded-xl"
                   >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="w-10 h-10">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-10 h-10 shrink-0">
                         <AvatarFallback className="bg-primary/10 text-primary">
                           {session.studentName.split(" ").map((n) => n[0]).join("")}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-medium">{session.studentName}</p>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{session.studentName}</p>
                         <p className="text-sm text-muted-foreground">{session.subject}</p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium">{formatDate(session.scheduledDate)}</p>
-                      <p className="text-sm text-muted-foreground">
-                        {formatTime(session.scheduledTime)} • {session.duration} min
-                      </p>
+                    <div className="flex items-center justify-between sm:gap-4">
+                      <div className="text-left sm:text-right">
+                        <p className="text-sm font-medium">{formatDate(session.scheduledDate)}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {formatTime(session.scheduledTime)} • {session.duration} min
+                        </p>
+                      </div>
+                      <Button size="sm" className="min-h-[44px]">
+                        <Video className="w-4 h-4 mr-1" />
+                        Start
+                      </Button>
                     </div>
-                    <Button size="sm" className="ml-4">
-                      <Video className="w-4 h-4 mr-2" />
-                      Start
-                    </Button>
                   </div>
                 ))
               ) : (

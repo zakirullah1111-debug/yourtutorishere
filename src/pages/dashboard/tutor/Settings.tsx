@@ -857,11 +857,11 @@ export default function TutorSettings() {
             </Card>
 
             <div className="flex justify-end">
-              <Button onClick={handleNotificationsSave} disabled={notifLoading}>
+              <Button onClick={handleNotificationsSave} disabled={notifLoading} className="w-full sm:w-auto min-h-[44px]">
                 {notifLoading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                 ) : (
-                  <><Save className="w-4 h-4 mr-2" /> Save Notification Preferences</>
+                  <><Save className="w-4 h-4 mr-2" /> Save Preferences</>
                 )}
               </Button>
             </div>

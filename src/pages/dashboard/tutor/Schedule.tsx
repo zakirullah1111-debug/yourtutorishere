@@ -334,23 +334,23 @@ export default function Schedule() {
                   {todaySessions.map((session) => (
                     <div
                       key={session.id}
-                      className="flex items-center justify-between p-4 bg-muted/50 rounded-xl"
+                     className="flex flex-col sm:flex-row sm:items-center gap-3 sm:justify-between p-4 bg-muted/50 rounded-xl"
                     >
-                      <div className="flex items-center gap-4">
+                      <div className="flex items-center gap-3 sm:gap-4">
                         <div className="text-center min-w-[60px]">
-                          <p className="text-lg font-bold">{formatTime(session.time)}</p>
+                          <p className="text-sm sm:text-lg font-bold">{formatTime(session.time)}</p>
                           <p className="text-xs text-muted-foreground">
                             {session.duration} min
                           </p>
                         </div>
-                        <div className="h-12 w-px bg-border" />
-                        <Avatar className="w-10 h-10">
+                        <div className="h-12 w-px bg-border hidden sm:block" />
+                        <Avatar className="w-10 h-10 hidden sm:flex">
                           <AvatarFallback className="bg-primary/10 text-primary">
                             {session.studentName.split(" ").map((n) => n[0]).join("")}
                           </AvatarFallback>
                         </Avatar>
-                        <div>
-                          <p className="font-medium">{session.studentName}</p>
+                        <div className="min-w-0">
+                          <p className="font-medium truncate">{session.studentName}</p>
                           <p className="text-sm text-muted-foreground">{session.subject}</p>
                         </div>
                       </div>
@@ -366,9 +366,9 @@ export default function Schedule() {
                         >
                           {session.status}
                         </Badge>
-                        <Button size="sm">
-                          <Video className="w-4 h-4 mr-2" />
-                          Start Session
+                        <Button size="sm" className="min-h-[44px] flex-1 sm:flex-none">
+                          <Video className="w-4 h-4 mr-1" />
+                          Start
                         </Button>
                       </div>
                     </div>

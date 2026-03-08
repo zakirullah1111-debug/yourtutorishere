@@ -361,8 +361,8 @@ export default function Earnings() {
           </Card>
         </div>
 
-        {/* Transactions Table */}
-        <Card>
+        {/* Transactions Table - Desktop */}
+        <Card className="hidden md:block">
           <CardHeader>
             <CardTitle className="text-lg">Recent Transactions</CardTitle>
           </CardHeader>
@@ -395,6 +395,27 @@ export default function Earnings() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Transactions Cards - Mobile */}
+        <div className="md:hidden space-y-3">
+          <h3 className="text-lg font-semibold">Recent Transactions</h3>
+          {transactions.map((transaction) => (
+            <Card key={transaction.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold">{transaction.studentName}</h4>
+                  {getStatusBadge(transaction.status)}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
+                  <span>{transaction.subject}</span>
+                  <span className="text-right">{formatDate(transaction.date)}</span>
+                  <span>{transaction.sessions} session{transaction.sessions > 1 ? "s" : ""}</span>
+                  <span className="text-right font-medium text-foreground">PKR {transaction.amount.toLocaleString()}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </DashboardLayout>
   );
