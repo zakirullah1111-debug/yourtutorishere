@@ -77,6 +77,63 @@ export type Database = {
         }
         Relationships: []
       }
+      demo_bookings: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string | null
+          duration_minutes: number | null
+          end_time: string
+          id: string
+          meeting_room_id: string
+          meeting_url: string
+          review_prompted: boolean | null
+          scheduled_date: string
+          scheduled_time: string
+          status: string
+          student_id: string
+          tutor_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          end_time: string
+          id?: string
+          meeting_room_id: string
+          meeting_url: string
+          review_prompted?: boolean | null
+          scheduled_date: string
+          scheduled_time: string
+          status?: string
+          student_id: string
+          tutor_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          duration_minutes?: number | null
+          end_time?: string
+          id?: string
+          meeting_room_id?: string
+          meeting_url?: string
+          review_prompted?: boolean | null
+          scheduled_date?: string
+          scheduled_time?: string
+          status?: string
+          student_id?: string
+          tutor_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string | null
@@ -117,6 +174,50 @@ export type Database = {
             columns: ["conversation_id"]
             isOneToOne: false
             referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          action_url: string | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          related_booking_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          related_booking_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          action_url?: string | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          related_booking_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_related_booking_id_fkey"
+            columns: ["related_booking_id"]
+            isOneToOne: false
+            referencedRelation: "demo_bookings"
             referencedColumns: ["id"]
           },
         ]
@@ -475,6 +576,36 @@ export type Database = {
         }
         Relationships: []
       }
+      tutor_availability: {
+        Row: {
+          created_at: string | null
+          day_of_week: number
+          end_time: string
+          id: string
+          is_active: boolean | null
+          start_time: string
+          tutor_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: number
+          end_time: string
+          id?: string
+          is_active?: boolean | null
+          start_time: string
+          tutor_id: string
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: number
+          end_time?: string
+          id?: string
+          is_active?: boolean | null
+          start_time?: string
+          tutor_id?: string
+        }
+        Relationships: []
+      }
       tutors: {
         Row: {
           active_students: number | null
@@ -482,6 +613,7 @@ export type Database = {
           availability_days: string[] | null
           average_rating: number | null
           bio_summary: string | null
+          blocked_dates: string[] | null
           cnic: string | null
           country: string | null
           created_at: string
@@ -523,6 +655,7 @@ export type Database = {
           availability_days?: string[] | null
           average_rating?: number | null
           bio_summary?: string | null
+          blocked_dates?: string[] | null
           cnic?: string | null
           country?: string | null
           created_at?: string
@@ -564,6 +697,7 @@ export type Database = {
           availability_days?: string[] | null
           average_rating?: number | null
           bio_summary?: string | null
+          blocked_dates?: string[] | null
           cnic?: string | null
           country?: string | null
           created_at?: string
