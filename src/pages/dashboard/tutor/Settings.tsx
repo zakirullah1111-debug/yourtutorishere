@@ -32,6 +32,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { DemoVideoSection } from "@/components/tutor/DemoVideoSection";
 
 const SUBJECTS = [
   "Mathematics", "Physics", "Chemistry", "Biology",
