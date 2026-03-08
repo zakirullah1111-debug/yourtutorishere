@@ -547,6 +547,8 @@ export function DemoVideoSection({ userId, initialData, isOptional, onSaved }: D
                 frameBorder="0"
                 allowFullScreen
                 allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                sandbox="allow-scripts allow-same-origin allow-presentation"
+                referrerPolicy="no-referrer"
                 title={videoTitle}
               />
             )}
@@ -557,6 +559,8 @@ export function DemoVideoSection({ userId, initialData, isOptional, onSaved }: D
                 frameBorder="0"
                 allowFullScreen
                 allow="autoplay; fullscreen; picture-in-picture"
+                sandbox="allow-scripts allow-same-origin allow-presentation"
+                referrerPolicy="no-referrer"
                 title={videoTitle}
               />
             )}

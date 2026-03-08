@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import SubjectsPage from "./pages/SubjectsPage";
 import TutorsPage from "./pages/TutorsPage";
@@ -62,29 +63,29 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
             
-            {/* Student Dashboard Routes */}
-            <Route path="/dashboard/student" element={<StudentDashboard />} />
-            <Route path="/dashboard/student/find-tutors" element={<FindTutors />} />
-            <Route path="/dashboard/student/my-tutors" element={<MyTutors />} />
-            <Route path="/dashboard/student/sessions" element={<MySessions />} />
-            <Route path="/dashboard/student/bookings" element={<StudentBookings />} />
-            <Route path="/dashboard/student/messages" element={<StudentMessages />} />
-            <Route path="/dashboard/student/progress" element={<StudentProgress />} />
-            <Route path="/dashboard/student/payments" element={<StudentPayments />} />
-            <Route path="/dashboard/student/settings" element={<StudentSettings />} />
-            <Route path="/dashboard/student/tutor/:tutorId" element={<TutorProfile />} />
+            {/* Student Dashboard Routes - Protected */}
+            <Route path="/dashboard/student" element={<ProtectedRoute allowedRoles={["student"]}><StudentDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/student/find-tutors" element={<ProtectedRoute allowedRoles={["student"]}><FindTutors /></ProtectedRoute>} />
+            <Route path="/dashboard/student/my-tutors" element={<ProtectedRoute allowedRoles={["student"]}><MyTutors /></ProtectedRoute>} />
+            <Route path="/dashboard/student/sessions" element={<ProtectedRoute allowedRoles={["student"]}><MySessions /></ProtectedRoute>} />
+            <Route path="/dashboard/student/bookings" element={<ProtectedRoute allowedRoles={["student"]}><StudentBookings /></ProtectedRoute>} />
+            <Route path="/dashboard/student/messages" element={<ProtectedRoute allowedRoles={["student"]}><StudentMessages /></ProtectedRoute>} />
+            <Route path="/dashboard/student/progress" element={<ProtectedRoute allowedRoles={["student"]}><StudentProgress /></ProtectedRoute>} />
+            <Route path="/dashboard/student/payments" element={<ProtectedRoute allowedRoles={["student"]}><StudentPayments /></ProtectedRoute>} />
+            <Route path="/dashboard/student/settings" element={<ProtectedRoute allowedRoles={["student"]}><StudentSettings /></ProtectedRoute>} />
+            <Route path="/dashboard/student/tutor/:tutorId" element={<ProtectedRoute allowedRoles={["student"]}><TutorProfile /></ProtectedRoute>} />
             
-            {/* Tutor Dashboard Routes */}
-            <Route path="/dashboard/tutor" element={<TutorDashboard />} />
-            <Route path="/dashboard/tutor/students" element={<MyStudents />} />
-            <Route path="/dashboard/tutor/schedule" element={<TutorSchedule />} />
-            <Route path="/dashboard/tutor/messages" element={<TutorMessages />} />
-            <Route path="/dashboard/tutor/earnings" element={<TutorEarnings />} />
-            <Route path="/dashboard/tutor/reviews" element={<TutorReviews />} />
-            <Route path="/dashboard/tutor/resources" element={<TutorResources />} />
-            <Route path="/dashboard/tutor/settings" element={<TutorSettings />} />
-            <Route path="/dashboard/tutor/complete-profile" element={<CompleteProfile />} />
-            <Route path="/dashboard/tutor/bookings" element={<TutorBookings />} />
+            {/* Tutor Dashboard Routes - Protected */}
+            <Route path="/dashboard/tutor" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorDashboard /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/students" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><MyStudents /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/schedule" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorSchedule /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/messages" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorMessages /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/earnings" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorEarnings /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/reviews" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorReviews /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/resources" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorResources /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/settings" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorSettings /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/complete-profile" element={<ProtectedRoute allowedRoles={["tutor"]}><CompleteProfile /></ProtectedRoute>} />
+            <Route path="/dashboard/tutor/bookings" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorBookings /></ProtectedRoute>} />
             
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
