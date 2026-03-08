@@ -37,7 +37,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(session);
         setUser(session?.user ?? null);
         
-        if (session?.user) {
+        if (event === "TOKEN_REFRESHED" && !session) {
+          // Session expired and couldn't be refreshed
+          setUserRole(null);
+          toast({
+            title: "Session Expired",
+            description: "Your session has expired. Please log in again.",
+            variant: "destructive",
+          });
+        } else if (event === "SIGNED_OUT") {
+          setUserRole(null);
+        } else if (session?.user) {
           setTimeout(() => {
             fetchUserRole(session.user.id);
           }, 0);
