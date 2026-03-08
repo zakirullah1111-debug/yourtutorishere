@@ -266,9 +266,9 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
       >
         <div className="flex flex-col h-full max-h-[90vh] max-sm:max-h-screen">
           {/* Step labels */}
-          <div className="px-6 pt-4 pb-0">
+          <div className="px-4 sm:px-6 pt-4 pb-0">
             {stepIndicator}
-            <div className="flex justify-between text-[11px] text-muted-foreground px-1 -mt-1 mb-2">
+            <div className="hidden sm:flex justify-between text-[11px] text-muted-foreground px-1 -mt-1 mb-2">
               <span>Select Date</span>
               <span>Choose Time</span>
               <span>Confirm</span>
