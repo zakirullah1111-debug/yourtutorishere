@@ -138,9 +138,9 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-subtle flex">
+    <div className="min-h-[100dvh] gradient-subtle flex">
       {/* Left Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:p-8">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
