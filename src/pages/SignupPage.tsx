@@ -406,7 +406,7 @@ const SignupPage = () => {
               type="submit" 
               variant="gradient" 
               size="xl" 
-              className="w-full"
+              className="w-full min-h-[48px]"
               disabled={isLoading}
             >
               {isLoading ? (
