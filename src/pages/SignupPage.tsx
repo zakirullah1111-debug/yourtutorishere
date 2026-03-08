@@ -377,6 +377,7 @@ const SignupPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              <PasswordStrengthIndicator password={formData.password} />
               {errors.password && (
                 <p className="text-sm text-destructive mt-1">{errors.password}</p>
               )}
