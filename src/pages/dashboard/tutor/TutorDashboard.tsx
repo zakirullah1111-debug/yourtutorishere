@@ -46,6 +46,7 @@ interface RecentActivity {
 
 export default function TutorDashboard() {
   const { user } = useAuth();
+  useSessionCompletion();
   const [stats, setStats] = useState<TutorStats>({
     activeStudents: 0,
     totalSessions: 0,

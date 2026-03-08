@@ -41,6 +41,7 @@ type Tab = "upcoming" | "past" | "cancelled";
 
 export default function TutorBookings() {
   const { user } = useAuth();
+  useSessionCompletion();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getOrCreateConversation } = useMessaging("tutor");

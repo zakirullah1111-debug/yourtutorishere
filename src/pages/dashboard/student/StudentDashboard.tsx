@@ -75,6 +75,7 @@ interface SubjectCategory {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  useSessionCompletion();
   const [stats, setStats] = useState<StudentStats>({
     upcomingSessionsCount: 0,
     totalHoursCompleted: 0,
