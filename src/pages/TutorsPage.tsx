@@ -12,8 +12,12 @@ import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
 
 interface PublicTutor {
   id: string;
+  user_id: string;
   name: string;
+  first_name: string;
+  last_name: string;
   avatar: string;
+  avatar_url: string | null;
   avatarColor: string;
   subjects: string[];
   rating: number;
