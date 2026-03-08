@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { checkTutorProfileComplete } from "@/lib/fetchProfileWithRetry";
+import { PasswordStrengthIndicator } from "@/components/auth/PasswordStrengthIndicator";
+import { validatePasswordPolicy } from "@/lib/passwordValidation";
 import { z } from "zod";
 
 const signupSchema = z.object({
@@ -13,7 +15,7 @@ const signupSchema = z.object({
   lastName: z.string().min(2, "Last name must be at least 2 characters"),
   email: z.string().email("Please enter a valid email address"),
   phone: z.string().min(10, "Please enter a valid phone number"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   level: z.string().optional(),
 });
 
@@ -61,6 +63,14 @@ const SignupPage = () => {
         password: formData.password,
         level: formData.level,
       });
+      
+      // Additional password policy check
+      const policyErrors = validatePasswordPolicy(formData.password);
+      if (policyErrors.length > 0) {
+        setErrors({ password: policyErrors[0] });
+        return false;
+      }
+      
       setErrors({});
       return true;
     } catch (error) {
@@ -367,6 +377,7 @@ const SignupPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
+              <PasswordStrengthIndicator password={formData.password} />
               {errors.password && (
                 <p className="text-sm text-destructive mt-1">{errors.password}</p>
               )}

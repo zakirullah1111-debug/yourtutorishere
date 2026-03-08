@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { checkTutorProfileComplete } from "@/lib/fetchProfileWithRetry";
+import { checkLoginLockout, recordFailedLogin, clearLoginAttempts } from "@/lib/passwordValidation";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
 
@@ -74,6 +75,17 @@ const LoginPage = () => {
     
     if (!validateForm()) return;
 
+    // Check brute force lockout
+    const lockout = checkLoginLockout();
+    if (lockout.locked) {
+      toast({
+        title: "Account Locked",
+        description: `Too many failed attempts. Try again in ${lockout.remainingMinutes} minutes.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsLoading(true);
 
     const result = await signIn(email, password);
@@ -82,10 +94,14 @@ const LoginPage = () => {
     const { data } = await supabase.auth.getUser();
 
     if (error) {
+      const bruteForce = recordFailedLogin();
+      
       let errorMessage = "Login failed. Please try again.";
       
-      if (error.message.includes("Invalid login credentials")) {
-        errorMessage = "Invalid email or password. Please check your credentials.";
+      if (bruteForce.locked) {
+        errorMessage = "Too many failed attempts. Your account is locked for 15 minutes.";
+      } else if (error.message.includes("Invalid login credentials")) {
+        errorMessage = `Invalid email or password. ${bruteForce.attemptsLeft} attempts remaining.`;
       } else if (error.message.includes("Email not confirmed")) {
         errorMessage = "Please verify your email address before logging in.";
       }
@@ -98,6 +114,9 @@ const LoginPage = () => {
       setIsLoading(false);
       return;
     }
+
+    // Successful login — clear attempts
+    clearLoginAttempts();
 
     toast({
       title: "Welcome back!",
