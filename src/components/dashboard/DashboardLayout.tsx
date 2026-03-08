@@ -16,9 +16,9 @@ import {
   GraduationCap,
   Menu,
   X,
-  Bell,
   ChevronDown,
 } from "lucide-react";
+import { NotificationBell } from "@/components/dashboard/NotificationBell";
 import { useAuth } from "@/hooks/useAuth";
 import { useUnreadMessages } from "@/hooks/useUnreadMessages";
 import { Button } from "@/components/ui/button";
