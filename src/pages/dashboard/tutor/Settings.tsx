@@ -418,7 +418,7 @@ export default function TutorSettings() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
             <TabsTrigger value="profile" className="gap-2">
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Profile</span>
@@ -426,6 +426,10 @@ export default function TutorSettings() {
             <TabsTrigger value="teaching" className="gap-2">
               <GraduationCap className="w-4 h-4" />
               <span className="hidden sm:inline">Teaching</span>
+            </TabsTrigger>
+            <TabsTrigger value="schedule" className="gap-2">
+              <CalendarDays className="w-4 h-4" />
+              <span className="hidden sm:inline">Schedule</span>
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-2">
               <Bell className="w-4 h-4" />
