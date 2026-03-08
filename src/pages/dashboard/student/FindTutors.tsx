@@ -761,8 +761,8 @@ export default function FindTutors() {
                                   <Link to={`/dashboard/student/tutor/${tutor.id}#demo-video`}>▶ Watch Demo</Link>
                                 </Button>
                               ) : tutor.live_demo_enabled ? (
-                                <Button className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm" asChild>
-                                  <Link to={`/dashboard/student/tutor/${tutor.id}`}>📅 Book Demo</Link>
+                                <Button className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm" onClick={() => setRequestDemoTutor(tutor)}>
+                                  📅 Book Demo
                                 </Button>
                               ) : null}
                             </div>
