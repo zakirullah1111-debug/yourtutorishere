@@ -927,7 +927,7 @@ export default function TutorSettings() {
                     <p className="text-sm text-destructive">{passwordErrors.confirm}</p>
                   )}
                 </div>
-                <Button onClick={handlePasswordChange} disabled={passwordLoading}>
+                <Button onClick={handlePasswordChange} disabled={passwordLoading} className="w-full sm:w-auto min-h-[44px]">
                   {passwordLoading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...</>
                   ) : (
