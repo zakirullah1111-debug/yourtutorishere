@@ -235,15 +235,19 @@ export function useMessaging(userType: "student" | "tutor") {
   }, [user, toast]);
 
   // Create or get conversation
-  const getOrCreateConversation = useCallback(async (tutorUserId: string): Promise<string | null> => {
+  const getOrCreateConversation = useCallback(async (otherUserId: string): Promise<string | null> => {
     if (!user) return null;
     try {
+      // Determine which is student and which is tutor based on userType
+      const studentId = userType === "student" ? user.id : otherUserId;
+      const tutorId = userType === "student" ? otherUserId : user.id;
+
       // Check existing
       const { data: existing } = await supabase
         .from("conversations")
         .select("id")
-        .eq("student_user_id", user.id)
-        .eq("tutor_user_id", tutorUserId)
+        .eq("student_user_id", studentId)
+        .eq("tutor_user_id", tutorId)
         .maybeSingle();
 
       if (existing) return existing.id;
@@ -252,8 +256,8 @@ export function useMessaging(userType: "student" | "tutor") {
       const { data: newConv, error } = await supabase
         .from("conversations")
         .insert({
-          student_user_id: user.id,
-          tutor_user_id: tutorUserId,
+          student_user_id: studentId,
+          tutor_user_id: tutorId,
         })
         .select("id")
         .single();
@@ -265,7 +269,7 @@ export function useMessaging(userType: "student" | "tutor") {
       toast({ title: "Could not start conversation", variant: "destructive" });
       return null;
     }
-  }, [user, toast]);
+  }, [user, userType, toast]);
 
   // Select conversation
   const selectConversation = useCallback(async (conversationId: string) => {

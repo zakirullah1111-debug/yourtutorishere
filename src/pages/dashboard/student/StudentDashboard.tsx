@@ -135,7 +135,7 @@ export default function StudentDashboard() {
         setIsNewUser(!hasCompletedSessions);
         
         setStats({
-          upcomingSessionsCount: 3,
+          upcomingSessionsCount: 0,
           totalHoursCompleted: studentData.total_hours_completed || 0,
           currentGradeAverage: studentData.current_grade_average || 0,
           activeTutorsCount: studentData.assigned_tutor_id ? 1 : 0,
