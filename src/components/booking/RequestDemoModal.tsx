@@ -36,39 +36,55 @@ export function RequestDemoModal({ open, onOpenChange, tutor }: RequestDemoModal
   const handleSend = async () => {
     setSending(true);
     try {
-      const res = await supabase.functions.invoke("request-demo", {
+      const { data, error } = await supabase.functions.invoke("request-demo", {
         body: {
           tutor_id: tutor.user_id,
           message: message.trim() || undefined,
         },
       });
 
-      if (res.error) {
-        const errData = res.data;
-        if (errData?.error === "duplicate_request") {
-          toast({
-            title: "Request already sent",
-            description: errData.message || "You already have a pending or confirmed session with this tutor.",
-            variant: "destructive",
-          });
-        } else {
-          toast({ title: "Failed to send request", description: "Please try again.", variant: "destructive" });
-        }
+      console.log("request-demo response:", { data, error });
+
+      // supabase.functions.invoke puts non-2xx responses in error,
+      // but the body may still be in data or we need to parse error
+      const responseData = data || {};
+
+      if (responseData?.error === "duplicate_request") {
+        toast({
+          title: "Request already sent",
+          description: responseData.message || "You already have a pending or confirmed session with this tutor.",
+          variant: "destructive",
+        });
         return;
       }
 
-      if (res.data?.success) {
-        setSent(true);
-      } else if (res.data?.error === "duplicate_request") {
-        toast({
-          title: "Request already sent",
-          description: res.data.message,
-          variant: "destructive",
-        });
-      } else {
-        toast({ title: "Failed to send request", description: "Please try again.", variant: "destructive" });
+      if (error) {
+        // Try to parse the error context for more info
+        let errMsg = "Please try again.";
+        try {
+          const errContext = await (error as any)?.context?.json?.();
+          if (errContext?.error === "duplicate_request") {
+            toast({
+              title: "Request already sent",
+              description: errContext.message || "You already have a pending or confirmed session with this tutor.",
+              variant: "destructive",
+            });
+            return;
+          }
+          errMsg = errContext?.message || errContext?.error || errMsg;
+        } catch {}
+        console.error("request-demo error:", error, errMsg);
+        toast({ title: "Failed to send request", description: errMsg, variant: "destructive" });
+        return;
       }
-    } catch {
+
+      if (responseData?.success) {
+        setSent(true);
+      } else {
+        toast({ title: "Failed to send request", description: responseData?.message || "Please try again.", variant: "destructive" });
+      }
+    } catch (err) {
+      console.error("request-demo exception:", err);
       toast({ title: "Error", description: "Something went wrong. Please try again.", variant: "destructive" });
     } finally {
       setSending(false);
