@@ -176,6 +176,9 @@ export default function FindTutors() {
           languages: tutor.languages || ["English", "Urdu"],
           bio_summary: tutor.bio_summary,
           math_levels: (tutor as any).math_levels || [],
+          demo_video_url: (tutor as any).demo_video_url || null,
+          demo_video_type: (tutor as any).demo_video_type || null,
+          live_demo_enabled: (tutor as any).live_demo_enabled || false,
         };
       });
 
