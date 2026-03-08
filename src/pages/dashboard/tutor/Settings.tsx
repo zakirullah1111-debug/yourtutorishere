@@ -964,14 +964,14 @@ export default function TutorSettings() {
                 <CardDescription>Irreversible actions</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">Delete Account</p>
                     <p className="text-sm text-muted-foreground">
                       Permanently delete your account and all data
                     </p>
                   </div>
-                  <Button variant="destructive">Delete Account</Button>
+                  <Button variant="destructive" className="w-full sm:w-auto min-h-[44px]">Delete Account</Button>
                 </div>
               </CardContent>
             </Card>
