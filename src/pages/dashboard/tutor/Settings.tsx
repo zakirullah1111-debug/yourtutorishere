@@ -798,6 +798,11 @@ export default function TutorSettings() {
             )}
           </TabsContent>
 
+          {/* ═══════════ SCHEDULE TAB ═══════════ */}
+          <TabsContent value="schedule">
+            <ScheduleTab />
+          </TabsContent>
+
           {/* ═══════════ NOTIFICATIONS TAB ═══════════ */}
           <TabsContent value="notifications" className="space-y-6">
             <Card>
