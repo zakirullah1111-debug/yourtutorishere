@@ -477,8 +477,8 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
             ) : step === "success" ? (
               /* SUCCESS SCREEN */
               <div className="text-center py-4">
-                <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 className="h-9 w-9 text-green-600" />
+                <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="h-9 w-9 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <h3 className="text-[22px] font-bold text-foreground">Session Booked!</h3>
                 <p className="text-[15px] text-muted-foreground mt-2">
