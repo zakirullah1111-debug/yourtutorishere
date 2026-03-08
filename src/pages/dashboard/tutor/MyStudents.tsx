@@ -87,8 +87,8 @@ export default function MyStudents() {
             const profile = profiles?.find((p) => p.user_id === student.user_id);
             return {
               id: student.id,
-              name: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown",
-              email: profile?.email || "",
+              name: profile ? `${profile.first_name} ${profile.last_name?.[0] || ""}.`.trim() : "Unknown",
+              email: "",
               subject: student.primary_subject,
               currentClass: student.current_class || "N/A",
               sessionsCompleted: student.total_sessions_completed || 0,
