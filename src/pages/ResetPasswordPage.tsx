@@ -71,7 +71,7 @@ const ResetPasswordPage = () => {
 
   if (!isRecovery && !success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="min-h-[100dvh] flex items-center justify-center px-4 py-8 sm:p-8">
         <div className="text-center space-y-4">
           <h1 className="text-heading-1 font-bold text-foreground">Invalid Reset Link</h1>
           <p className="text-muted-foreground">This password reset link is invalid or has expired.</p>
