@@ -14,3 +14,6 @@ verify_jwt = false
 
 [functions.reject-demo]
 verify_jwt = false
+
+[functions.send-session-link]
+verify_jwt = false
