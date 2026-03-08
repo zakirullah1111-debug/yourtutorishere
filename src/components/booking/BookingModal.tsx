@@ -505,13 +505,13 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                 </p>
 
                 <div className="space-y-2">
-                  <Button className="w-full" onClick={() => { onOpenChange(false); navigate("/dashboard/student/bookings"); }}>
+                  <Button className="w-full min-h-[44px]" onClick={() => { onOpenChange(false); navigate("/dashboard/student/bookings"); }}>
                     <Calendar className="mr-2 h-4 w-4" /> View My Sessions
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={handleMessageTutor}>
+                  <Button variant="outline" className="w-full min-h-[44px]" onClick={handleMessageTutor}>
                     <MessageCircle className="mr-2 h-4 w-4" /> Message Tutor
                   </Button>
-                  <button className="text-sm text-muted-foreground hover:text-foreground mt-2" onClick={() => onOpenChange(false)}>
+                  <button className="text-sm text-muted-foreground hover:text-foreground mt-2 min-h-[44px]" onClick={() => onOpenChange(false)}>
                     Close
                   </button>
                 </div>
