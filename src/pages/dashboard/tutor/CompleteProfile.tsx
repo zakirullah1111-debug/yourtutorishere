@@ -363,7 +363,7 @@ export default function CompleteProfile() {
             {/* Teaching Mode */}
             <div className="space-y-2">
               <Label>Teaching Mode *</Label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { value: "online", label: "🌐 Online Only" },
                   { value: "in-person", label: "🏠 In-Person Only" },
