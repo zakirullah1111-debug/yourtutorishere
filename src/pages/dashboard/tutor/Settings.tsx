@@ -580,7 +580,7 @@ export default function TutorSettings() {
             </Card>
 
             <div className="flex justify-end">
-              <Button onClick={handleProfileSave} disabled={profileLoading}>
+              <Button onClick={handleProfileSave} disabled={profileLoading} className="w-full sm:w-auto min-h-[44px]">
                 {profileLoading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                 ) : (
@@ -718,7 +718,7 @@ export default function TutorSettings() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Teaching Mode</Label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
                       { value: "online", label: "🌐 Online Only" },
                       { value: "in-person", label: "🏠 In-Person Only" },
@@ -728,7 +728,7 @@ export default function TutorSettings() {
                         key={mode.value}
                         type="button"
                         variant={teaching.teachingMode === mode.value ? "default" : "outline"}
-                        className="h-auto py-3"
+                        className="h-auto py-3 min-h-[44px]"
                         onClick={() => setTeaching({ ...teaching, teachingMode: mode.value })}
                       >
                         {mode.label}
@@ -772,7 +772,7 @@ export default function TutorSettings() {
             </Card>
 
             <div className="flex justify-end">
-              <Button onClick={handleTeachingSave} disabled={teachingLoading}>
+              <Button onClick={handleTeachingSave} disabled={teachingLoading} className="w-full sm:w-auto min-h-[44px]">
                 {teachingLoading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                 ) : (
@@ -857,11 +857,11 @@ export default function TutorSettings() {
             </Card>
 
             <div className="flex justify-end">
-              <Button onClick={handleNotificationsSave} disabled={notifLoading}>
+              <Button onClick={handleNotificationsSave} disabled={notifLoading} className="w-full sm:w-auto min-h-[44px]">
                 {notifLoading ? (
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...</>
                 ) : (
-                  <><Save className="w-4 h-4 mr-2" /> Save Notification Preferences</>
+                  <><Save className="w-4 h-4 mr-2" /> Save Preferences</>
                 )}
               </Button>
             </div>
@@ -927,7 +927,7 @@ export default function TutorSettings() {
                     <p className="text-sm text-destructive">{passwordErrors.confirm}</p>
                   )}
                 </div>
-                <Button onClick={handlePasswordChange} disabled={passwordLoading}>
+                <Button onClick={handlePasswordChange} disabled={passwordLoading} className="w-full sm:w-auto min-h-[44px]">
                   {passwordLoading ? (
                     <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Updating...</>
                   ) : (
@@ -964,14 +964,14 @@ export default function TutorSettings() {
                 <CardDescription>Irreversible actions</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <p className="font-medium">Delete Account</p>
                     <p className="text-sm text-muted-foreground">
                       Permanently delete your account and all data
                     </p>
                   </div>
-                  <Button variant="destructive">Delete Account</Button>
+                  <Button variant="destructive" className="w-full sm:w-auto min-h-[44px]">Delete Account</Button>
                 </div>
               </CardContent>
             </Card>

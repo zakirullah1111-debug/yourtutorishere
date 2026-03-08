@@ -301,17 +301,17 @@ export default function Reviews() {
         <div className="space-y-4">
           {filteredReviews.map((review) => (
             <Card key={review.id}>
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <Avatar className="w-12 h-12">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
+                  <Avatar className="w-10 h-10 sm:w-12 sm:h-12 shrink-0">
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {review.studentName.split(" ").map((n) => n[0]).join("")}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-1">
                       <div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold">{review.studentName}</h3>
                           {review.verified && (
                             <Badge variant="secondary" className="text-xs">

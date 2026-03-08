@@ -270,8 +270,8 @@ export default function MyStudents() {
           </CardContent>
         </Card>
 
-        {/* Students Table */}
-        <Card>
+        {/* Students Table - Desktop */}
+        <Card className="hidden md:block">
           <CardContent className="p-0">
             <Table>
               <TableHeader>
@@ -342,6 +342,52 @@ export default function MyStudents() {
             </Table>
           </CardContent>
         </Card>
+
+        {/* Students Cards - Mobile */}
+        <div className="md:hidden space-y-3">
+          {filteredStudents.map((student) => (
+            <Card key={student.id}>
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3 mb-3">
+                  <Avatar className="w-10 h-10">
+                    <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      {student.name.split(" ").map((n) => n[0]).join("")}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium truncate">{student.name}</p>
+                    <p className="text-sm text-muted-foreground">{student.subject} · {student.currentClass}</p>
+                  </div>
+                  {getProgressBadge(student.progress)}
+                </div>
+                <div className="grid grid-cols-3 gap-2 text-center text-sm mb-3">
+                  <div>
+                    <p className="font-bold">{student.sessionsCompleted}</p>
+                    <p className="text-xs text-muted-foreground">Sessions</p>
+                  </div>
+                  <div>
+                    <p className={`font-bold ${student.gradeAverage >= 80 ? "text-green-600" : student.gradeAverage >= 60 ? "text-yellow-600" : "text-red-600"}`}>
+                      {student.gradeAverage}%
+                    </p>
+                    <p className="text-xs text-muted-foreground">Grade</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">{student.nextSession ? formatDate(student.nextSession) : "—"}</p>
+                    <p className="text-xs text-muted-foreground">Next</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" className="flex-1 min-h-[44px]">
+                    <MessageSquare className="w-4 h-4 mr-1" /> Message
+                  </Button>
+                  <Button size="sm" className="flex-1 min-h-[44px]">
+                    <Calendar className="w-4 h-4 mr-1" /> Schedule
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </DashboardLayout>
   );
