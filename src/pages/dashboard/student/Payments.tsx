@@ -165,9 +165,9 @@ export default function Payments() {
             ) : (
               upcomingPayments.map((payment) => (
                 <Card key={payment.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div className="flex-1">
                         <h4 className="font-semibold">{payment.tutorName}</h4>
                         <p className="text-sm text-muted-foreground">
                           {payment.sessions} sessions
@@ -176,13 +176,15 @@ export default function Payments() {
                           Due: {formatDate(payment.date)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">
-                          PKR {payment.amount.toLocaleString()}
-                        </p>
-                        <div className="mt-1">{getStatusBadge(payment.status)}</div>
+                      <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
+                        <div>
+                          <p className="text-xl sm:text-2xl font-bold">
+                            PKR {payment.amount.toLocaleString()}
+                          </p>
+                          <div className="mt-1">{getStatusBadge(payment.status)}</div>
+                        </div>
+                        <Button className="min-h-[44px] w-full sm:w-auto">Pay Now</Button>
                       </div>
-                      <Button>Pay Now</Button>
                     </div>
                   </CardContent>
                 </Card>
