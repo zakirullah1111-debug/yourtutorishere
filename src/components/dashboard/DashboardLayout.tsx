@@ -71,6 +71,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const unreadCount = useUnreadMessages(userType);
+  const { activeSession, dismissPopup } = useSessionLinkDelivery();
 
   const navItems = userType === "student" ? studentNavItems : tutorNavItems;
 
