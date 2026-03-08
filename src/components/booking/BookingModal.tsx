@@ -219,8 +219,9 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
     }
   };
 
-  // Monday-first week header
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // Monday-first week header (full on desktop, single letter on mobile)
+  const weekDaysFull = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const weekDaysShort = ["M", "T", "W", "T", "F", "S", "S"];
 
   // Get offset for first day (Monday = 0)
   const firstDayOffset = useMemo(() => {
