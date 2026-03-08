@@ -290,7 +290,7 @@ function CategoryBlock({
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {category.subjects.map((subject) => (
           <Link
             key={subject}
