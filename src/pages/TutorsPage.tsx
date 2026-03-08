@@ -1,12 +1,14 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Filter, Star, Clock, MessageSquare, Heart, Sparkles, ChevronDown, Loader2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AIChatbot } from "@/components/chat/AIChatbot";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
 
 interface PublicTutor {
   id: string;
