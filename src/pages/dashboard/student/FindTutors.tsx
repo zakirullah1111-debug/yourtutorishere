@@ -661,7 +661,15 @@ export default function FindTutors() {
                             <MessageCircle className="w-4 h-4 mr-1" />
                             Message
                           </Button>
-                          <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm">Book Demo</Button>
+                          {tutor.demo_video_url ? (
+                            <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm" asChild>
+                              <Link to={`/dashboard/student/tutor/${tutor.id}#demo-video`}>▶ Watch Demo</Link>
+                            </Button>
+                          ) : tutor.live_demo_enabled ? (
+                            <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm" asChild>
+                              <Link to={`/dashboard/student/tutor/${tutor.id}`}>📅 Book Demo</Link>
+                            </Button>
+                          ) : null}
                         </div>
                       </CardContent>
                     </Card>
