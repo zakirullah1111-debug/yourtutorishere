@@ -471,7 +471,7 @@ export default function TutorProfile() {
                     <MessageCircle className="w-4 h-4 mr-2" /> Message Tutor
                   </Button>
                   {tutor.live_demo_enabled && (
-                    <Button className="w-full" onClick={() => setComingSoonOpen(true)}>
+                    <Button className="w-full" onClick={() => setBookingOpen(true)}>
                       <Calendar className="w-4 h-4 mr-2" />
                       Book Live Demo — {tutor.live_demo_price === 0 ? "Free" : tutor.live_demo_price ? `PKR ${tutor.live_demo_price.toLocaleString()}` : "Free"}
                     </Button>
