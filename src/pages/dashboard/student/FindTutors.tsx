@@ -65,6 +65,9 @@ interface Tutor {
   teaching_levels: string[];
   languages?: string[];
   math_levels?: string[];
+  demo_video_url?: string | null;
+  demo_video_type?: string | null;
+  live_demo_enabled?: boolean;
 }
 
 type SearchType = "tutor_name" | "subject";
