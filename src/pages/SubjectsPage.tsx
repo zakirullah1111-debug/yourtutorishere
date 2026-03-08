@@ -126,7 +126,7 @@ const SubjectsPage = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-center max-w-3xl mx-auto"
             >
-              <h1 className="text-display-3 md:text-display-2 font-bold text-foreground mb-4">
+              <h1 className="text-[1.75rem] sm:text-display-3 md:text-display-2 font-bold text-foreground mb-4">
                 Explore All <span className="gradient-text">Subjects</span>
               </h1>
               <p className="text-body-lg text-muted-foreground mb-8">
@@ -182,7 +182,7 @@ const SubjectsPage = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: 0.1 }}
-                className="bg-primary/5 rounded-3xl p-8 border border-primary/10"
+                className="bg-primary/5 rounded-2xl sm:rounded-3xl p-5 sm:p-8 border border-primary/10"
               >
                 <div className="flex items-center justify-between mb-6">
                   <div className="flex items-center gap-4">
@@ -272,7 +272,7 @@ function CategoryBlock({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className={`${category.bgColor} rounded-3xl p-8`}
+      className={`${category.bgColor} rounded-2xl sm:rounded-3xl p-5 sm:p-8`}
     >
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
@@ -280,7 +280,7 @@ function CategoryBlock({
             {category.emoji}
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-foreground">{category.name}</h2>
+            <h2 className="text-xl sm:text-2xl font-bold text-foreground">{category.name}</h2>
             {loading ? (
               <Skeleton className="h-5 w-32 mt-1" />
             ) : (
@@ -290,12 +290,12 @@ function CategoryBlock({
         </div>
       </div>
 
-      <div className="grid sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
         {category.subjects.map((subject) => (
           <Link
             key={subject}
             to={`/tutors?subject=${encodeURIComponent(subject)}`}
-            className="bg-card rounded-xl p-4 border border-border hover:border-primary hover:shadow-md transition-all group"
+            className="bg-card rounded-xl p-4 border border-border hover:border-primary hover:shadow-md transition-all group min-h-[56px]"
           >
             <div className="flex items-center justify-between">
               <div>
