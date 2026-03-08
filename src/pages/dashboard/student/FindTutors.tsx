@@ -459,7 +459,7 @@ export default function FindTutors() {
         </Card>
 
         {/* Sort and View Controls */}
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:flex-wrap items-start sm:items-center justify-between gap-3">
           <p className="text-muted-foreground">
             Showing <span className="font-medium text-foreground">{filteredTutors.length}</span> tutors
           </p>
@@ -467,7 +467,7 @@ export default function FindTutors() {
           <div className="flex items-center gap-4">
             {/* Sort */}
             <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-48 min-h-[44px]">
                 <SelectValue placeholder="Sort by" />
               </SelectTrigger>
               <SelectContent>

@@ -145,10 +145,10 @@ export default function Payments() {
         </div>
 
         <Tabs defaultValue="upcoming">
-          <TabsList>
-            <TabsTrigger value="upcoming">Upcoming Payments</TabsTrigger>
-            <TabsTrigger value="history">Payment History</TabsTrigger>
-            <TabsTrigger value="methods">Payment Methods</TabsTrigger>
+          <TabsList className="w-full grid grid-cols-3">
+            <TabsTrigger value="upcoming" className="text-xs sm:text-sm">Upcoming</TabsTrigger>
+            <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
+            <TabsTrigger value="methods" className="text-xs sm:text-sm">Methods</TabsTrigger>
           </TabsList>
 
           <TabsContent value="upcoming" className="mt-4 space-y-4">
@@ -165,9 +165,9 @@ export default function Payments() {
             ) : (
               upcomingPayments.map((payment) => (
                 <Card key={payment.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
+                  <CardContent className="p-4 sm:p-6">
+                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                      <div className="flex-1">
                         <h4 className="font-semibold">{payment.tutorName}</h4>
                         <p className="text-sm text-muted-foreground">
                           {payment.sessions} sessions
@@ -176,13 +176,15 @@ export default function Payments() {
                           Due: {formatDate(payment.date)}
                         </p>
                       </div>
-                      <div className="text-right">
-                        <p className="text-2xl font-bold">
-                          PKR {payment.amount.toLocaleString()}
-                        </p>
-                        <div className="mt-1">{getStatusBadge(payment.status)}</div>
+                      <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
+                        <div>
+                          <p className="text-xl sm:text-2xl font-bold">
+                            PKR {payment.amount.toLocaleString()}
+                          </p>
+                          <div className="mt-1">{getStatusBadge(payment.status)}</div>
+                        </div>
+                        <Button className="min-h-[44px] w-full sm:w-auto">Pay Now</Button>
                       </div>
-                      <Button>Pay Now</Button>
                     </div>
                   </CardContent>
                 </Card>
@@ -191,7 +193,8 @@ export default function Payments() {
           </TabsContent>
 
           <TabsContent value="history" className="mt-4">
-            <Card>
+            {/* Desktop table */}
+            <Card className="hidden md:block">
               <CardContent className="p-0">
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -229,6 +232,28 @@ export default function Payments() {
                 </div>
               </CardContent>
             </Card>
+            {/* Mobile card layout */}
+            <div className="md:hidden space-y-3">
+              {paymentHistory.map((payment) => (
+                <Card key={payment.id}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="font-semibold">{payment.tutorName}</h4>
+                      {getStatusBadge(payment.status)}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
+                      <span>{formatDate(payment.date)}</span>
+                      <span className="text-right">{payment.method}</span>
+                      <span>{payment.sessions} sessions</span>
+                      <span className="text-right font-medium text-foreground">PKR {payment.amount.toLocaleString()}</span>
+                    </div>
+                    <Button variant="ghost" size="sm" className="w-full min-h-[44px]">
+                      <Download className="w-4 h-4 mr-1" /> Download Receipt
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
 
           <TabsContent value="methods" className="mt-4 space-y-4">

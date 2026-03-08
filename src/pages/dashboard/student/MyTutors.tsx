@@ -75,12 +75,12 @@ export default function MyTutors() {
   return (
     <DashboardLayout userType="student">
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl font-bold">My Tutors</h1>
             <p className="text-muted-foreground">Manage your current tutors</p>
           </div>
-          <Button asChild>
+          <Button asChild className="w-full sm:w-auto min-h-[44px]">
             <Link to="/dashboard/student/find-tutors">Find New Tutor</Link>
           </Button>
         </div>
@@ -133,13 +133,13 @@ export default function MyTutors() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                       <div>
-                        <p className="text-2xl font-bold">{tutor.sessionsCompleted}</p>
+                        <p className="text-xl sm:text-2xl font-bold">{tutor.sessionsCompleted}</p>
                         <p className="text-xs text-muted-foreground">Sessions</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold">{tutor.totalHours}h</p>
+                        <p className="text-xl sm:text-2xl font-bold">{tutor.totalHours}h</p>
                         <p className="text-xs text-muted-foreground">Total Hours</p>
                       </div>
                       <div>
@@ -156,11 +156,11 @@ export default function MyTutors() {
                       )}
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                    <div className="flex gap-2 w-full sm:w-auto">
+                      <Button variant="outline" size="sm" className="flex-1 sm:flex-none min-h-[44px]">
                         <MessageSquare className="w-4 h-4 mr-1" /> Message
                       </Button>
-                      <Button size="sm">
+                      <Button size="sm" className="flex-1 sm:flex-none min-h-[44px]">
                         <Video className="w-4 h-4 mr-1" /> Book Session
                       </Button>
                     </div>

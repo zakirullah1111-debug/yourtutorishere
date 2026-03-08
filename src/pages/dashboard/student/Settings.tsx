@@ -228,17 +228,17 @@ export default function Settings() {
 
         <Tabs defaultValue="profile">
           <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="profile">
-              <User className="w-4 h-4 mr-2" /> Profile
+            <TabsTrigger value="profile" className="text-xs sm:text-sm gap-1 sm:gap-2 px-1 sm:px-3">
+              <User className="w-4 h-4 shrink-0" /> <span className="hidden sm:inline">Profile</span>
             </TabsTrigger>
-            <TabsTrigger value="notifications">
-              <Bell className="w-4 h-4 mr-2" /> Notifications
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm gap-1 sm:gap-2 px-1 sm:px-3">
+              <Bell className="w-4 h-4 shrink-0" /> <span className="hidden sm:inline">Notifications</span>
             </TabsTrigger>
-            <TabsTrigger value="security">
-              <Lock className="w-4 h-4 mr-2" /> Security
+            <TabsTrigger value="security" className="text-xs sm:text-sm gap-1 sm:gap-2 px-1 sm:px-3">
+              <Lock className="w-4 h-4 shrink-0" /> <span className="hidden sm:inline">Security</span>
             </TabsTrigger>
-            <TabsTrigger value="privacy">
-              <Shield className="w-4 h-4 mr-2" /> Privacy
+            <TabsTrigger value="privacy" className="text-xs sm:text-sm gap-1 sm:gap-2 px-1 sm:px-3">
+              <Shield className="w-4 h-4 shrink-0" /> <span className="hidden sm:inline">Privacy</span>
             </TabsTrigger>
           </TabsList>
 
@@ -296,7 +296,7 @@ export default function Settings() {
                 <CardDescription>Update your personal details</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>First Name</Label>
                     <Input
@@ -327,7 +327,7 @@ export default function Settings() {
                     placeholder="+92 XXX XXXXXXX"
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label>School/College</Label>
                     <Input
@@ -352,7 +352,7 @@ export default function Settings() {
                     </Select>
                   </div>
                 </div>
-                <Button onClick={handleSaveProfile} disabled={saving}>
+                <Button onClick={handleSaveProfile} disabled={saving} className="w-full sm:w-auto min-h-[44px]">
                   {saving ? (
                     <>
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Saving...
