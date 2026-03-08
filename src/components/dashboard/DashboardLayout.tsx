@@ -182,11 +182,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
 
             {/* Right Side */}
             <div className="flex items-center gap-4">
-              {/* Notifications */}
-              <button className="relative p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted">
-                <Bell className="w-5 h-5" />
-                <span className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full" />
-              </button>
+              <NotificationBell />
 
               {/* Profile Dropdown */}
               <DropdownMenu>
