@@ -289,11 +289,11 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
 
                 {/* Calendar navigation */}
                 <div className="flex items-center justify-between mb-3">
-                  <Button variant="ghost" size="icon" disabled={!canGoPrev} onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>
+                  <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" disabled={!canGoPrev} onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm font-semibold text-foreground">{format(currentMonth, "MMMM yyyy")}</span>
-                  <Button variant="ghost" size="icon" disabled={!canGoNext} onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                  <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" disabled={!canGoNext} onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
