@@ -276,7 +276,7 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-6">
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
