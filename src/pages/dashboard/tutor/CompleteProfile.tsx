@@ -448,6 +448,23 @@ export default function CompleteProfile() {
           </CardContent>
         </Card>
 
+        {/* Section 4: Demo Video (Optional) */}
+        {user && (
+          <DemoVideoSection
+            userId={user.id}
+            isOptional
+            initialData={{
+              demo_video_type: null,
+              demo_video_url: null,
+              demo_video_title: null,
+              demo_video_thumbnail: null,
+              demo_video_duration: null,
+              live_demo_enabled: false,
+              live_demo_price: null,
+            }}
+          />
+        )}
+
         {/* Submit */}
         <Button
           className="w-full h-12 text-base"
