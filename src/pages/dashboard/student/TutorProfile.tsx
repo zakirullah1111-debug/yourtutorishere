@@ -16,6 +16,10 @@ import {
   Languages,
   ChevronDown,
   ChevronUp,
+  Video,
+  Play,
+  Calendar,
+  Rocket,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
