@@ -127,23 +127,23 @@ const TutorsPage = () => {
 
         <section className="py-8">
           <div className="container mx-auto container-padding">
-            <div className="flex flex-wrap items-center gap-4 mb-8">
-              <select className="px-4 py-2 rounded-lg border border-border bg-card text-foreground">
+            <div className="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-3 sm:gap-4 mb-8">
+              <select className="px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm sm:text-base min-h-[44px]">
                 {subjects.map((s) => <option key={s}>{s}</option>)}
               </select>
-              <select className="px-4 py-2 rounded-lg border border-border bg-card text-foreground">
+              <select className="px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm sm:text-base min-h-[44px]">
                 {levels.map((l) => <option key={l}>{l}</option>)}
               </select>
-              <select className="px-4 py-2 rounded-lg border border-border bg-card text-foreground">
+              <select className="px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm sm:text-base min-h-[44px]">
                 {priceRanges.map((p) => <option key={p}>{p}</option>)}
               </select>
               
-              <Button variant="outline" className="ml-auto">
+              <Button variant="outline" className="sm:ml-auto min-h-[44px]">
                 <Sparkles className="w-4 h-4 mr-2 text-primary" />
                 AI Match
               </Button>
               
-              <select className="px-4 py-2 rounded-lg border border-border bg-card text-foreground">
+              <select className="col-span-2 sm:col-span-1 px-3 py-2 rounded-lg border border-border bg-card text-foreground text-sm sm:text-base min-h-[44px]">
                 <option>Sort by: Recommended</option>
                 <option>Price: Low to High</option>
                 <option>Price: High to Low</option>
