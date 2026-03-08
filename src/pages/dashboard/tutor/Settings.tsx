@@ -201,6 +201,16 @@ export default function TutorSettings() {
         if (notifPrefs && typeof notifPrefs === "object") {
           setNotifications((prev) => ({ ...prev, ...notifPrefs }));
         }
+
+        setDemoVideoData({
+          demo_video_type: (tutorData as any).demo_video_type || null,
+          demo_video_url: (tutorData as any).demo_video_url || null,
+          demo_video_title: (tutorData as any).demo_video_title || null,
+          demo_video_thumbnail: (tutorData as any).demo_video_thumbnail || null,
+          demo_video_duration: (tutorData as any).demo_video_duration || null,
+          live_demo_enabled: (tutorData as any).live_demo_enabled || false,
+          live_demo_price: (tutorData as any).live_demo_price || null,
+        });
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
