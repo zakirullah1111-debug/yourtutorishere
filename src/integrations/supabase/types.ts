@@ -88,11 +88,15 @@ export type Database = {
           id: string
           meeting_room_id: string
           meeting_url: string
+          rejected_reason: string | null
+          request_message: string | null
           review_prompted: boolean | null
           scheduled_date: string
           scheduled_time: string
+          session_link_sent: boolean
           status: string
           student_id: string
+          tutor_approved_at: string | null
           tutor_id: string
           updated_at: string | null
         }
@@ -106,11 +110,15 @@ export type Database = {
           id?: string
           meeting_room_id: string
           meeting_url: string
+          rejected_reason?: string | null
+          request_message?: string | null
           review_prompted?: boolean | null
           scheduled_date: string
           scheduled_time: string
+          session_link_sent?: boolean
           status?: string
           student_id: string
+          tutor_approved_at?: string | null
           tutor_id: string
           updated_at?: string | null
         }
@@ -124,11 +132,15 @@ export type Database = {
           id?: string
           meeting_room_id?: string
           meeting_url?: string
+          rejected_reason?: string | null
+          request_message?: string | null
           review_prompted?: boolean | null
           scheduled_date?: string
           scheduled_time?: string
+          session_link_sent?: boolean
           status?: string
           student_id?: string
+          tutor_approved_at?: string | null
           tutor_id?: string
           updated_at?: string | null
         }
