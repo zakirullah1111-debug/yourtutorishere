@@ -80,15 +80,15 @@ export default function MyStudents() {
           const userIds = studentsData.map((s) => s.user_id);
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("user_id, first_name, last_name, email")
+            .select("user_id, first_name, last_name")
             .in("user_id", userIds);
 
           const mappedStudents: Student[] = studentsData.map((student) => {
             const profile = profiles?.find((p) => p.user_id === student.user_id);
             return {
               id: student.id,
-              name: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown",
-              email: profile?.email || "",
+              name: profile ? `${profile.first_name} ${profile.last_name?.[0] || ""}.`.trim() : "Unknown",
+              email: "",
               subject: student.primary_subject,
               currentClass: student.current_class || "N/A",
               sessionsCompleted: student.total_sessions_completed || 0,

@@ -435,6 +435,8 @@ export default function TutorProfile() {
                         frameBorder="0"
                         allowFullScreen
                         allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        sandbox="allow-scripts allow-same-origin allow-presentation"
+                        referrerPolicy="no-referrer"
                         title={tutor.demo_video_title || "Demo lesson"}
                       />
                     </div>
@@ -446,6 +448,8 @@ export default function TutorProfile() {
                         frameBorder="0"
                         allowFullScreen
                         allow="autoplay; fullscreen; picture-in-picture"
+                        sandbox="allow-scripts allow-same-origin allow-presentation"
+                        referrerPolicy="no-referrer"
                         title={tutor.demo_video_title || "Demo lesson"}
                       />
                     </div>

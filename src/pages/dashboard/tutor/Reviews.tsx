@@ -89,7 +89,7 @@ export default function Reviews() {
           studentRecords?.forEach((s) => {
             const profile = profiles?.find((p) => p.user_id === s.user_id);
             studentMap.set(s.id, {
-              name: profile ? `${profile.first_name} ${profile.last_name}` : "Unknown",
+              name: profile ? `${profile.first_name} ${profile.last_name?.[0] || ""}.`.trim() : "Unknown",
               subject: s.primary_subject,
             });
           });

@@ -117,12 +117,14 @@ const SignupPage = () => {
         description: errorMessage,
         variant: "destructive",
       });
+      setFormData(prev => ({ ...prev, password: "" })); // Clear sensitive data
       setIsLoading(false);
       return;
     }
 
-    // TODO: Re-enable email verification before production deployment
-    // Email verification is temporarily disabled for faster testing iteration
+    // Clear sensitive form data after successful signup
+    setFormData(prev => ({ ...prev, password: "" }));
+    
     toast({
       title: "Welcome to Your-Tutor! 🎉",
       description: "Your account has been created. Redirecting to your dashboard...",

@@ -23,21 +23,22 @@ export function useAvatarUpload({ userId, onSuccess }: UseAvatarUploadOptions) {
       return;
     }
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
+    // Validate file type against allowed MIME types
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
       toast({
         title: "Invalid File",
-        description: "Please upload an image file (JPG, PNG, GIF)",
+        description: "Please upload an image file (JPG, PNG, GIF, WebP)",
         variant: "destructive",
       });
       return;
     }
 
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
+    // Validate file size (max 5MB per security policy)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File Too Large",
-        description: "Please upload an image smaller than 2MB",
+        description: "Please upload an image smaller than 5MB",
         variant: "destructive",
       });
       return;
@@ -46,9 +47,9 @@ export function useAvatarUpload({ userId, onSuccess }: UseAvatarUploadOptions) {
     setUploading(true);
 
     try {
-      // Create unique filename
-      const fileExt = file.name.split(".").pop();
-      const fileName = `${userId}/avatar-${Date.now()}.${fileExt}`;
+      // Create unique filename using UUID - never preserve original filename
+      const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const fileName = `${userId}/${crypto.randomUUID()}.${fileExt}`;
 
       // Delete old avatar if exists
       const { data: existingFiles } = await supabase.storage
