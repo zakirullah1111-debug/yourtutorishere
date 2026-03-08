@@ -71,7 +71,7 @@ const ResetPasswordPage = () => {
 
   if (!isRecovery && !success) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-8">
+      <div className="min-h-[100dvh] flex items-center justify-center px-4 py-8 sm:p-8">
         <div className="text-center space-y-4">
           <h1 className="text-heading-1 font-bold text-foreground">Invalid Reset Link</h1>
           <p className="text-muted-foreground">This password reset link is invalid or has expired.</p>
@@ -84,7 +84,7 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-subtle flex items-center justify-center p-8">
+    <div className="min-h-[100dvh] gradient-subtle flex items-center justify-center px-4 py-8 sm:p-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <Link to="/" className="flex items-center gap-2 mb-8">
           <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
@@ -119,7 +119,7 @@ const ResetPasswordPage = () => {
                     required
                     disabled={isLoading}
                   />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center">
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
@@ -141,7 +141,7 @@ const ResetPasswordPage = () => {
                 </div>
               </div>
               {error && <p className="text-sm text-destructive">{error}</p>}
-              <Button type="submit" variant="gradient" size="xl" className="w-full" disabled={isLoading}>
+              <Button type="submit" variant="gradient" size="xl" className="w-full min-h-[48px]" disabled={isLoading}>
                 {isLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Updating...</> : "Update Password"}
               </Button>
             </form>

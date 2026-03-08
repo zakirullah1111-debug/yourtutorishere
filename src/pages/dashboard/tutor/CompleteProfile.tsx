@@ -363,7 +363,7 @@ export default function CompleteProfile() {
             {/* Teaching Mode */}
             <div className="space-y-2">
               <Label>Teaching Mode *</Label>
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {[
                   { value: "online", label: "🌐 Online Only" },
                   { value: "in-person", label: "🏠 In-Person Only" },
@@ -467,7 +467,7 @@ export default function CompleteProfile() {
 
         {/* Submit */}
         <Button
-          className="w-full h-12 text-base"
+          className="w-full h-12 min-h-[48px] text-base"
           onClick={handleSubmit}
           disabled={loading}
         >

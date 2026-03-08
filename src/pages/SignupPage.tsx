@@ -149,7 +149,7 @@ const SignupPage = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-subtle flex">
+    <div className="min-h-[100dvh] gradient-subtle flex">
       {/* Left Side - Branding */}
       <div className="hidden lg:flex flex-1 gradient-bg items-center justify-center p-12">
         <div className="text-center text-white max-w-md">
@@ -176,7 +176,7 @@ const SignupPage = () => {
       </div>
 
       {/* Right Side - Form */}
-      <div className="flex-1 flex items-center justify-center p-8 overflow-y-auto">
+      <div className="flex-1 flex items-center justify-center px-4 py-8 sm:p-8 overflow-y-auto">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -229,7 +229,7 @@ const SignupPage = () => {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name Fields */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
                   First Name
@@ -374,7 +374,7 @@ const SignupPage = () => {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -406,7 +406,7 @@ const SignupPage = () => {
               type="submit" 
               variant="gradient" 
               size="xl" 
-              className="w-full"
+              className="w-full min-h-[48px]"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -428,7 +428,7 @@ const SignupPage = () => {
           </div>
 
           {/* Social Signup */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-3">
             <Button variant="outline" size="lg" className="w-full" disabled={isLoading}>
               <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>

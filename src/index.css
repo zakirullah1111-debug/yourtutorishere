@@ -137,6 +137,44 @@
   h1, h2, h3, h4, h5, h6 {
     @apply font-bold tracking-tight;
   }
+
+  /* Fluid typography */
+  h1 {
+    font-size: clamp(1.5rem, 5vw, 3.5rem);
+    line-height: 1.15;
+  }
+  h2 {
+    font-size: clamp(1.25rem, 3.5vw, 2.5rem);
+    line-height: 1.25;
+  }
+  h3 {
+    font-size: clamp(1.125rem, 2.5vw, 1.75rem);
+    line-height: 1.35;
+  }
+
+  /* Global min body text */
+  p, li, span, a, label {
+    min-height: 0;
+  }
+
+  /* Full-height with dynamic viewport height */
+  .min-h-screen {
+    min-height: 100dvh;
+  }
+
+  /* Safe area insets for fixed/sticky elements */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* Ensure all images are responsive */
+  img {
+    max-width: 100%;
+    height: auto;
+  }
 }
 
 @layer components {
