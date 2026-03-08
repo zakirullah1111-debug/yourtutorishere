@@ -84,7 +84,7 @@ const ResetPasswordPage = () => {
   }
 
   return (
-    <div className="min-h-screen gradient-subtle flex items-center justify-center p-8">
+    <div className="min-h-[100dvh] gradient-subtle flex items-center justify-center px-4 py-8 sm:p-8">
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md">
         <Link to="/" className="flex items-center gap-2 mb-8">
           <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
