@@ -219,8 +219,9 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
     }
   };
 
-  // Monday-first week header
-  const weekDays = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  // Monday-first week header (full on desktop, single letter on mobile)
+  const weekDaysFull = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const weekDaysShort = ["M", "T", "W", "T", "F", "S", "S"];
 
   // Get offset for first day (Monday = 0)
   const firstDayOffset = useMemo(() => {
@@ -265,9 +266,9 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
       >
         <div className="flex flex-col h-full max-h-[90vh] max-sm:max-h-screen">
           {/* Step labels */}
-          <div className="px-6 pt-4 pb-0">
+          <div className="px-4 sm:px-6 pt-4 pb-0">
             {stepIndicator}
-            <div className="flex justify-between text-[11px] text-muted-foreground px-1 -mt-1 mb-2">
+            <div className="hidden sm:flex justify-between text-[11px] text-muted-foreground px-1 -mt-1 mb-2">
               <span>Select Date</span>
               <span>Choose Time</span>
               <span>Confirm</span>
@@ -275,7 +276,7 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto px-6 pb-6">
+          <div className="flex-1 overflow-y-auto px-4 sm:px-6 pb-6">
             {loading ? (
               <div className="flex items-center justify-center py-20">
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -288,19 +289,22 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
 
                 {/* Calendar navigation */}
                 <div className="flex items-center justify-between mb-3">
-                  <Button variant="ghost" size="icon" disabled={!canGoPrev} onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>
+                  <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" disabled={!canGoPrev} onClick={() => setCurrentMonth(addMonths(currentMonth, -1))}>
                     <ChevronLeft className="h-4 w-4" />
                   </Button>
                   <span className="text-sm font-semibold text-foreground">{format(currentMonth, "MMMM yyyy")}</span>
-                  <Button variant="ghost" size="icon" disabled={!canGoNext} onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
+                  <Button variant="ghost" size="icon" className="min-h-[44px] min-w-[44px]" disabled={!canGoNext} onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}>
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 </div>
 
                 {/* Week header */}
                 <div className="grid grid-cols-7 gap-1 mb-1">
-                  {weekDays.map(d => (
-                    <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">{d}</div>
+                  {weekDaysFull.map((d, i) => (
+                    <div key={d} className="text-center text-xs font-medium text-muted-foreground py-1">
+                      <span className="hidden sm:inline">{d}</span>
+                      <span className="sm:hidden">{weekDaysShort[i]}</span>
+                    </div>
                   ))}
                 </div>
 
@@ -318,7 +322,7 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                         disabled={!available}
                         onClick={() => { setSelectedDate(date); setSelectedSlot(null); setSlotWarning(null); }}
                         className={cn(
-                          "relative h-10 w-full rounded-lg text-sm transition-colors flex flex-col items-center justify-center",
+                          "relative h-10 min-h-[44px] w-full rounded-lg text-sm transition-colors flex flex-col items-center justify-center",
                           isSelected ? "bg-primary text-primary-foreground font-bold" :
                           available ? "hover:bg-primary/10 text-foreground cursor-pointer" :
                           isPast ? "text-muted-foreground/40 cursor-default" :
@@ -421,11 +425,11 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                       </div>
                     )}
 
-                    <div className="flex gap-2 mt-6">
-                      <Button variant="outline" className="flex-1" onClick={() => setStep(1)}>
+                    <div className="flex flex-col sm:flex-row gap-2 mt-6">
+                      <Button variant="outline" className="w-full sm:flex-1 min-h-[44px]" onClick={() => setStep(1)}>
                         <ChevronLeft className="mr-1 h-4 w-4" /> Back
                       </Button>
-                      <Button className="flex-1" disabled={!selectedSlot} onClick={() => setStep(3)}>
+                      <Button className="w-full sm:flex-1 min-h-[44px]" disabled={!selectedSlot} onClick={() => setStep(3)}>
                         Confirm Booking <ChevronRight className="ml-1 h-4 w-4" />
                       </Button>
                     </div>
@@ -462,7 +466,7 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                   After confirming, you'll receive a confirmation email with your session link. The Join button activates 15 minutes before your session starts.
                 </p>
 
-                <Button className="w-full mt-6 h-[52px] text-base font-bold" disabled={booking} onClick={handleConfirmBooking}>
+                <Button className="w-full mt-6 h-[52px] min-h-[52px] text-base font-bold" disabled={booking} onClick={handleConfirmBooking}>
                   {booking ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Booking your session...</>
                   ) : (
@@ -501,13 +505,13 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                 </p>
 
                 <div className="space-y-2">
-                  <Button className="w-full" onClick={() => { onOpenChange(false); navigate("/dashboard/student/bookings"); }}>
+                  <Button className="w-full min-h-[44px]" onClick={() => { onOpenChange(false); navigate("/dashboard/student/bookings"); }}>
                     <Calendar className="mr-2 h-4 w-4" /> View My Sessions
                   </Button>
-                  <Button variant="outline" className="w-full" onClick={handleMessageTutor}>
+                  <Button variant="outline" className="w-full min-h-[44px]" onClick={handleMessageTutor}>
                     <MessageCircle className="mr-2 h-4 w-4" /> Message Tutor
                   </Button>
-                  <button className="text-sm text-muted-foreground hover:text-foreground mt-2" onClick={() => onOpenChange(false)}>
+                  <button className="text-sm text-muted-foreground hover:text-foreground mt-2 min-h-[44px]" onClick={() => onOpenChange(false)}>
                     Close
                   </button>
                 </div>
