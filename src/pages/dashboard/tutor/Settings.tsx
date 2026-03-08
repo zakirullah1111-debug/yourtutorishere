@@ -109,6 +109,17 @@ export default function TutorSettings() {
     pushMessages: true,
   });
 
+  // Demo video state
+  const [demoVideoData, setDemoVideoData] = useState({
+    demo_video_type: null as string | null,
+    demo_video_url: null as string | null,
+    demo_video_title: null as string | null,
+    demo_video_thumbnail: null as string | null,
+    demo_video_duration: null as string | null,
+    live_demo_enabled: false,
+    live_demo_price: null as number | null,
+  });
+
   // Password state
   const [passwords, setPasswords] = useState({
     current: "",
