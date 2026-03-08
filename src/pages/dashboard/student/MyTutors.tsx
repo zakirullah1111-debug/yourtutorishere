@@ -133,13 +133,13 @@ export default function MyTutors() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                       <div>
-                        <p className="text-2xl font-bold">{tutor.sessionsCompleted}</p>
+                        <p className="text-xl sm:text-2xl font-bold">{tutor.sessionsCompleted}</p>
                         <p className="text-xs text-muted-foreground">Sessions</p>
                       </div>
                       <div>
-                        <p className="text-2xl font-bold">{tutor.totalHours}h</p>
+                        <p className="text-xl sm:text-2xl font-bold">{tutor.totalHours}h</p>
                         <p className="text-xs text-muted-foreground">Total Hours</p>
                       </div>
                       <div>
