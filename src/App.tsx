@@ -36,6 +36,7 @@ import TutorReviews from "./pages/dashboard/tutor/Reviews";
 import TutorResources from "./pages/dashboard/tutor/Resources";
 import TutorSettings from "./pages/dashboard/tutor/Settings";
 import CompleteProfile from "./pages/dashboard/tutor/CompleteProfile";
+import TutorBookings from "./pages/dashboard/tutor/Bookings";
 
 const queryClient = new QueryClient();
 
