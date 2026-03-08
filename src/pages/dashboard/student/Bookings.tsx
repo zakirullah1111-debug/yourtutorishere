@@ -107,13 +107,51 @@ export default function StudentBookings() {
       setBookings(mapped);
 
       // Check existing reviews for past bookings
-      const pastIds = mapped.filter(b => b.review_prompted).map(b => b.id);
-      if (pastIds.length > 0) {
-        const { data: reviews } = await supabase
-          .from("reviews")
-          .select("session_id, rating, comment")
-          .eq("student_id", user.id);
-        // We'll use session_id as booking_id reference if available
+      const reviewedBookingIds = mapped
+        .filter(b => b.status === "completed" || b.review_prompted)
+        .map(b => b.id);
+      
+      if (reviewedBookingIds.length > 0) {
+        // Find student record id
+        const { data: studentRec } = await supabase
+          .from("students")
+          .select("id")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        if (studentRec) {
+          const { data: existingReviews } = await supabase
+            .from("reviews")
+            .select("rating, comment, tutor_id")
+            .eq("student_id", studentRec.id);
+
+          if (existingReviews && existingReviews.length > 0) {
+            // Map reviews to bookings by matching tutor
+            const reviewedTutorIds = new Set(existingReviews.map(r => r.tutor_id));
+            
+            // Get tutor user_id -> tutor record id mapping
+            const tutorUserIds = [...new Set(mapped.map(b => b.tutor_user_id))];
+            const { data: tutorRecs } = await supabase
+              .from("tutors")
+              .select("id, user_id")
+              .in("user_id", tutorUserIds);
+
+            const userToTutorId = new Map((tutorRecs || []).map(t => [t.user_id, t.id]));
+
+            // Pre-populate reviewData for bookings that have reviews
+            const preReviewData: Record<string, { rating: number; comment: string; submitted: boolean }> = {};
+            for (const b of mapped) {
+              const tutorRecId = userToTutorId.get(b.tutor_user_id);
+              if (tutorRecId) {
+                const review = existingReviews.find(r => r.tutor_id === tutorRecId);
+                if (review) {
+                  preReviewData[b.id] = { rating: review.rating, comment: review.comment || "", submitted: true };
+                }
+              }
+            }
+            setReviewData(prev => ({ ...prev, ...preReviewData }));
+          }
+        }
       }
     } catch (err) {
       console.error("Failed to fetch bookings:", err);
