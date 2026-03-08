@@ -718,7 +718,7 @@ export default function TutorSettings() {
               <CardContent className="space-y-6">
                 <div className="space-y-2">
                   <Label>Teaching Mode</Label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {[
                       { value: "online", label: "🌐 Online Only" },
                       { value: "in-person", label: "🏠 In-Person Only" },
@@ -728,7 +728,7 @@ export default function TutorSettings() {
                         key={mode.value}
                         type="button"
                         variant={teaching.teachingMode === mode.value ? "default" : "outline"}
-                        className="h-auto py-3"
+                        className="h-auto py-3 min-h-[44px]"
                         onClick={() => setTeaching({ ...teaching, teachingMode: mode.value })}
                       >
                         {mode.label}
