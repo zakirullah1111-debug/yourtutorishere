@@ -1,17 +1,23 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Search, Filter, Star, Clock, MessageSquare, Heart, Sparkles, ChevronDown, Loader2 } from "lucide-react";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AIChatbot } from "@/components/chat/AIChatbot";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
 
 interface PublicTutor {
   id: string;
+  user_id: string;
   name: string;
+  first_name: string;
+  last_name: string;
   avatar: string;
+  avatar_url: string | null;
   avatarColor: string;
   subjects: string[];
   rating: number;
@@ -30,9 +36,12 @@ const priceRanges = ["Any Price", "PKR 500-800", "PKR 800-1000", "PKR 1000-1500"
 const avatarColors = ["bg-primary", "bg-success", "bg-accent", "bg-indigo-500", "bg-emerald-500", "bg-pink-500"];
 
 const TutorsPage = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const [showFilters, setShowFilters] = useState(false);
   const [tutors, setTutors] = useState<PublicTutor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [requestDemoTutor, setRequestDemoTutor] = useState<PublicTutor | null>(null);
 
   useEffect(() => {
     async function fetchTutors() {
@@ -61,8 +70,12 @@ const TutorsPage = () => {
           const allSubjects = [t.primary_subject, t.secondary_subject, ...(t.additional_subjects || [])].filter(Boolean) as string[];
           return {
             id: t.id,
+            user_id: t.user_id,
             name,
+            first_name: profile?.first_name || "",
+            last_name: profile?.last_name || "",
             avatar: name[0]?.toUpperCase() || "T",
+            avatar_url: profile?.avatar_url || null,
             avatarColor: avatarColors[i % avatarColors.length],
             subjects: allSubjects.slice(0, 3),
             rating: Number(t.average_rating) || 0,
@@ -218,8 +231,18 @@ const TutorsPage = () => {
                       </div>
 
                       <div className="flex gap-2 sm:gap-3">
-                        <Button variant="gradient" className="flex-1 min-h-[44px] text-sm" asChild>
-                          <Link to="/signup">Book Demo</Link>
+                        <Button
+                          variant="gradient"
+                          className="flex-1 min-h-[44px] text-sm"
+                          onClick={() => {
+                            if (user) {
+                              setRequestDemoTutor(tutor);
+                            } else {
+                              navigate("/signup");
+                            }
+                          }}
+                        >
+                          Book Demo
                         </Button>
                         <Button variant="outline" size="icon" className="min-h-[44px] min-w-[44px]">
                           <MessageSquare className="w-4 h-4" />
@@ -239,6 +262,19 @@ const TutorsPage = () => {
 
       <Footer />
       <AIChatbot />
+
+      {requestDemoTutor && (
+        <RequestDemoModal
+          open={!!requestDemoTutor}
+          onOpenChange={(v) => { if (!v) setRequestDemoTutor(null); }}
+          tutor={{
+            user_id: requestDemoTutor.user_id,
+            first_name: requestDemoTutor.first_name,
+            last_name: requestDemoTutor.last_name,
+            avatar_url: requestDemoTutor.avatar_url,
+          }}
+        />
+      )}
     </div>
   );
 };
