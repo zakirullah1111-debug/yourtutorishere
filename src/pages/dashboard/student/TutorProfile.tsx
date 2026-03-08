@@ -311,7 +311,7 @@ export default function TutorProfile() {
                     <Button variant="outline" onClick={handleMessage}>
                       <MessageCircle className="mr-2 h-4 w-4" /> Message
                     </Button>
-                    <Button variant="default" onClick={() => toast({ title: "Coming Soon", description: "Demo booking is under development." })}>
+                    <Button variant="default" onClick={() => setBookingOpen(true)}>
                       <BookOpen className="mr-2 h-4 w-4" /> Book Demo Session
                     </Button>
                   </div>
