@@ -1,4 +1,6 @@
 import { ReactNode, useState } from "react";
+import { useSessionLinkDelivery } from "@/hooks/useSessionLinkDelivery";
+import { JoinSessionPopup } from "@/components/dashboard/JoinSessionPopup";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -69,6 +71,7 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const unreadCount = useUnreadMessages(userType);
+  const { activeSession, dismissPopup } = useSessionLinkDelivery();
 
   const navItems = userType === "student" ? studentNavItems : tutorNavItems;
 
@@ -224,6 +227,14 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
         {/* Page Content */}
         <main className="p-4 lg:p-8">{children}</main>
       </div>
+
+      {activeSession && (
+        <JoinSessionPopup
+          meetingUrl={activeSession.meetingUrl}
+          otherPersonName={activeSession.otherPersonName}
+          onDismiss={dismissPopup}
+        />
+      )}
     </div>
   );
 }
