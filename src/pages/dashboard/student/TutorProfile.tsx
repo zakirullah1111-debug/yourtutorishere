@@ -689,7 +689,7 @@ export default function TutorProfile() {
               <Play className="mr-1.5 h-4 w-4" /> Watch Demo
             </Button>
           ) : (
-            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setComingSoonOpen(true)}>
+            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setBookingOpen(true)}>
               Book Demo
             </Button>
           )}
