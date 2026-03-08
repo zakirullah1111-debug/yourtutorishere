@@ -126,7 +126,7 @@ const SubjectsPage = () => {
               animate={{ opacity: 1, y: 0 }}
               className="text-center max-w-3xl mx-auto"
             >
-              <h1 className="text-display-3 md:text-display-2 font-bold text-foreground mb-4">
+              <h1 className="text-[1.75rem] sm:text-display-3 md:text-display-2 font-bold text-foreground mb-4">
                 Explore All <span className="gradient-text">Subjects</span>
               </h1>
               <p className="text-body-lg text-muted-foreground mb-8">
