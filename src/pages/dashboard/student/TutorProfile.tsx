@@ -16,6 +16,10 @@ import {
   Languages,
   ChevronDown,
   ChevronUp,
+  Video,
+  Play,
+  Calendar,
+  Rocket,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
@@ -24,6 +28,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/hooks/useAuth";
@@ -53,6 +63,13 @@ interface TutorData {
   last_name: string;
   avatar_url: string | null;
   city: string | null;
+  demo_video_type: string | null;
+  demo_video_url: string | null;
+  demo_video_title: string | null;
+  demo_video_thumbnail: string | null;
+  demo_video_duration: string | null;
+  live_demo_enabled: boolean;
+  live_demo_price: number | null;
 }
 
 interface Review {
@@ -76,6 +93,8 @@ export default function TutorProfile() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [bioExpanded, setBioExpanded] = useState(false);
+  const [demoVideoSignedUrl, setDemoVideoSignedUrl] = useState<string | null>(null);
+  const [comingSoonOpen, setComingSoonOpen] = useState(false);
 
   useEffect(() => {
     if (tutorId) fetchTutorData();
@@ -121,6 +140,13 @@ export default function TutorProfile() {
         last_name: profileData?.last_name || "",
         avatar_url: profileData?.avatar_url || null,
         city: profileData?.city || null,
+        demo_video_type: (tutorData as any).demo_video_type || null,
+        demo_video_url: (tutorData as any).demo_video_url || null,
+        demo_video_title: (tutorData as any).demo_video_title || null,
+        demo_video_thumbnail: (tutorData as any).demo_video_thumbnail || null,
+        demo_video_duration: (tutorData as any).demo_video_duration || null,
+        live_demo_enabled: (tutorData as any).live_demo_enabled || false,
+        live_demo_price: (tutorData as any).live_demo_price || null,
       };
       setTutor(merged);
 
@@ -362,6 +388,118 @@ export default function TutorProfile() {
           </Card>
         </motion.div>
 
+        {/* DEMO VIDEO SECTION */}
+        {tutor.demo_video_url && (
+          <motion.div id="demo-video" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.12 }}>
+            <Card className="mt-4">
+              <CardContent className="p-6">
+                <h2 className="text-lg font-semibold text-foreground mb-1">Watch a Demo Lesson</h2>
+                <p className="text-sm text-muted-foreground mb-4">See how {tutor.first_name} teaches before you decide</p>
+
+                <div className="rounded-xl overflow-hidden shadow-lg">
+                  {tutor.demo_video_type === "upload" ? (
+                    <div className="aspect-video bg-muted">
+                      {demoVideoSignedUrl ? (
+                        <video
+                          controls
+                          preload="metadata"
+                          playsInline
+                          poster={tutor.demo_video_thumbnail || undefined}
+                          className="w-full h-full"
+                          onError={() => setDemoVideoSignedUrl(null)}
+                        >
+                          <source src={demoVideoSignedUrl} />
+                          Your browser doesn't support video playback.
+                        </video>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Button
+                            variant="ghost"
+                            onClick={async () => {
+                              const { data } = await supabase.storage.from("demo-videos").createSignedUrl(tutor.demo_video_url!, 3600);
+                              if (data?.signedUrl) setDemoVideoSignedUrl(data.signedUrl);
+                            }}
+                          >
+                            <Play className="w-8 h-8 mr-2" /> Load Video
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  ) : tutor.demo_video_type === "youtube" ? (
+                    <div className="aspect-video">
+                      <iframe
+                        src={`https://www.youtube-nocookie.com/embed/${tutor.demo_video_url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)?.[1]}?rel=0&modestbranding=1`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allowFullScreen
+                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        title={tutor.demo_video_title || "Demo lesson"}
+                      />
+                    </div>
+                  ) : tutor.demo_video_type === "vimeo" ? (
+                    <div className="aspect-video">
+                      <iframe
+                        src={`https://player.vimeo.com/video/${tutor.demo_video_url?.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/)?.[1]}?color=7C3AED&title=0&byline=0&portrait=0`}
+                        className="w-full h-full"
+                        frameBorder="0"
+                        allowFullScreen
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        title={tutor.demo_video_title || "Demo lesson"}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                {(tutor.demo_video_title || tutor.demo_video_duration) && (
+                  <div className="mt-3 flex items-center gap-3 flex-wrap">
+                    {tutor.demo_video_title && <span className="text-[15px] font-medium text-foreground">{tutor.demo_video_title}</span>}
+                    {tutor.demo_video_duration && (
+                      <Badge variant="secondary" className="text-xs">🕐 {tutor.demo_video_duration}</Badge>
+                    )}
+                    <span className="text-xs text-muted-foreground">
+                      {tutor.demo_video_type === "youtube" ? "▶ Hosted on YouTube" : tutor.demo_video_type === "vimeo" ? "▶ Hosted on Vimeo" : "Uploaded video"}
+                    </span>
+                  </div>
+                )}
+
+                {/* CTA box */}
+                <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/10 space-y-2">
+                  <p className="text-sm font-medium text-foreground">Liked what you saw?</p>
+                  <Button variant="outline" className="w-full" onClick={handleMessage}>
+                    <MessageCircle className="w-4 h-4 mr-2" /> Message Tutor
+                  </Button>
+                  {tutor.live_demo_enabled && (
+                    <Button className="w-full" onClick={() => setComingSoonOpen(true)}>
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Book Live Demo — {tutor.live_demo_price === 0 ? "Free" : tutor.live_demo_price ? `PKR ${tutor.live_demo_price.toLocaleString()}` : "Free"}
+                    </Button>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Coming Soon Modal */}
+        <Dialog open={comingSoonOpen} onOpenChange={setComingSoonOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Rocket className="w-5 h-5 text-primary" /> Coming Very Soon!
+              </DialogTitle>
+            </DialogHeader>
+            <p className="text-sm text-muted-foreground">
+              Live demo booking is almost ready. For now, message the tutor directly to arrange a session at a time that works for both of you.
+            </p>
+            <div className="flex gap-2 mt-2">
+              <Button variant="outline" className="flex-1" onClick={() => setComingSoonOpen(false)}>Close</Button>
+              <Button className="flex-1" onClick={() => { setComingSoonOpen(false); handleMessage(); }}>
+                <MessageCircle className="w-4 h-4 mr-2" /> Message Tutor
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
         {/* SECTION 3 — Teaching Details */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
           <Card className="mt-4">
@@ -547,9 +685,15 @@ export default function TutorProfile() {
           <Button variant="outline" className="flex-1 min-h-[44px] text-sm" onClick={handleMessage}>
             <MessageCircle className="mr-1.5 h-4 w-4" /> Message
           </Button>
-          <Button className="flex-1 min-h-[44px] text-sm" onClick={() => toast({ title: "Coming Soon", description: "Demo booking is under development." })}>
-            Book Demo
-          </Button>
+          {tutor.demo_video_url ? (
+            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => document.getElementById("demo-video")?.scrollIntoView({ behavior: "smooth" })}>
+              <Play className="mr-1.5 h-4 w-4" /> Watch Demo
+            </Button>
+          ) : (
+            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setComingSoonOpen(true)}>
+              Book Demo
+            </Button>
+          )}
         </div>
       </div>
     </DashboardLayout>

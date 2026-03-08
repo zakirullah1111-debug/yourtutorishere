@@ -20,6 +20,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, User, Briefcase, BookOpen, Globe, Home, CheckCircle } from "lucide-react";
+import { DemoVideoSection } from "@/components/tutor/DemoVideoSection";
 
 const SUBJECTS = [
   "Mathematics", "Physics", "Chemistry", "Biology",
@@ -446,6 +447,23 @@ export default function CompleteProfile() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Section 4: Demo Video (Optional) */}
+        {user && (
+          <DemoVideoSection
+            userId={user.id}
+            isOptional
+            initialData={{
+              demo_video_type: null,
+              demo_video_url: null,
+              demo_video_title: null,
+              demo_video_thumbnail: null,
+              demo_video_duration: null,
+              live_demo_enabled: false,
+              live_demo_price: null,
+            }}
+          />
+        )}
 
         {/* Submit */}
         <Button

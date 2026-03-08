@@ -32,6 +32,7 @@ import {
   Eye,
   EyeOff,
 } from "lucide-react";
+import { DemoVideoSection } from "@/components/tutor/DemoVideoSection";
 
 const SUBJECTS = [
   "Mathematics", "Physics", "Chemistry", "Biology",
@@ -106,6 +107,17 @@ export default function TutorSettings() {
     pushNewBooking: true,
     pushSessionReminder: true,
     pushMessages: true,
+  });
+
+  // Demo video state
+  const [demoVideoData, setDemoVideoData] = useState({
+    demo_video_type: null as string | null,
+    demo_video_url: null as string | null,
+    demo_video_title: null as string | null,
+    demo_video_thumbnail: null as string | null,
+    demo_video_duration: null as string | null,
+    live_demo_enabled: false,
+    live_demo_price: null as number | null,
   });
 
   // Password state
@@ -189,6 +201,16 @@ export default function TutorSettings() {
         if (notifPrefs && typeof notifPrefs === "object") {
           setNotifications((prev) => ({ ...prev, ...notifPrefs }));
         }
+
+        setDemoVideoData({
+          demo_video_type: (tutorData as any).demo_video_type || null,
+          demo_video_url: (tutorData as any).demo_video_url || null,
+          demo_video_title: (tutorData as any).demo_video_title || null,
+          demo_video_thumbnail: (tutorData as any).demo_video_thumbnail || null,
+          demo_video_duration: (tutorData as any).demo_video_duration || null,
+          live_demo_enabled: (tutorData as any).live_demo_enabled || false,
+          live_demo_price: (tutorData as any).live_demo_price || null,
+        });
       }
     } catch (error) {
       console.error("Error fetching profile:", error);
@@ -752,6 +774,22 @@ export default function TutorSettings() {
                 )}
               </Button>
             </div>
+
+            {/* Demo Video Section */}
+            {user && (
+              <DemoVideoSection
+                userId={user.id}
+                initialData={{
+                  demo_video_type: demoVideoData.demo_video_type,
+                  demo_video_url: demoVideoData.demo_video_url,
+                  demo_video_title: demoVideoData.demo_video_title,
+                  demo_video_thumbnail: demoVideoData.demo_video_thumbnail,
+                  demo_video_duration: demoVideoData.demo_video_duration,
+                  live_demo_enabled: demoVideoData.live_demo_enabled,
+                  live_demo_price: demoVideoData.live_demo_price,
+                }}
+              />
+            )}
           </TabsContent>
 
           {/* ═══════════ NOTIFICATIONS TAB ═══════════ */}

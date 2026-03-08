@@ -486,11 +486,18 @@ export type Database = {
           country: string | null
           created_at: string
           degree: string
+          demo_video_duration: string | null
+          demo_video_thumbnail: string | null
+          demo_video_title: string | null
+          demo_video_type: string | null
+          demo_video_url: string | null
           education_level: string
           graduation_year: number
           hourly_rate_pkr: number
           id: string
           languages: string[] | null
+          live_demo_enabled: boolean | null
+          live_demo_price: number | null
           math_levels: string[] | null
           notification_preferences: Json | null
           preferred_time_slot: string | null
@@ -520,11 +527,18 @@ export type Database = {
           country?: string | null
           created_at?: string
           degree: string
+          demo_video_duration?: string | null
+          demo_video_thumbnail?: string | null
+          demo_video_title?: string | null
+          demo_video_type?: string | null
+          demo_video_url?: string | null
           education_level: string
           graduation_year: number
           hourly_rate_pkr: number
           id?: string
           languages?: string[] | null
+          live_demo_enabled?: boolean | null
+          live_demo_price?: number | null
           math_levels?: string[] | null
           notification_preferences?: Json | null
           preferred_time_slot?: string | null
@@ -554,11 +568,18 @@ export type Database = {
           country?: string | null
           created_at?: string
           degree?: string
+          demo_video_duration?: string | null
+          demo_video_thumbnail?: string | null
+          demo_video_title?: string | null
+          demo_video_type?: string | null
+          demo_video_url?: string | null
           education_level?: string
           graduation_year?: number
           hourly_rate_pkr?: number
           id?: string
           languages?: string[] | null
+          live_demo_enabled?: boolean | null
+          live_demo_price?: number | null
           math_levels?: string[] | null
           notification_preferences?: Json | null
           preferred_time_slot?: string | null
