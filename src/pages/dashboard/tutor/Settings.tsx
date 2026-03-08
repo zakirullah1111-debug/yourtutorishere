@@ -31,8 +31,10 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  CalendarDays,
 } from "lucide-react";
 import { DemoVideoSection } from "@/components/tutor/DemoVideoSection";
+import { ScheduleTab } from "@/components/tutor/ScheduleTab";
 
 const SUBJECTS = [
   "Mathematics", "Physics", "Chemistry", "Biology",
