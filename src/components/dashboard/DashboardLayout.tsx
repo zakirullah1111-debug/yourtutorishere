@@ -227,6 +227,14 @@ export function DashboardLayout({ children, userType }: DashboardLayoutProps) {
         {/* Page Content */}
         <main className="p-4 lg:p-8">{children}</main>
       </div>
+
+      {activeSession && (
+        <JoinSessionPopup
+          meetingUrl={activeSession.meetingUrl}
+          otherPersonName={activeSession.otherPersonName}
+          onDismiss={dismissPopup}
+        />
+      )}
     </div>
   );
 }
