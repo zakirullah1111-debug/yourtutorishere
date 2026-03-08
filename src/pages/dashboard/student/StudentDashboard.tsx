@@ -24,6 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
+import { useSessionCompletion } from "@/hooks/useSessionCompletion";
 
 interface StudentStats {
   upcomingSessionsCount: number;
@@ -74,6 +75,7 @@ interface SubjectCategory {
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  useSessionCompletion();
   const [stats, setStats] = useState<StudentStats>({
     upcomingSessionsCount: 0,
     totalHoursCompleted: 0,

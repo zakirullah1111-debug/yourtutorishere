@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { useSessionCompletion } from "@/hooks/useSessionCompletion";
 import { useAuth } from "@/hooks/useAuth";
 import {
   Users,
@@ -45,6 +46,7 @@ interface RecentActivity {
 
 export default function TutorDashboard() {
   const { user } = useAuth();
+  useSessionCompletion();
   const [stats, setStats] = useState<TutorStats>({
     activeStudents: 0,
     totalSessions: 0,

@@ -14,6 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { useSessionCompletion } from "@/hooks/useSessionCompletion";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -42,6 +43,7 @@ type Tab = "upcoming" | "past" | "cancelled";
 
 export default function StudentBookings() {
   const { user } = useAuth();
+  useSessionCompletion();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getOrCreateConversation } = useMessaging("student");

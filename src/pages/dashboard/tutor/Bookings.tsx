@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { supabase } from "@/integrations/supabase/client";
+import { useSessionCompletion } from "@/hooks/useSessionCompletion";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { useMessaging } from "@/hooks/useMessaging";
@@ -40,6 +41,7 @@ type Tab = "upcoming" | "past" | "cancelled";
 
 export default function TutorBookings() {
   const { user } = useAuth();
+  useSessionCompletion();
   const { toast } = useToast();
   const navigate = useNavigate();
   const { getOrCreateConversation } = useMessaging("tutor");
