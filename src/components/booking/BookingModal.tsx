@@ -466,7 +466,7 @@ export function BookingModal({ open, onOpenChange, tutor }: BookingModalProps) {
                   After confirming, you'll receive a confirmation email with your session link. The Join button activates 15 minutes before your session starts.
                 </p>
 
-                <Button className="w-full mt-6 h-[52px] text-base font-bold" disabled={booking} onClick={handleConfirmBooking}>
+                <Button className="w-full mt-6 h-[52px] min-h-[52px] text-base font-bold" disabled={booking} onClick={handleConfirmBooking}>
                   {booking ? (
                     <><Loader2 className="mr-2 h-5 w-5 animate-spin" /> Booking your session...</>
                   ) : (
