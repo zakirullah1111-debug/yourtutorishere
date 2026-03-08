@@ -70,8 +70,12 @@ const TutorsPage = () => {
           const allSubjects = [t.primary_subject, t.secondary_subject, ...(t.additional_subjects || [])].filter(Boolean) as string[];
           return {
             id: t.id,
+            user_id: t.user_id,
             name,
+            first_name: profile?.first_name || "",
+            last_name: profile?.last_name || "",
             avatar: name[0]?.toUpperCase() || "T",
+            avatar_url: profile?.avatar_url || null,
             avatarColor: avatarColors[i % avatarColors.length],
             subjects: allSubjects.slice(0, 3),
             rating: Number(t.average_rating) || 0,
