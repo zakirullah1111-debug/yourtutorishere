@@ -45,6 +45,13 @@ const SignupPage = () => {
     }
   }, [user, loading, navigate]);
 
+  useEffect(() => {
+    const roleFromQuery = searchParams.get("role");
+    if (roleFromQuery === "student" || roleFromQuery === "tutor") {
+      setFormData((prev) => ({ ...prev, role: roleFromQuery }));
+    }
+  }, [searchParams]);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });

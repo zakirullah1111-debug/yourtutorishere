@@ -279,7 +279,13 @@ const LoginPage = () => {
           {/* Sign Up Link */}
           <p className="text-center mt-8 text-muted-foreground">
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary font-semibold hover:underline">
+            <Link
+              to={(() => {
+                const role = searchParams.get("role");
+                return role === "student" || role === "tutor" ? `/signup?role=${role}` : "/signup";
+              })()}
+              className="text-primary font-semibold hover:underline"
+            >
               Sign up
             </Link>
           </p>
