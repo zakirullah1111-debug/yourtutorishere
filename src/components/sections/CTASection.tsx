@@ -50,7 +50,7 @@ export function CTASection() {
                   className="bg-white text-primary hover:bg-white/90 font-bold"
                   asChild
                 >
-                  <Link to="/signup?role=student">
+                  <Link to="/login?role=student">
                     Find Your Dream Tutor
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Link>
@@ -65,7 +65,7 @@ export function CTASection() {
                   size="xl"
                   asChild
                 >
-                  <Link to="/signup?role=tutor">
+                  <Link to="/login?role=tutor">
                     I Am a Tutor
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Link>

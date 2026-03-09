@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { GraduationCap, Mail, Lock, Eye, EyeOff, User, Phone, ChevronDown, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
@@ -35,6 +35,7 @@ const SignupPage = () => {
 
   const { signUp, user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
   // Redirect if already logged in
@@ -43,6 +44,13 @@ const SignupPage = () => {
       navigate("/");
     }
   }, [user, loading, navigate]);
+
+  useEffect(() => {
+    const roleFromQuery = searchParams.get("role");
+    if (roleFromQuery === "student" || roleFromQuery === "tutor") {
+      setFormData((prev) => ({ ...prev, role: roleFromQuery }));
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -449,7 +457,7 @@ const SignupPage = () => {
           {/* Login Link */}
           <p className="text-center mt-8 text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary font-semibold hover:underline">
+            <Link to={`/login?role=${formData.role}`} className="text-primary font-semibold hover:underline">
               Log in
             </Link>
           </p>

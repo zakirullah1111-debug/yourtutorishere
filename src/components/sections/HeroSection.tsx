@@ -136,7 +136,7 @@ export function HeroSection() {
             <div className="flex flex-col sm:flex-row gap-6 justify-center lg:justify-start mb-8">
               <div className="flex flex-col items-center lg:items-start">
                 <Button variant="hero" size="xl" asChild>
-                  <Link to="/signup?role=student">
+                  <Link to="/login?role=student">
                     Find Your Dream Tutor
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Link>
@@ -147,7 +147,7 @@ export function HeroSection() {
               </div>
               <div className="flex flex-col items-center lg:items-start">
                 <Button variant="outline" size="xl" className="bg-background/50 backdrop-blur-sm" asChild>
-                  <Link to="/signup?role=tutor">
+                  <Link to="/login?role=tutor">
                     I Am a Tutor
                     <ArrowRight className="w-5 h-5 ml-1" />
                   </Link>
