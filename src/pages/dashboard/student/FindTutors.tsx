@@ -105,7 +105,7 @@ export default function FindTutors() {
   const [requestDemoTutor, setRequestDemoTutor] = useState<Tutor | null>(null);
 
   // Filters
-  const [priceRange, setPriceRange] = useState<[number, number]>([500, 2000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [minRating, setMinRating] = useState<number>(0);
   const [experienceFilter, setExperienceFilter] = useState<string>("all");
   const [educationFilter, setEducationFilter] = useState<string>("all");
