@@ -325,17 +325,17 @@ export default function FindTutors() {
       {/* Rating Filter */}
       <div>
         <label className="text-sm font-medium mb-3 block">Minimum Rating</label>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-4 gap-1.5">
           {[0, 4, 4.5, 5].map((rating) => (
             <Button
               key={rating}
               variant={minRating === rating ? "default" : "outline"}
               size="sm"
               onClick={() => setMinRating(rating)}
-              className="flex-1"
+              className="px-1 text-xs"
             >
               {rating === 0 ? "All" : `${rating}+`}
-              {rating > 0 && <Star className="w-3 h-3 ml-1 fill-current" />}
+              {rating > 0 && <Star className="w-3 h-3 ml-0.5 fill-current" />}
             </Button>
           ))}
         </div>
