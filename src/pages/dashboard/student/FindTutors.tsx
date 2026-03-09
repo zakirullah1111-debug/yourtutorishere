@@ -315,8 +315,8 @@ export default function FindTutors() {
         <Slider
           value={priceRange}
           onValueChange={(value) => setPriceRange(value as [number, number])}
-          min={200}
-          max={3000}
+          min={0}
+          max={5000}
           step={100}
           className="mt-2"
         />
