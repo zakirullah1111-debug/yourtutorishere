@@ -43,26 +43,37 @@ export function CTASection() {
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
-              <Button
-                size="xl"
-                className="bg-white text-primary hover:bg-white/90 font-bold"
-                asChild
-              >
-                <Link to="/signup">
-                  Start Free Trial
-                  <ArrowRight className="w-5 h-5 ml-1" />
-                </Link>
-              </Button>
-              <Button
-                variant="hero-outline"
-                size="xl"
-                asChild
-              >
-                <Link to="/demo">
-                  Schedule Demo
-                </Link>
-              </Button>
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8">
+              <div className="flex flex-col items-center">
+                <Button
+                  size="xl"
+                  className="bg-white text-primary hover:bg-white/90 font-bold"
+                  asChild
+                >
+                  <Link to="/signup?role=student">
+                    Find Your Dream Tutor
+                    <ArrowRight className="w-5 h-5 ml-1" />
+                  </Link>
+                </Button>
+                <p className="text-xs text-white/60 mt-2 italic">
+                  Your dream tutor is just one click away
+                </p>
+              </div>
+              <div className="flex flex-col items-center">
+                <Button
+                  variant="hero-outline"
+                  size="xl"
+                  asChild
+                >
+                  <Link to="/signup?role=tutor">
+                    I Am a Tutor
+                    <ArrowRight className="w-5 h-5 ml-1" />
+                  </Link>
+                </Button>
+                <p className="text-xs text-white/60 mt-2 italic">
+                  Share your knowledge, shape futures
+                </p>
+              </div>
             </div>
 
             {/* Trust Indicators */}
