@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Play, Sparkles, Home, Trees, Users, Flame } from "lucide-react";
+import { ArrowRight, Sparkles, Home, Trees, Users, Flame } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 
