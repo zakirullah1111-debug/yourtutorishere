@@ -35,6 +35,7 @@ const SignupPage = () => {
 
   const { signUp, user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
   // Redirect if already logged in

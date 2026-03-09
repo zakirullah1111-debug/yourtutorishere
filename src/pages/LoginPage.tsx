@@ -24,6 +24,7 @@ const LoginPage = () => {
   
   const { signIn, user, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { toast } = useToast();
 
   const { userRole } = useAuth();
