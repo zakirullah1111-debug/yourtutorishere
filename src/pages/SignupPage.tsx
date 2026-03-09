@@ -457,7 +457,7 @@ const SignupPage = () => {
           {/* Login Link */}
           <p className="text-center mt-8 text-muted-foreground">
             Already have an account?{" "}
-            <Link to="/login" className="text-primary font-semibold hover:underline">
+            <Link to={`/login?role=${formData.role}`} className="text-primary font-semibold hover:underline">
               Log in
             </Link>
           </p>
