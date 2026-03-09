@@ -105,7 +105,7 @@ export default function FindTutors() {
   const [requestDemoTutor, setRequestDemoTutor] = useState<Tutor | null>(null);
 
   // Filters
-  const [priceRange, setPriceRange] = useState<[number, number]>([500, 2000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
   const [minRating, setMinRating] = useState<number>(0);
   const [experienceFilter, setExperienceFilter] = useState<string>("all");
   const [educationFilter, setEducationFilter] = useState<string>("all");
@@ -292,15 +292,15 @@ export default function FindTutors() {
   };
 
   const clearFilters = () => {
-    setPriceRange([500, 2000]);
+    setPriceRange([0, 5000]);
     setMinRating(0);
     setExperienceFilter("all");
     setEducationFilter("all");
   };
 
   const hasActiveFilters =
-    priceRange[0] !== 500 ||
-    priceRange[1] !== 2000 ||
+    priceRange[0] !== 0 ||
+    priceRange[1] !== 5000 ||
     minRating > 0 ||
     experienceFilter !== "all" ||
     educationFilter !== "all";
@@ -315,8 +315,8 @@ export default function FindTutors() {
         <Slider
           value={priceRange}
           onValueChange={(value) => setPriceRange(value as [number, number])}
-          min={200}
-          max={3000}
+          min={0}
+          max={5000}
           step={100}
           className="mt-2"
         />
