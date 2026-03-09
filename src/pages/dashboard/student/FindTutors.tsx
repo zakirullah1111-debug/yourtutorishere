@@ -383,6 +383,12 @@ export default function FindTutors() {
   return (
     <DashboardLayout userType="student">
       <div className="space-y-6">
+        {/* Page Title */}
+        <div>
+          <h1 className="text-2xl font-bold text-foreground">Find Tutors</h1>
+          <p className="text-muted-foreground">Browse and connect with expert tutors</p>
+        </div>
+
         {/* Search Section */}
         <Card>
           <CardContent className="p-6">
