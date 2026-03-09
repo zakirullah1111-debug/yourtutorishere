@@ -299,8 +299,8 @@ export default function FindTutors() {
   };
 
   const hasActiveFilters =
-    priceRange[0] !== 500 ||
-    priceRange[1] !== 2000 ||
+    priceRange[0] !== 0 ||
+    priceRange[1] !== 5000 ||
     minRating > 0 ||
     experienceFilter !== "all" ||
     educationFilter !== "all";
