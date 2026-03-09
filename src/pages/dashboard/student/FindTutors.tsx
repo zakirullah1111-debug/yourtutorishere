@@ -292,7 +292,7 @@ export default function FindTutors() {
   };
 
   const clearFilters = () => {
-    setPriceRange([500, 2000]);
+    setPriceRange([0, 5000]);
     setMinRating(0);
     setExperienceFilter("all");
     setEducationFilter("all");
