@@ -49,7 +49,7 @@ const TutorsPage = () => {
         const { data: tutorsData, error } = await supabase
           .from("tutors")
           .select("id, user_id, primary_subject, secondary_subject, additional_subjects, university, degree, education_level, years_of_experience, hourly_rate_pkr, average_rating, total_reviews, verified, languages")
-          .or("verified.eq.true,profile_complete.eq.true");
+          .eq("profile_complete", true);
 
         if (error) throw error;
         if (!tutorsData || tutorsData.length === 0) {
