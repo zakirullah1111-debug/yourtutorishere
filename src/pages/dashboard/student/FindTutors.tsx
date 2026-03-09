@@ -309,35 +309,32 @@ export default function FindTutors() {
     <div className="space-y-6">
       {/* Price Range */}
       <div>
-        <label className="text-sm font-medium mb-3 block">
-          Price Range (PKR {priceRange[0]} - {priceRange[1]})
-        </label>
-        <Slider
-          value={priceRange}
-          onValueChange={(value) => setPriceRange(value as [number, number])}
-          min={0}
-          max={5000}
-          step={100}
-          className="mt-2"
-        />
-      </div>
-
-      {/* Rating Filter */}
-      <div>
-        <label className="text-sm font-medium mb-3 block">Minimum Rating</label>
-        <div className="grid grid-cols-4 gap-1.5">
-          {[0, 4, 4.5, 5].map((rating) => (
-            <Button
-              key={rating}
-              variant={minRating === rating ? "default" : "outline"}
-              size="sm"
-              onClick={() => setMinRating(rating)}
-              className="px-1 text-xs"
-            >
-              {rating === 0 ? "All" : `${rating}+`}
-              {rating > 0 && <Star className="w-3 h-3 ml-0.5 fill-current" />}
-            </Button>
-          ))}
+        <label className="text-sm font-medium mb-3 block">Price Range (PKR)</label>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Min</label>
+            <Input
+              type="number"
+              value={priceRange[0]}
+              onChange={(e) => setPriceRange([Number(e.target.value), priceRange[1]])}
+              min={0}
+              max={priceRange[1]}
+              step={100}
+              className="h-9"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Max</label>
+            <Input
+              type="number"
+              value={priceRange[1]}
+              onChange={(e) => setPriceRange([priceRange[0], Number(e.target.value)])}
+              min={priceRange[0]}
+              max={10000}
+              step={100}
+              className="h-9"
+            />
+          </div>
         </div>
       </div>
 
