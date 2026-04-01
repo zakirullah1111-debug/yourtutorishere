@@ -54,6 +54,7 @@ export default function MyStudents() {
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [progressFilter, setProgressFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [startingClassFor, setStartingClassFor] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStudents() {
