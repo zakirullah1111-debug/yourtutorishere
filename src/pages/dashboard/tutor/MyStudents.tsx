@@ -115,6 +115,26 @@ export default function MyStudents() {
     fetchStudents();
   }, [user]);
 
+  const handleStartClass = async (student: Student) => {
+    setStartingClassFor(student.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("start-class", {
+        body: { student_user_id: student.userId },
+      });
+      if (error || !data?.meeting_url) {
+        toast.error("Failed to start class. Please try again.");
+        return;
+      }
+      toast.success(`Class started! ${student.name} has been notified.`);
+      window.open(data.meeting_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Start class error:", err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setStartingClassFor(null);
+    }
+  };
+
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
       student.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
