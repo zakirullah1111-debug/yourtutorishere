@@ -352,11 +352,17 @@ export default function MyStudents() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm">
-                          <MessageSquare className="w-4 h-4" />
+                        <Button
+                          variant="default"
+                          size="sm"
+                          disabled={startingClassFor === student.id}
+                          onClick={() => handleStartClass(student)}
+                        >
+                          <Video className="w-4 h-4 mr-1" />
+                          {startingClassFor === student.id ? "Starting..." : "Start Class"}
                         </Button>
                         <Button variant="ghost" size="sm">
-                          <Calendar className="w-4 h-4" />
+                          <MessageSquare className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
