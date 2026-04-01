@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -29,11 +30,12 @@ import {
   TrendingUp,
   TrendingDown,
   Users,
-  Filter,
+  Video,
 } from "lucide-react";
 
 interface Student {
   id: string;
+  userId: string;
   name: string;
   email: string;
   subject: string;
@@ -52,6 +54,7 @@ export default function MyStudents() {
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [progressFilter, setProgressFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [startingClassFor, setStartingClassFor] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStudents() {
@@ -87,6 +90,7 @@ export default function MyStudents() {
             const profile = profiles?.find((p) => p.user_id === student.user_id);
             return {
               id: student.id,
+              userId: student.user_id,
               name: profile ? `${profile.first_name} ${profile.last_name?.[0] || ""}.`.trim() : "Unknown",
               email: "",
               subject: student.primary_subject,
@@ -110,6 +114,26 @@ export default function MyStudents() {
 
     fetchStudents();
   }, [user]);
+
+  const handleStartClass = async (student: Student) => {
+    setStartingClassFor(student.id);
+    try {
+      const { data, error } = await supabase.functions.invoke("start-class", {
+        body: { student_user_id: student.userId },
+      });
+      if (error || !data?.meeting_url) {
+        toast.error("Failed to start class. Please try again.");
+        return;
+      }
+      toast.success(`Class started! ${student.name} has been notified.`);
+      window.open(data.meeting_url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error("Start class error:", err);
+      toast.error("Something went wrong. Please try again.");
+    } finally {
+      setStartingClassFor(null);
+    }
+  };
 
   const filteredStudents = students.filter((student) => {
     const matchesSearch =
@@ -328,11 +352,17 @@ export default function MyStudents() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="sm">
-                          <MessageSquare className="w-4 h-4" />
+                        <Button
+                          variant="default"
+                          size="sm"
+                          disabled={startingClassFor === student.id}
+                          onClick={() => handleStartClass(student)}
+                        >
+                          <Video className="w-4 h-4 mr-1" />
+                          {startingClassFor === student.id ? "Starting..." : "Start Class"}
                         </Button>
                         <Button variant="ghost" size="sm">
-                          <Calendar className="w-4 h-4" />
+                          <MessageSquare className="w-4 h-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -377,11 +407,17 @@ export default function MyStudents() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 min-h-[44px]"
+                    disabled={startingClassFor === student.id}
+                    onClick={() => handleStartClass(student)}
+                  >
+                    <Video className="w-4 h-4 mr-1" />
+                    {startingClassFor === student.id ? "Starting..." : "Start Class"}
+                  </Button>
                   <Button variant="outline" size="sm" className="flex-1 min-h-[44px]">
                     <MessageSquare className="w-4 h-4 mr-1" /> Message
-                  </Button>
-                  <Button size="sm" className="flex-1 min-h-[44px]">
-                    <Calendar className="w-4 h-4 mr-1" /> Schedule
                   </Button>
                 </div>
               </CardContent>
