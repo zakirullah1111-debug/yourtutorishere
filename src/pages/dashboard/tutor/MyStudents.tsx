@@ -90,6 +90,7 @@ export default function MyStudents() {
             const profile = profiles?.find((p) => p.user_id === student.user_id);
             return {
               id: student.id,
+              userId: student.user_id,
               name: profile ? `${profile.first_name} ${profile.last_name?.[0] || ""}.`.trim() : "Unknown",
               email: "",
               subject: student.primary_subject,
