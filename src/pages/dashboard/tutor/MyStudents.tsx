@@ -407,11 +407,17 @@ export default function MyStudents() {
                   </div>
                 </div>
                 <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    className="flex-1 min-h-[44px]"
+                    disabled={startingClassFor === student.id}
+                    onClick={() => handleStartClass(student)}
+                  >
+                    <Video className="w-4 h-4 mr-1" />
+                    {startingClassFor === student.id ? "Starting..." : "Start Class"}
+                  </Button>
                   <Button variant="outline" size="sm" className="flex-1 min-h-[44px]">
                     <MessageSquare className="w-4 h-4 mr-1" /> Message
-                  </Button>
-                  <Button size="sm" className="flex-1 min-h-[44px]">
-                    <Calendar className="w-4 h-4 mr-1" /> Schedule
                   </Button>
                 </div>
               </CardContent>
