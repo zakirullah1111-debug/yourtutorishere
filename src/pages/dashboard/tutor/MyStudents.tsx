@@ -30,7 +30,7 @@ import {
   TrendingUp,
   TrendingDown,
   Users,
-  Filter,
+  Video,
 } from "lucide-react";
 
 interface Student {

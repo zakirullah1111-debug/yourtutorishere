@@ -75,7 +75,7 @@ export function useSessionLinkDelivery() {
         const notif = payload.new as any;
         if ((notif.type === "session_starting" || notif.type === "class_starting") && notif.action_url && !dismissed.has(notif.related_booking_id || notif.id)) {
           setActiveSession({
-            bookingId: notif.related_booking_id || "",
+            bookingId: notif.related_booking_id || notif.id || "",
             meetingUrl: notif.action_url,
             otherPersonName: "",
           });
