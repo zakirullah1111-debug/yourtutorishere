@@ -22,6 +22,7 @@ import {
   Rocket,
 } from "lucide-react";
 import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
+import { EnrollCourseModal } from "@/components/enrollment/EnrollCourseModal";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -97,6 +98,7 @@ export default function TutorProfile() {
   const [demoVideoSignedUrl, setDemoVideoSignedUrl] = useState<string | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [enrollOpen, setEnrollOpen] = useState(false);
 
   useEffect(() => {
     if (tutorId) fetchTutorData();
@@ -311,8 +313,8 @@ export default function TutorProfile() {
                     <Button variant="outline" onClick={handleMessage}>
                       <MessageCircle className="mr-2 h-4 w-4" /> Message
                     </Button>
-                    <Button variant="default" onClick={() => setBookingOpen(true)}>
-                      <BookOpen className="mr-2 h-4 w-4" /> Book Demo Session
+                    <Button variant="default" onClick={() => setEnrollOpen(true)}>
+                      <GraduationCap className="mr-2 h-4 w-4" /> Enroll Course
                     </Button>
                   </div>
                 </div>
@@ -323,8 +325,8 @@ export default function TutorProfile() {
                 <Button variant="outline" className="flex-1 min-h-[44px]" onClick={handleMessage}>
                   <MessageCircle className="mr-2 h-4 w-4" /> Message
                 </Button>
-                <Button className="flex-1 min-h-[44px]" onClick={() => setBookingOpen(true)}>
-                  <BookOpen className="mr-2 h-4 w-4" /> Book Demo
+                <Button className="flex-1 min-h-[44px]" onClick={() => setEnrollOpen(true)}>
+                  <GraduationCap className="mr-2 h-4 w-4" /> Enroll
                 </Button>
               </div>
             </CardContent>
@@ -685,17 +687,26 @@ export default function TutorProfile() {
           <Button variant="outline" className="flex-1 min-h-[44px] text-sm" onClick={handleMessage}>
             <MessageCircle className="mr-1.5 h-4 w-4" /> Message
           </Button>
-          {tutor.demo_video_url ? (
-            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => document.getElementById("demo-video")?.scrollIntoView({ behavior: "smooth" })}>
-              <Play className="mr-1.5 h-4 w-4" /> Watch Demo
-            </Button>
-          ) : (
-            <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setBookingOpen(true)}>
-              Book Demo
-            </Button>
-          )}
+          <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setEnrollOpen(true)}>
+            <GraduationCap className="mr-1.5 h-4 w-4" /> Enroll Course
+          </Button>
         </div>
       </div>
+
+      {enrollOpen && tutor && (
+        <EnrollCourseModal
+          open={enrollOpen}
+          onOpenChange={setEnrollOpen}
+          tutor={{
+            id: tutor.id,
+            first_name: tutor.first_name,
+            last_name: tutor.last_name,
+            primary_subject: tutor.primary_subject,
+            secondary_subject: tutor.secondary_subject,
+            additional_subjects: tutor.additional_subjects,
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }

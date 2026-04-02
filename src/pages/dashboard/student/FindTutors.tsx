@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
+import { EnrollCourseModal } from "@/components/enrollment/EnrollCourseModal";
 
 import { useMessaging } from "@/hooks/useMessaging";
 import { useToast } from "@/hooks/use-toast";
@@ -103,6 +104,7 @@ export default function FindTutors() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [mathLevelFilter, setMathLevelFilter] = useState<string>("");
   const [requestDemoTutor, setRequestDemoTutor] = useState<Tutor | null>(null);
+  const [enrollTutor, setEnrollTutor] = useState<Tutor | null>(null);
 
   // Filters
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
@@ -666,15 +668,13 @@ export default function FindTutors() {
                             <MessageCircle className="w-4 h-4 mr-1" />
                             Message
                           </Button>
-                          {tutor.demo_video_url ? (
-                            <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm" asChild>
-                              <Link to={`/dashboard/student/tutor/${tutor.id}#demo-video`}>▶ Watch Demo</Link>
-                            </Button>
-                          ) : tutor.live_demo_enabled ? (
-                            <Button className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm" onClick={() => setRequestDemoTutor(tutor)}>
-                              📅 Book Demo
-                            </Button>
-                          ) : null}
+                          <Button
+                            className="w-full sm:w-auto sm:flex-1 min-h-[44px] text-[13px] sm:text-sm"
+                            onClick={() => setEnrollTutor(tutor)}
+                          >
+                            <GraduationCap className="w-4 h-4 mr-1" />
+                            Enroll Course
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -758,15 +758,13 @@ export default function FindTutors() {
                                 <MessageCircle className="w-4 h-4 mr-1" />
                                 Message
                               </Button>
-                              {tutor.demo_video_url ? (
-                                <Button className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm" asChild>
-                                  <Link to={`/dashboard/student/tutor/${tutor.id}#demo-video`}>▶ Watch Demo</Link>
-                                </Button>
-                              ) : tutor.live_demo_enabled ? (
-                                <Button className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm" onClick={() => setRequestDemoTutor(tutor)}>
-                                  📅 Book Demo
-                                </Button>
-                              ) : null}
+                              <Button
+                                className="w-full sm:w-auto min-h-[44px] text-[13px] sm:text-sm"
+                                onClick={() => setEnrollTutor(tutor)}
+                              >
+                                <GraduationCap className="w-4 h-4 mr-1" />
+                                Enroll Course
+                              </Button>
                             </div>
                           </div>
                         </div>
@@ -788,6 +786,20 @@ export default function FindTutors() {
             first_name: requestDemoTutor.first_name,
             last_name: requestDemoTutor.last_name,
             avatar_url: requestDemoTutor.avatar_url || null,
+          }}
+        />
+      )}
+      {enrollTutor && (
+        <EnrollCourseModal
+          open={!!enrollTutor}
+          onOpenChange={(v) => { if (!v) setEnrollTutor(null); }}
+          tutor={{
+            id: enrollTutor.id,
+            first_name: enrollTutor.first_name,
+            last_name: enrollTutor.last_name,
+            primary_subject: enrollTutor.primary_subject,
+            secondary_subject: enrollTutor.secondary_subject,
+            additional_subjects: enrollTutor.additional_subjects,
           }}
         />
       )}

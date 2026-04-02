@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
+import { PendingEnrollments } from "@/components/enrollment/PendingEnrollments";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,6 +56,8 @@ export default function MyStudents() {
   const [progressFilter, setProgressFilter] = useState("all");
   const [loading, setLoading] = useState(true);
   const [startingClassFor, setStartingClassFor] = useState<string | null>(null);
+  const [tutorRecordId, setTutorRecordId] = useState<string | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   useEffect(() => {
     async function fetchStudents() {
@@ -72,6 +75,8 @@ export default function MyStudents() {
           setLoading(false);
           return;
         }
+
+        setTutorRecordId(tutorData.id);
 
         // Fetch students assigned to this tutor
         const { data: studentsData } = await supabase
@@ -113,7 +118,7 @@ export default function MyStudents() {
     }
 
     fetchStudents();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const handleStartClass = async (student: Student) => {
     setStartingClassFor(student.id);
@@ -252,6 +257,14 @@ export default function MyStudents() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Enrollment Requests */}
+        {tutorRecordId && (
+          <PendingEnrollments
+            tutorId={tutorRecordId}
+            onApproved={() => setRefreshKey((k) => k + 1)}
+          />
+        )}
 
         {/* Filters */}
         <Card>
