@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/sheet";
 import { supabase } from "@/integrations/supabase/client";
 import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
+import { EnrollCourseModal } from "@/components/enrollment/EnrollCourseModal";
 
 import { useMessaging } from "@/hooks/useMessaging";
 import { useToast } from "@/hooks/use-toast";
