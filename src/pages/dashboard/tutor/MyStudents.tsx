@@ -258,6 +258,14 @@ export default function MyStudents() {
           </Card>
         </div>
 
+        {/* Pending Enrollment Requests */}
+        {tutorRecordId && (
+          <PendingEnrollments
+            tutorId={tutorRecordId}
+            onApproved={() => setRefreshKey((k) => k + 1)}
+          />
+        )}
+
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
