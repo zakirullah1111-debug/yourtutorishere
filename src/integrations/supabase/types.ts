@@ -146,6 +146,45 @@ export type Database = {
         }
         Relationships: []
       }
+      enrollment_requests: {
+        Row: {
+          created_at: string
+          current_class: string | null
+          education_board: string | null
+          id: string
+          message: string | null
+          status: string
+          student_user_id: string
+          subject: string
+          tutor_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_class?: string | null
+          education_board?: string | null
+          id?: string
+          message?: string | null
+          status?: string
+          student_user_id: string
+          subject: string
+          tutor_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_class?: string | null
+          education_board?: string | null
+          id?: string
+          message?: string | null
+          status?: string
+          student_user_id?: string
+          subject?: string
+          tutor_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       messages: {
         Row: {
           content: string | null
