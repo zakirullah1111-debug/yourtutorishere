@@ -104,6 +104,7 @@ export default function FindTutors() {
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [mathLevelFilter, setMathLevelFilter] = useState<string>("");
   const [requestDemoTutor, setRequestDemoTutor] = useState<Tutor | null>(null);
+  const [enrollTutor, setEnrollTutor] = useState<Tutor | null>(null);
 
   // Filters
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
