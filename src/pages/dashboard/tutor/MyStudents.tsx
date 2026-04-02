@@ -76,6 +76,8 @@ export default function MyStudents() {
           return;
         }
 
+        setTutorRecordId(tutorData.id);
+
         // Fetch students assigned to this tutor
         const { data: studentsData } = await supabase
           .from("students")
