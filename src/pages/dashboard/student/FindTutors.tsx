@@ -789,6 +789,20 @@ export default function FindTutors() {
           }}
         />
       )}
+      {enrollTutor && (
+        <EnrollCourseModal
+          open={!!enrollTutor}
+          onOpenChange={(v) => { if (!v) setEnrollTutor(null); }}
+          tutor={{
+            id: enrollTutor.id,
+            first_name: enrollTutor.first_name,
+            last_name: enrollTutor.last_name,
+            primary_subject: enrollTutor.primary_subject,
+            secondary_subject: enrollTutor.secondary_subject,
+            additional_subjects: enrollTutor.additional_subjects,
+          }}
+        />
+      )}
     </DashboardLayout>
   );
 }

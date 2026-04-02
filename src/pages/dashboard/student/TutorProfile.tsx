@@ -325,8 +325,8 @@ export default function TutorProfile() {
                 <Button variant="outline" className="flex-1 min-h-[44px]" onClick={handleMessage}>
                   <MessageCircle className="mr-2 h-4 w-4" /> Message
                 </Button>
-                <Button className="flex-1 min-h-[44px]" onClick={() => setBookingOpen(true)}>
-                  <BookOpen className="mr-2 h-4 w-4" /> Book Demo
+                <Button className="flex-1 min-h-[44px]" onClick={() => setEnrollOpen(true)}>
+                  <GraduationCap className="mr-2 h-4 w-4" /> Enroll
                 </Button>
               </div>
             </CardContent>
