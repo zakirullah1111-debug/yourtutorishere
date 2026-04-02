@@ -22,6 +22,7 @@ import {
   Rocket,
 } from "lucide-react";
 import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
+import { EnrollCourseModal } from "@/components/enrollment/EnrollCourseModal";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
