@@ -98,6 +98,7 @@ export default function TutorProfile() {
   const [demoVideoSignedUrl, setDemoVideoSignedUrl] = useState<string | null>(null);
   const [comingSoonOpen, setComingSoonOpen] = useState(false);
   const [bookingOpen, setBookingOpen] = useState(false);
+  const [enrollOpen, setEnrollOpen] = useState(false);
 
   useEffect(() => {
     if (tutorId) fetchTutorData();
