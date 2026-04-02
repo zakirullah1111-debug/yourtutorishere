@@ -118,7 +118,7 @@ export default function MyStudents() {
     }
 
     fetchStudents();
-  }, [user]);
+  }, [user, refreshKey]);
 
   const handleStartClass = async (student: Student) => {
     setStartingClassFor(student.id);
