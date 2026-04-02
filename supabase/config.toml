@@ -20,3 +20,6 @@ verify_jwt = false
 
 [functions.start-class]
 verify_jwt = false
+
+[functions.approve-enrollment]
+verify_jwt = false
