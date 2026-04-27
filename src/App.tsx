@@ -8,6 +8,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import SubjectsPage from "./pages/SubjectsPage";
 import TutorsPage from "./pages/TutorsPage";
+import PublicTutorProfile from "./pages/PublicTutorProfile";
 import PricingPage from "./pages/PricingPage";
 import AboutPage from "./pages/AboutPage";
 import HowItWorksPage from "./pages/HowItWorksPage";
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/subjects" element={<SubjectsPage />} />
             <Route path="/tutors" element={<TutorsPage />} />
+            <Route path="/tutors/:tutorId" element={<PublicTutorProfile />} />
             <Route path="/pricing" element={<PricingPage />} />
             <Route path="/about" element={<AboutPage />} />
             <Route path="/how-it-works" element={<HowItWorksPage />} />
@@ -62,7 +64,7 @@ const App = () => (
             <Route path="/signup" element={<SignupPage />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
-            
+
             {/* Student Dashboard Routes - Protected */}
             <Route path="/dashboard/student" element={<ProtectedRoute allowedRoles={["student"]}><StudentDashboard /></ProtectedRoute>} />
             <Route path="/dashboard/student/find-tutors" element={<ProtectedRoute allowedRoles={["student"]}><FindTutors /></ProtectedRoute>} />
@@ -74,7 +76,7 @@ const App = () => (
             <Route path="/dashboard/student/payments" element={<ProtectedRoute allowedRoles={["student"]}><StudentPayments /></ProtectedRoute>} />
             <Route path="/dashboard/student/settings" element={<ProtectedRoute allowedRoles={["student"]}><StudentSettings /></ProtectedRoute>} />
             <Route path="/dashboard/student/tutor/:tutorId" element={<ProtectedRoute allowedRoles={["student"]}><TutorProfile /></ProtectedRoute>} />
-            
+
             {/* Tutor Dashboard Routes - Protected */}
             <Route path="/dashboard/tutor" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorDashboard /></ProtectedRoute>} />
             <Route path="/dashboard/tutor/students" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><MyStudents /></ProtectedRoute>} />
@@ -86,8 +88,7 @@ const App = () => (
             <Route path="/dashboard/tutor/settings" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorSettings /></ProtectedRoute>} />
             <Route path="/dashboard/tutor/complete-profile" element={<ProtectedRoute allowedRoles={["tutor"]}><CompleteProfile /></ProtectedRoute>} />
             <Route path="/dashboard/tutor/bookings" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorBookings /></ProtectedRoute>} />
-            
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
