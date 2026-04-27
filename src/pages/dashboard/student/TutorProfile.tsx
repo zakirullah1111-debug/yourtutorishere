@@ -1,207 +1,152 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import {
-  ArrowLeft,
-  Star,
-  MapPin,
-  GraduationCap,
-  Globe,
-  Home,
-  CheckCircle,
-  MessageCircle,
-  BookOpen,
-  Clock,
-  School,
-  Languages,
-  ChevronDown,
-  ChevronUp,
-  Video,
-  Play,
-  Calendar,
-  Rocket,
+  ArrowLeft, Star, MapPin, GraduationCap, Globe, Home,
+  CheckCircle2, MessageCircle, BookOpen, Clock, Languages,
+  ChevronDown, ChevronUp, Video, Play, Calendar, Users,
+  BadgeCheck, Zap, Award, Heart, Share2, Flag
 } from "lucide-react";
 import { RequestDemoModal } from "@/components/booking/RequestDemoModal";
 import { EnrollCourseModal } from "@/components/enrollment/EnrollCourseModal";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useMessaging } from "@/hooks/useMessaging";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
 
+/* ─── types ──────────────────────────────────────────── */
 interface TutorData {
-  id: string;
-  user_id: string;
-  bio_summary: string | null;
-  primary_subject: string;
-  secondary_subject: string | null;
-  additional_subjects: string[] | null;
-  hourly_rate_pkr: number;
-  years_of_experience: number | null;
-  education_level: string;
-  university: string;
-  degree: string;
-  school_of_teaching: string | null;
-  teaching_mode: string | null;
-  languages: string[] | null;
-  average_rating: number | null;
-  total_reviews: number | null;
-  math_levels: string[] | null;
-  verified: boolean | null;
-  profile_complete: boolean | null;
-  first_name: string;
-  last_name: string;
-  avatar_url: string | null;
-  city: string | null;
-  demo_video_type: string | null;
-  demo_video_url: string | null;
-  demo_video_title: string | null;
-  demo_video_thumbnail: string | null;
-  demo_video_duration: string | null;
-  live_demo_enabled: boolean;
-  live_demo_price: number | null;
+  id: string; user_id: string; bio_summary: string | null;
+  primary_subject: string; secondary_subject: string | null;
+  additional_subjects: string[] | null; hourly_rate_pkr: number;
+  years_of_experience: number | null; education_level: string;
+  university: string; degree: string; school_of_teaching: string | null;
+  teaching_mode: string | null; languages: string[] | null;
+  average_rating: number | null; total_reviews: number | null;
+  math_levels: string[] | null; verified: boolean | null;
+  first_name: string; last_name: string; avatar_url: string | null;
+  city: string | null; demo_video_type: string | null;
+  demo_video_url: string | null; demo_video_title: string | null;
+  demo_video_thumbnail: string | null; demo_video_duration: string | null;
+  live_demo_enabled: boolean; live_demo_price: number | null;
+  total_students_taught: number | null; total_hours_taught: number | null;
 }
 
 interface Review {
-  id: string;
-  rating: number;
-  comment: string | null;
-  created_at: string;
-  student_name: string;
-  student_avatar: string | null;
+  id: string; rating: number; comment: string | null;
+  created_at: string; student_name: string; student_avatar: string | null;
 }
 
+/* ─── component ───────────────────────────────────────── */
 export default function TutorProfile() {
-  const { tutorId } = useParams<{ tutorId: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { toast } = useToast();
+  const { tutorId }  = useParams<{ tutorId: string }>();
+  const navigate     = useNavigate();
+  const { user }     = useAuth();
+  const { toast }    = useToast();
   const { getOrCreateConversation } = useMessaging("student");
 
-  const [tutor, setTutor] = useState<TutorData | null>(null);
-  const [reviews, setReviews] = useState<Review[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [tutor,       setTutor]       = useState<TutorData | null>(null);
+  const [reviews,     setReviews]     = useState<Review[]>([]);
+  const [loading,     setLoading]     = useState(true);
+  const [error,       setError]       = useState<string | null>(null);
   const [bioExpanded, setBioExpanded] = useState(false);
-  const [demoVideoSignedUrl, setDemoVideoSignedUrl] = useState<string | null>(null);
-  const [comingSoonOpen, setComingSoonOpen] = useState(false);
+  const [signedUrl,   setSignedUrl]   = useState<string | null>(null);
   const [bookingOpen, setBookingOpen] = useState(false);
-  const [enrollOpen, setEnrollOpen] = useState(false);
+  const [enrollOpen,  setEnrollOpen]  = useState(false);
+  const [wishlisted,  setWishlisted]  = useState(false);
+  const [stickyVisible, setStickyVisible] = useState(false);
+  const heroRef = useRef<HTMLDivElement>(null);
+
+  /* ── fetch ── */
+  useEffect(() => { if (tutorId) fetchTutor(); }, [tutorId]);
 
   useEffect(() => {
-    if (tutorId) fetchTutorData();
-  }, [tutorId]);
-
-  useEffect(() => {
-    if (tutor) {
-      document.title = `${tutor.first_name} ${tutor.last_name} — YouT utor`;
-    }
-    return () => { document.title = "YouT utor"; };
+    if (!tutor) return;
+    document.title = `${tutor.first_name} ${tutor.last_name} – Studypulse`;
+    return () => { document.title = "Studypulse"; };
   }, [tutor]);
 
-  const fetchTutorData = async () => {
-    setLoading(true);
-    setError(null);
+  /* ── sticky CTA on scroll ── */
+  useEffect(() => {
+    const obs = new IntersectionObserver(
+      ([entry]) => setStickyVisible(!entry.isIntersecting),
+      { threshold: 0 }
+    );
+    if (heroRef.current) obs.observe(heroRef.current);
+    return () => obs.disconnect();
+  }, [tutor]);
+
+  const fetchTutor = async () => {
+    setLoading(true); setError(null);
     try {
-      // Fetch tutor + profile
-      const { data: tutorData, error: tutorError } = await supabase
+      const { data: td, error: te } = await supabase
         .from("tutors")
-        .select("id, user_id, primary_subject, secondary_subject, additional_subjects, teaching_levels, education_level, university, degree, graduation_year, years_of_experience, hourly_rate_pkr, bio_summary, languages, teaching_mode, school_of_teaching, math_levels, country, average_rating, total_reviews, total_students_taught, active_students, total_hours_taught, verified, profile_complete, status, demo_video_url, demo_video_type, demo_video_title, demo_video_thumbnail, demo_video_duration, live_demo_enabled, live_demo_price, availability_days, preferred_time_slot, created_at, updated_at")
+        .select("id,user_id,primary_subject,secondary_subject,additional_subjects,education_level,university,degree,years_of_experience,hourly_rate_pkr,bio_summary,languages,teaching_mode,school_of_teaching,math_levels,average_rating,total_reviews,total_students_taught,total_hours_taught,verified,profile_complete,demo_video_url,demo_video_type,demo_video_title,demo_video_thumbnail,demo_video_duration,live_demo_enabled,live_demo_price")
         .eq("id", tutorId!)
         .eq("verified", true)
         .eq("profile_complete", true)
         .maybeSingle();
 
-      if (tutorError) throw tutorError;
-      if (!tutorData) {
-        setError("This tutor profile is not available.");
-        setLoading(false);
-        return;
-      }
+      if (te) throw te;
+      if (!td) { setError("This tutor profile is not available."); return; }
 
-      // Fetch profile info
-      const { data: profileData } = await supabase
+      const { data: pd } = await supabase
         .from("profiles")
-        .select("first_name, last_name, avatar_url, city")
-        .eq("user_id", tutorData.user_id)
+        .select("first_name,last_name,avatar_url,city")
+        .eq("user_id", td.user_id)
         .maybeSingle();
 
-      const merged: TutorData = {
-        ...tutorData,
-        first_name: profileData?.first_name || "",
-        last_name: profileData?.last_name || "",
-        avatar_url: profileData?.avatar_url || null,
-        city: profileData?.city || null,
-        demo_video_type: (tutorData as any).demo_video_type || null,
-        demo_video_url: (tutorData as any).demo_video_url || null,
-        demo_video_title: (tutorData as any).demo_video_title || null,
-        demo_video_thumbnail: (tutorData as any).demo_video_thumbnail || null,
-        demo_video_duration: (tutorData as any).demo_video_duration || null,
-        live_demo_enabled: (tutorData as any).live_demo_enabled || false,
-        live_demo_price: (tutorData as any).live_demo_price || null,
-      };
-      setTutor(merged);
+      setTutor({
+        ...td,
+        first_name: pd?.first_name || "",
+        last_name:  pd?.last_name  || "",
+        avatar_url: pd?.avatar_url || null,
+        city:       pd?.city       || null,
+        demo_video_type:      (td as any).demo_video_type      || null,
+        demo_video_url:       (td as any).demo_video_url       || null,
+        demo_video_title:     (td as any).demo_video_title     || null,
+        demo_video_thumbnail: (td as any).demo_video_thumbnail || null,
+        demo_video_duration:  (td as any).demo_video_duration  || null,
+        live_demo_enabled:    (td as any).live_demo_enabled    || false,
+        live_demo_price:      (td as any).live_demo_price      || null,
+        total_students_taught:(td as any).total_students_taught|| null,
+        total_hours_taught:   (td as any).total_hours_taught   || null,
+      });
 
-      // Fetch reviews
-      const { data: reviewsData } = await supabase
+      /* reviews */
+      const { data: rv } = await supabase
         .from("reviews")
-        .select("id, rating, comment, created_at, student_id")
+        .select("id,rating,comment,created_at,student_id")
         .eq("tutor_id", tutorId!)
         .order("created_at", { ascending: false })
-        .limit(10);
+        .limit(12);
 
-      if (reviewsData && reviewsData.length > 0) {
-        // Get student names from the students table -> profiles
-        const studentIds = reviewsData.map((r) => r.student_id);
-        const { data: students } = await supabase
-          .from("students")
-          .select("id, user_id")
-          .in("id", studentIds);
-
-        const userIds = students?.map((s) => s.user_id) || [];
-        const { data: studentProfiles } = await supabase
-          .from("profiles")
-          .select("user_id, first_name, avatar_url")
-          .in("user_id", userIds);
-
-        const studentMap = new Map<string, { name: string; avatar: string | null }>();
-        students?.forEach((s) => {
-          const prof = studentProfiles?.find((p) => p.user_id === s.user_id);
-          studentMap.set(s.id, {
-            name: prof?.first_name || "Student",
-            avatar: prof?.avatar_url || null,
-          });
+      if (rv?.length) {
+        const sids = rv.map(r => r.student_id);
+        const { data: students } = await supabase.from("students").select("id,user_id").in("id", sids);
+        const uids = students?.map(s => s.user_id) || [];
+        const { data: sprofs } = await supabase.from("profiles").select("user_id,first_name,avatar_url").in("user_id", uids);
+        const smap = new Map<string, { name: string; avatar: string | null }>();
+        students?.forEach(s => {
+          const sp = sprofs?.find(p => p.user_id === s.user_id);
+          smap.set(s.id, { name: sp?.first_name || "Student", avatar: sp?.avatar_url || null });
         });
-
-        setReviews(
-          reviewsData.map((r) => ({
-            id: r.id,
-            rating: r.rating,
-            comment: r.comment,
-            created_at: r.created_at,
-            student_name: studentMap.get(r.student_id)?.name || "Student",
-            student_avatar: studentMap.get(r.student_id)?.avatar || null,
-          }))
-        );
+        setReviews(rv.map(r => ({
+          id: r.id, rating: r.rating, comment: r.comment,
+          created_at: r.created_at,
+          student_name:   smap.get(r.student_id)?.name   || "Student",
+          student_avatar: smap.get(r.student_id)?.avatar || null,
+        })));
       }
-    } catch (err) {
-      console.error("Error fetching tutor:", err);
-      setError("Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) {
+      console.error(e); setError("Something went wrong.");
+    } finally { setLoading(false); }
   };
 
   const handleMessage = async () => {
@@ -209,9 +154,7 @@ export default function TutorProfile() {
     try {
       await getOrCreateConversation(tutor.user_id);
       navigate("/dashboard/student/messages");
-    } catch {
-      toast({ title: "Error", description: "Could not start conversation.", variant: "destructive" });
-    }
+    } catch { toast({ title: "Error", description: "Could not start conversation.", variant: "destructive" }); }
   };
 
   const allSubjects = tutor
@@ -220,529 +163,475 @@ export default function TutorProfile() {
 
   const initials = tutor ? `${tutor.first_name[0] || ""}${tutor.last_name[0] || ""}`.toUpperCase() : "";
 
-  const teachingModeLabel = tutor?.teaching_mode === "online"
-    ? { icon: Globe, label: "Online Sessions", color: "bg-primary/10 text-primary" }
-    : tutor?.teaching_mode === "in-person"
-    ? { icon: Home, label: "In-Person Sessions", color: "bg-green-100 text-green-700" }
-    : { icon: CheckCircle, label: "Online & In-Person", color: "bg-primary/10 text-primary" };
-
   const ratingBreakdown = () => {
     if (!reviews.length) return [];
-    const counts = [0, 0, 0, 0, 0];
-    reviews.forEach((r) => { if (r.rating >= 1 && r.rating <= 5) counts[r.rating - 1]++; });
-    return [5, 4, 3, 2, 1].map((star) => ({
-      star,
-      count: counts[star - 1],
-      pct: Math.round((counts[star - 1] / reviews.length) * 100),
+    const counts = [0,0,0,0,0];
+    reviews.forEach(r => { if (r.rating >= 1 && r.rating <= 5) counts[r.rating - 1]++; });
+    return [5,4,3,2,1].map(star => ({
+      star, count: counts[star-1],
+      pct: Math.round((counts[star-1] / reviews.length) * 100),
     }));
   };
 
-  if (loading) return <TutorProfileSkeleton />;
+  if (loading) return <ProfileSkeleton />;
 
-  if (error || !tutor) {
-    return (
-      <DashboardLayout userType="student">
-        <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-          <p className="text-lg text-muted-foreground">{error || "Tutor not found."}</p>
-          <Button variant="outline" onClick={() => navigate("/dashboard/student/find-tutors")}>
-            <ArrowLeft className="mr-2 h-4 w-4" /> Back to Find Tutors
-          </Button>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  if (error || !tutor) return (
+    <DashboardLayout userType="student">
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
+        <p className="text-lg text-muted-foreground">{error || "Tutor not found."}</p>
+        <Button variant="outline" onClick={() => navigate("/dashboard/student/find-tutors")}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Find Tutors
+        </Button>
+      </div>
+    </DashboardLayout>
+  );
+
+  const demoPrice = tutor.live_demo_price === 0 || !tutor.live_demo_price
+    ? "Free" : `PKR ${tutor.live_demo_price.toLocaleString()}`;
 
   return (
     <DashboardLayout userType="student">
-      <div className="max-w-4xl mx-auto pb-28 sm:pb-8">
-        {/* Back button */}
-        <Button
-          variant="ghost"
-          className="mb-4 text-muted-foreground hover:text-foreground"
-          onClick={() => navigate("/dashboard/student/find-tutors")}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Back to Find Tutors
+      <div className="max-w-4xl mx-auto pb-32 sm:pb-8">
+
+        {/* Back */}
+        <Button variant="ghost" className="mb-4 text-muted-foreground hover:text-foreground -ml-2" onClick={() => navigate(-1)}>
+          <ArrowLeft className="mr-2 h-4 w-4" /> Back
         </Button>
 
-        {/* SECTION 1 — Hero */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-          <Card className="overflow-hidden">
-            <CardContent className="p-6 sm:p-8">
-              <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-                <Avatar className="h-24 w-24 border-[3px] border-background shadow-lg shrink-0">
-                  <AvatarImage src={tutor.avatar_url || undefined} alt={`${tutor.first_name} ${tutor.last_name}`} />
-                  <AvatarFallback className="text-2xl font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
-                </Avatar>
+        {/* ── HERO CARD ─────────────────────────────────── */}
+        <motion.div ref={heroRef} initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+          <div className="bg-card border border-border rounded-2xl overflow-hidden">
+            {/* Gradient banner */}
+            <div className="h-28 gradient-bg relative">
+              <div className="absolute inset-0 opacity-20" style={{backgroundImage:"radial-gradient(circle at 20% 50%, white 1px, transparent 1px), radial-gradient(circle at 80% 20%, white 1px, transparent 1px)", backgroundSize:"30px 30px"}} />
+              {/* Action buttons */}
+              <div className="absolute top-3 right-3 flex gap-2">
+                <button
+                  onClick={() => setWishlisted(!wishlisted)}
+                  className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-colors"
+                >
+                  <Heart className={cn("w-4 h-4 text-white", wishlisted && "fill-white")} />
+                </button>
+                <button className="w-8 h-8 rounded-full bg-white/20 backdrop-blur flex items-center justify-center hover:bg-white/30 transition-colors">
+                  <Share2 className="w-4 h-4 text-white" />
+                </button>
+              </div>
+            </div>
 
-                <div className="flex-1 text-center sm:text-left">
-                  <div className="flex items-center justify-center sm:justify-start gap-2">
-                    <h1 className="text-xl sm:text-2xl font-bold text-foreground">
-                      {tutor.first_name} {tutor.last_name}
-                    </h1>
-                    <Tooltip>
-                      <TooltipTrigger>
-                        <CheckCircle className="h-5 w-5 text-primary fill-primary/20" />
-                      </TooltipTrigger>
-                      <TooltipContent>Verified Tutor</TooltipContent>
-                    </Tooltip>
+            <div className="px-6 pb-6">
+              {/* Avatar + name row */}
+              <div className="flex flex-col sm:flex-row gap-4 sm:items-end -mt-12 mb-5">
+                <div className="relative">
+                  <Avatar className="h-24 w-24 border-4 border-card shadow-xl">
+                    <AvatarImage src={tutor.avatar_url || undefined} />
+                    <AvatarFallback className="text-2xl font-bold gradient-bg text-white">{initials}</AvatarFallback>
+                  </Avatar>
+                  {tutor.verified && (
+                    <div className="absolute -bottom-1 -right-1 w-7 h-7 gradient-bg rounded-full flex items-center justify-center border-2 border-card">
+                      <BadgeCheck className="w-4 h-4 text-white fill-white" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex-1 sm:pb-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h1 className="text-2xl font-bold text-foreground">{tutor.first_name} {tutor.last_name}</h1>
+                    {tutor.verified && (
+                      <Badge className="gradient-bg text-white border-0 text-[10px]">
+                        <BadgeCheck className="w-3 h-3 mr-1" /> Verified
+                      </Badge>
+                    )}
                   </div>
+                  <p className="text-sm text-muted-foreground mt-0.5">{tutor.degree} · {tutor.university}</p>
 
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {tutor.education_level} · {tutor.university}
-                  </p>
-
-                  <div className="flex items-center justify-center sm:justify-start gap-3 mt-2 flex-wrap">
+                  {/* Rating */}
+                  <div className="flex items-center gap-3 mt-2 flex-wrap">
                     {(tutor.total_reviews ?? 0) > 0 ? (
-                      <span className="flex items-center gap-1 text-sm">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold">{(tutor.average_rating ?? 0).toFixed(1)}</span>
-                        <span className="text-muted-foreground">({tutor.total_reviews} reviews)</span>
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <div className="flex gap-0.5">
+                          {[1,2,3,4,5].map(s => (
+                            <Star key={s} className={cn("w-4 h-4", s <= Math.round(tutor.average_rating || 0) ? "fill-amber-400 text-amber-400" : "text-muted")} />
+                          ))}
+                        </div>
+                        <span className="font-semibold text-foreground">{(tutor.average_rating || 0).toFixed(1)}</span>
+                        <span className="text-sm text-muted-foreground">({tutor.total_reviews} reviews)</span>
+                      </div>
                     ) : (
                       <Badge variant="secondary" className="text-xs">New Tutor</Badge>
                     )}
                     {tutor.city && (
                       <span className="flex items-center gap-1 text-sm text-muted-foreground">
-                        <MapPin className="h-3.5 w-3.5" /> {tutor.city}
+                        <MapPin className="w-3.5 h-3.5" /> {tutor.city}
                       </span>
                     )}
                   </div>
-
-                  {/* Desktop CTAs */}
-                  <div className="hidden sm:flex gap-3 mt-4">
-                    <Button variant="outline" onClick={handleMessage}>
-                      <MessageCircle className="mr-2 h-4 w-4" /> Message
-                    </Button>
-                    <Button variant="default" onClick={() => setEnrollOpen(true)}>
-                      <GraduationCap className="mr-2 h-4 w-4" /> Enroll Course
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Mobile CTAs */}
-              <div className="flex sm:hidden gap-2 mt-5">
-                <Button variant="outline" className="flex-1 min-h-[44px]" onClick={handleMessage}>
-                  <MessageCircle className="mr-2 h-4 w-4" /> Message
-                </Button>
-                <Button className="flex-1 min-h-[44px]" onClick={() => setEnrollOpen(true)}>
-                  <GraduationCap className="mr-2 h-4 w-4" /> Enroll
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* SECTION 2 — About */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
-          <Card className="mt-4">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-3">About Me</h2>
-
-              {tutor.bio_summary ? (
-                <div>
-                  <p className="text-[15px] leading-relaxed text-muted-foreground">
-                    {!bioExpanded && tutor.bio_summary.length > 300
-                      ? tutor.bio_summary.slice(0, 300) + "..."
-                      : tutor.bio_summary}
-                  </p>
-                  {tutor.bio_summary.length > 300 && (
-                    <button
-                      className="text-sm text-primary font-medium mt-1 hover:underline flex items-center gap-1"
-                      onClick={() => setBioExpanded(!bioExpanded)}
-                    >
-                      {bioExpanded ? "Show less" : "Read more"}
-                      {bioExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground italic">No bio added yet.</p>
-              )}
-
-              {/* Languages */}
-              {tutor.languages && tutor.languages.length > 0 && (
-                <div className="mt-4">
-                  <p className="text-xs font-medium text-muted-foreground mb-2 flex items-center gap-1">
-                    <Languages className="h-3.5 w-3.5" /> Teaches in
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {tutor.languages.map((lang) => (
-                      <Badge key={lang} variant="outline" className="text-xs border-primary/30 text-primary">
-                        {lang}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Teaching Mode */}
-              <div className="mt-4">
-                {(() => {
-                  const mode = teachingModeLabel;
-                  const ModeIcon = mode.icon;
-                  return (
-                    <Badge className={`${mode.color} border-0 text-xs px-3 py-1`}>
-                      <ModeIcon className="h-3.5 w-3.5 mr-1" /> {mode.label}
-                    </Badge>
-                  );
-                })()}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* DEMO VIDEO SECTION */}
-        {tutor.demo_video_url && (
-          <motion.div id="demo-video" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.12 }}>
-            <Card className="mt-4">
-              <CardContent className="p-6">
-                <h2 className="text-lg font-semibold text-foreground mb-1">Watch a Demo Lesson</h2>
-                <p className="text-sm text-muted-foreground mb-4">See how {tutor.first_name} teaches before you decide</p>
-
-                <div className="rounded-xl overflow-hidden shadow-lg">
-                  {tutor.demo_video_type === "upload" ? (
-                    <div className="aspect-video bg-muted">
-                      {demoVideoSignedUrl ? (
-                        <video
-                          controls
-                          preload="metadata"
-                          playsInline
-                          poster={tutor.demo_video_thumbnail || undefined}
-                          className="w-full h-full"
-                          onError={() => setDemoVideoSignedUrl(null)}
-                        >
-                          <source src={demoVideoSignedUrl} />
-                          Your browser doesn't support video playback.
-                        </video>
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Button
-                            variant="ghost"
-                            onClick={async () => {
-                              const { data } = await supabase.storage.from("demo-videos").createSignedUrl(tutor.demo_video_url!, 3600);
-                              if (data?.signedUrl) setDemoVideoSignedUrl(data.signedUrl);
-                            }}
-                          >
-                            <Play className="w-8 h-8 mr-2" /> Load Video
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  ) : tutor.demo_video_type === "youtube" ? (
-                    <div className="aspect-video">
-                      <iframe
-                        src={`https://www.youtube-nocookie.com/embed/${tutor.demo_video_url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)?.[1]}?rel=0&modestbranding=1`}
-                        className="w-full h-full"
-                        frameBorder="0"
-                        allowFullScreen
-                        allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        sandbox="allow-scripts allow-same-origin allow-presentation"
-                        referrerPolicy="no-referrer"
-                        title={tutor.demo_video_title || "Demo lesson"}
-                      />
-                    </div>
-                  ) : tutor.demo_video_type === "vimeo" ? (
-                    <div className="aspect-video">
-                      <iframe
-                        src={`https://player.vimeo.com/video/${tutor.demo_video_url?.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/)?.[1]}?color=7C3AED&title=0&byline=0&portrait=0`}
-                        className="w-full h-full"
-                        frameBorder="0"
-                        allowFullScreen
-                        allow="autoplay; fullscreen; picture-in-picture"
-                        sandbox="allow-scripts allow-same-origin allow-presentation"
-                        referrerPolicy="no-referrer"
-                        title={tutor.demo_video_title || "Demo lesson"}
-                      />
-                    </div>
-                  ) : null}
                 </div>
 
-                {(tutor.demo_video_title || tutor.demo_video_duration) && (
-                  <div className="mt-3 flex items-center gap-3 flex-wrap">
-                    {tutor.demo_video_title && <span className="text-[15px] font-medium text-foreground">{tutor.demo_video_title}</span>}
-                    {tutor.demo_video_duration && (
-                      <Badge variant="secondary" className="text-xs">🕐 {tutor.demo_video_duration}</Badge>
-                    )}
-                    <span className="text-xs text-muted-foreground">
-                      {tutor.demo_video_type === "youtube" ? "▶ Hosted on YouTube" : tutor.demo_video_type === "vimeo" ? "▶ Hosted on Vimeo" : "Uploaded video"}
-                    </span>
-                  </div>
-                )}
-
-                {/* CTA box */}
-                <div className="mt-4 p-4 rounded-lg bg-primary/5 border border-primary/10 space-y-2">
-                  <p className="text-sm font-medium text-foreground">Liked what you saw?</p>
-                  <Button variant="outline" className="w-full" onClick={handleMessage}>
-                    <MessageCircle className="w-4 h-4 mr-2" /> Message Tutor
+                {/* Desktop CTAs */}
+                <div className="hidden sm:flex gap-2.5 shrink-0 pb-1">
+                  <Button variant="outline" onClick={handleMessage}>
+                    <MessageCircle className="mr-2 h-4 w-4" /> Message
                   </Button>
                   {tutor.live_demo_enabled && (
-                    <Button className="w-full" onClick={() => setBookingOpen(true)}>
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Book Live Demo — {tutor.live_demo_price === 0 ? "Free" : tutor.live_demo_price ? `PKR ${tutor.live_demo_price.toLocaleString()}` : "Free"}
+                    <Button className="gradient-bg text-white border-0 shadow-md shadow-primary/25" onClick={() => setBookingOpen(true)}>
+                      <Calendar className="mr-2 h-4 w-4" /> Book Demo · {demoPrice}
                     </Button>
                   )}
+                  <Button onClick={() => setEnrollOpen(true)}>
+                    <GraduationCap className="mr-2 h-4 w-4" /> Enroll Course
+                  </Button>
                 </div>
-              </CardContent>
-            </Card>
+              </div>
+
+              {/* Stats strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl bg-muted/40 border border-border">
+                {[
+                  { icon: Clock,   value: `${tutor.years_of_experience || 0}y`,  label: "Experience" },
+                  { icon: Users,   value: tutor.total_students_taught ? `${tutor.total_students_taught}+` : "—", label: "Students" },
+                  { icon: BookOpen,value: tutor.total_hours_taught     ? `${tutor.total_hours_taught}h`   : "—", label: "Hours Taught" },
+                  { icon: Award,   value: `PKR ${tutor.hourly_rate_pkr.toLocaleString()}`, label: "Per hour" },
+                ].map(s => (
+                  <div key={s.label} className="flex items-center gap-2.5">
+                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center shrink-0">
+                      <s.icon className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-sm text-foreground">{s.value}</div>
+                      <div className="text-[11px] text-muted-foreground">{s.label}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── ABOUT ─────────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.08 }}>
+          <div className="bg-card border border-border rounded-2xl p-6 mt-4">
+            <h2 className="text-base font-bold text-foreground mb-3">About Me</h2>
+            {tutor.bio_summary ? (
+              <>
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  {!bioExpanded && tutor.bio_summary.length > 320
+                    ? tutor.bio_summary.slice(0, 320) + "…"
+                    : tutor.bio_summary}
+                </p>
+                {tutor.bio_summary.length > 320 && (
+                  <button
+                    className="mt-2 text-sm text-primary font-medium hover:underline flex items-center gap-1"
+                    onClick={() => setBioExpanded(!bioExpanded)}
+                  >
+                    {bioExpanded ? "Show less" : "Read more"}
+                    {bioExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                  </button>
+                )}
+              </>
+            ) : (
+              <p className="text-sm text-muted-foreground italic">No bio added yet.</p>
+            )}
+
+            {/* Languages + mode badges */}
+            <div className="flex flex-wrap gap-2 mt-4">
+              {tutor.languages?.map(lang => (
+                <Badge key={lang} variant="outline" className="text-xs border-primary/30 text-primary gap-1">
+                  <Languages className="w-3 h-3" /> {lang}
+                </Badge>
+              ))}
+              <Badge variant="secondary" className="text-xs gap-1">
+                {tutor.teaching_mode === "online"    ? <><Globe className="w-3 h-3" /> Online</> :
+                 tutor.teaching_mode === "in-person" ? <><Home className="w-3 h-3" /> In-Person</> :
+                 <><CheckCircle2 className="w-3 h-3" /> Online & In-Person</>}
+              </Badge>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* ── DEMO VIDEO ───────────────────────────────── */}
+        {tutor.demo_video_url && (
+          <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.12 }}>
+            <div className="bg-card border border-border rounded-2xl p-6 mt-4">
+              <div className="flex items-center gap-2 mb-1">
+                <Video className="w-4 h-4 text-primary" />
+                <h2 className="text-base font-bold text-foreground">Watch a Demo Lesson</h2>
+              </div>
+              <p className="text-sm text-muted-foreground mb-4">
+                See how {tutor.first_name} teaches — before you commit to anything.
+              </p>
+
+              <div className="rounded-xl overflow-hidden shadow-lg bg-muted aspect-video">
+                {tutor.demo_video_type === "upload" ? (
+                  signedUrl ? (
+                    <video controls preload="metadata" playsInline poster={tutor.demo_video_thumbnail || undefined} className="w-full h-full">
+                      <source src={signedUrl} />
+                    </video>
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center">
+                      <Button variant="ghost" onClick={async () => {
+                        const { data } = await supabase.storage.from("demo-videos").createSignedUrl(tutor.demo_video_url!, 3600);
+                        if (data?.signedUrl) setSignedUrl(data.signedUrl);
+                      }}>
+                        <Play className="w-8 h-8 mr-2" /> Load Video
+                      </Button>
+                    </div>
+                  )
+                ) : tutor.demo_video_type === "youtube" ? (
+                  <iframe
+                    src={`https://www.youtube-nocookie.com/embed/${tutor.demo_video_url?.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([a-zA-Z0-9_-]{11})/)?.[1]}?rel=0&modestbranding=1`}
+                    className="w-full h-full" frameBorder="0" allowFullScreen
+                    allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                    title={tutor.demo_video_title || "Demo lesson"}
+                  />
+                ) : tutor.demo_video_type === "vimeo" ? (
+                  <iframe
+                    src={`https://player.vimeo.com/video/${tutor.demo_video_url?.match(/(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/)?.[1]}?color=7C3AED&title=0&byline=0&portrait=0`}
+                    className="w-full h-full" frameBorder="0" allowFullScreen
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    title={tutor.demo_video_title || "Demo lesson"}
+                  />
+                ) : null}
+              </div>
+
+              {(tutor.demo_video_title || tutor.demo_video_duration) && (
+                <div className="flex items-center gap-2 mt-3">
+                  {tutor.demo_video_title && <span className="text-sm font-medium text-foreground">{tutor.demo_video_title}</span>}
+                  {tutor.demo_video_duration && <Badge variant="secondary" className="text-xs">🕐 {tutor.demo_video_duration}</Badge>}
+                </div>
+              )}
+            </div>
           </motion.div>
         )}
 
-        {/* Request Demo Modal */}
-        {tutor && (
-          <RequestDemoModal
-            open={bookingOpen}
-            onOpenChange={setBookingOpen}
-            tutor={{
-              user_id: tutor.user_id,
-              first_name: tutor.first_name,
-              last_name: tutor.last_name,
-              avatar_url: tutor.avatar_url,
-            }}
-          />
-        )}
-
-        {/* SECTION 3 — Teaching Details */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
-          <Card className="mt-4">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-3">What I Teach</h2>
-
-              <p className="text-xs font-medium text-muted-foreground mb-2">Subjects</p>
-              <div className="flex flex-wrap gap-2">
-                {allSubjects.map((subject) => (
-                  <Badge key={subject} className="bg-primary text-primary-foreground text-xs px-3 py-1">
-                    {subject}
-                  </Badge>
-                ))}
-              </div>
-
-              {tutor.math_levels && tutor.math_levels.length > 0 && (
-                <div className="mt-5">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">
-                    Talking in Math — Levels I Cover
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {(tutor.math_levels as string[]).map((level) => (
-                      <Badge key={level} variant="outline" className="text-xs border-primary/40 text-primary px-3 py-1">
-                        {level}
-                      </Badge>
-                    ))}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1.5 italic">Level-based math — not grade-based</p>
+        {/* ── SUBJECTS ─────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.16 }}>
+          <div className="bg-card border border-border rounded-2xl p-6 mt-4">
+            <h2 className="text-base font-bold text-foreground mb-4">What I Teach</h2>
+            <div className="flex flex-wrap gap-2">
+              {allSubjects.map(s => (
+                <span key={s as string} className="px-3 py-1.5 bg-primary/8 text-primary text-sm font-medium rounded-lg">
+                  {s as string}
+                </span>
+              ))}
+            </div>
+            {tutor.math_levels?.length && (
+              <div className="mt-4">
+                <p className="text-xs text-muted-foreground mb-2 font-medium">Math levels covered</p>
+                <div className="flex flex-wrap gap-2">
+                  {(tutor.math_levels as string[]).map(l => (
+                    <Badge key={l} variant="outline" className="text-xs border-primary/30 text-primary">{l}</Badge>
+                  ))}
                 </div>
-              )}
-
-              <div className="mt-5 p-4 rounded-lg bg-primary/5 border border-primary/10 inline-flex items-baseline gap-1">
-                <span className="text-xl font-bold text-primary">PKR {tutor.hourly_rate_pkr.toLocaleString()}</span>
-                <span className="text-sm text-muted-foreground">/ hour</span>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">Demo session rate may vary</p>
-            </CardContent>
-          </Card>
+            )}
+            <div className="mt-5 flex items-baseline gap-1.5 p-4 bg-primary/5 border border-primary/15 rounded-xl w-fit">
+              <span className="text-2xl font-bold text-primary">PKR {tutor.hourly_rate_pkr.toLocaleString()}</span>
+              <span className="text-sm text-muted-foreground">/ hour</span>
+            </div>
+          </div>
         </motion.div>
 
-        {/* SECTION 4 — Education & Experience */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
-          <Card className="mt-4">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Background & Experience</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Education */}
-                <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-center gap-2 mb-3">
-                    <GraduationCap className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">Education</span>
+        {/* ── BACKGROUND ───────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.2 }}>
+          <div className="bg-card border border-border rounded-2xl p-6 mt-4">
+            <h2 className="text-base font-bold text-foreground mb-4">Background & Experience</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <GraduationCap className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold">Education</span>
+                </div>
+                <div className="space-y-2.5">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Degree</p>
+                    <p className="text-sm font-medium text-foreground">{tutor.degree}</p>
                   </div>
-                  <div className="space-y-2">
-                    <div>
-                      <p className="text-xs text-muted-foreground">Degree</p>
-                      <p className="text-sm font-medium text-foreground">{tutor.degree}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Institution</p>
-                      <p className="text-sm font-medium text-foreground">{tutor.university}</p>
-                    </div>
+                  <div>
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide">University</p>
+                    <p className="text-sm font-medium text-foreground">{tutor.university}</p>
                   </div>
                   {tutor.school_of_teaching && (
-                    <div className="mt-3 pt-3 border-t border-border">
-                      <div className="flex items-center gap-2 mb-1">
-                        <School className="h-3.5 w-3.5 text-primary" />
-                        <p className="text-xs text-muted-foreground">Current School</p>
-                      </div>
+                    <div>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Currently at</p>
                       <p className="text-sm font-medium text-foreground">{tutor.school_of_teaching}</p>
                     </div>
                   )}
                 </div>
-
-                {/* Experience */}
-                <div className="p-4 rounded-lg bg-muted/50 border border-border">
-                  <div className="flex items-center gap-2 mb-3">
-                    <Clock className="h-4 w-4 text-primary" />
-                    <span className="text-sm font-semibold text-foreground">Experience</span>
+              </div>
+              <div className="p-4 rounded-xl bg-muted/50 border border-border">
+                <div className="flex items-center gap-2 mb-3">
+                  <Award className="w-4 h-4 text-primary" />
+                  <span className="text-sm font-semibold">Experience</span>
+                </div>
+                <div className="space-y-2.5">
+                  <div>
+                    <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Teaching since</p>
+                    <p className="text-sm font-medium text-foreground">
+                      {tutor.years_of_experience ?? 0} year{(tutor.years_of_experience ?? 0) !== 1 ? "s" : ""}
+                    </p>
                   </div>
-                  <div className="space-y-2">
+                  {tutor.city && (
                     <div>
-                      <p className="text-xs text-muted-foreground">Teaching Experience</p>
-                      <p className="text-sm font-medium text-foreground">
-                        {tutor.years_of_experience ?? 0} year{(tutor.years_of_experience ?? 0) !== 1 ? "s" : ""} of teaching
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Location</p>
+                      <p className="text-sm font-medium text-foreground flex items-center gap-1">
+                        <MapPin className="w-3.5 h-3.5 text-primary" /> {tutor.city}
                       </p>
                     </div>
-                    {tutor.city && (
-                      <div>
-                        <p className="text-xs text-muted-foreground">Location</p>
-                        <p className="text-sm font-medium text-foreground flex items-center gap-1">
-                          <MapPin className="h-3.5 w-3.5 text-primary" /> {tutor.city}
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                  )}
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </motion.div>
 
-        {/* SECTION 5 — Reviews */}
-        <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.25 }}>
-          <Card className="mt-4">
-            <CardContent className="p-6">
-              <h2 className="text-lg font-semibold text-foreground mb-4">Student Reviews</h2>
+        {/* ── REVIEWS ───────────────────────────────────── */}
+        <motion.div initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: 0.24 }}>
+          <div className="bg-card border border-border rounded-2xl p-6 mt-4">
+            <h2 className="text-base font-bold text-foreground mb-4">Student Reviews</h2>
 
-              {reviews.length > 0 ? (
-                <>
-                  {/* Rating summary */}
-                  <div className="flex flex-col sm:flex-row gap-6 mb-6 p-4 rounded-lg bg-muted/50 border border-border">
-                    <div className="text-center sm:text-left">
-                      <div className="flex items-center justify-center sm:justify-start gap-2">
-                        <Star className="h-6 w-6 fill-yellow-400 text-yellow-400" />
-                        <span className="text-3xl font-bold text-foreground">{(tutor.average_rating ?? 0).toFixed(1)}</span>
-                      </div>
-                      <p className="text-sm text-muted-foreground mt-1">Based on {tutor.total_reviews} reviews</p>
+            {reviews.length > 0 ? (
+              <>
+                {/* Summary */}
+                <div className="flex flex-col sm:flex-row gap-6 mb-6 p-5 bg-muted/40 border border-border rounded-xl">
+                  <div className="text-center sm:text-left shrink-0">
+                    <div className="text-5xl font-bold text-foreground leading-none">
+                      {(tutor.average_rating || 0).toFixed(1)}
                     </div>
-                    <div className="flex-1 space-y-1.5">
-                      {ratingBreakdown().map(({ star, pct }) => (
-                        <div key={star} className="flex items-center gap-2 text-xs">
-                          <span className="w-8 text-right text-muted-foreground">{star} ★</span>
-                          <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
-                            <div className="h-full bg-yellow-400 rounded-full" style={{ width: `${pct}%` }} />
-                          </div>
-                          <span className="w-8 text-muted-foreground">{pct}%</span>
-                        </div>
+                    <div className="flex justify-center sm:justify-start gap-0.5 my-2">
+                      {[1,2,3,4,5].map(s => (
+                        <Star key={s} className={cn("w-4 h-4", s <= Math.round(tutor.average_rating || 0) ? "fill-amber-400 text-amber-400" : "text-muted")} />
                       ))}
                     </div>
+                    <p className="text-xs text-muted-foreground">{tutor.total_reviews} reviews</p>
                   </div>
-
-                  {/* Individual reviews */}
-                  <div className="space-y-4">
-                    {reviews.map((review) => (
-                      <div key={review.id} className="flex gap-3 p-4 rounded-lg border border-border">
-                        <Avatar className="h-8 w-8 shrink-0">
-                          <AvatarImage src={review.student_avatar || undefined} />
-                          <AvatarFallback className="text-xs bg-primary/10 text-primary">
-                            {review.student_name[0]}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-sm font-medium text-foreground">{review.student_name}</span>
-                            <div className="flex">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-muted"}`}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {new Date(review.created_at).toLocaleDateString("en-US", { month: "long", year: "numeric" })}
-                            </span>
-                          </div>
-                          {review.comment && (
-                            <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">{review.comment}</p>
-                          )}
+                  <div className="flex-1 space-y-1.5">
+                    {ratingBreakdown().map(({ star, pct }) => (
+                      <div key={star} className="flex items-center gap-2 text-xs">
+                        <span className="w-6 text-muted-foreground text-right">{star}★</span>
+                        <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                          <div className="h-full bg-amber-400 rounded-full transition-all" style={{ width: `${pct}%` }} />
                         </div>
+                        <span className="w-8 text-muted-foreground">{pct}%</span>
                       </div>
                     ))}
                   </div>
-                </>
-              ) : (
-                <div className="text-center py-10">
-                  <Star className="h-10 w-10 text-muted mx-auto mb-3" />
-                  <p className="text-sm font-medium text-muted-foreground">No reviews yet</p>
-                  <p className="text-xs text-muted-foreground mt-1">Be the first to book a session and leave a review!</p>
                 </div>
-              )}
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
 
-      {/* SECTION 6 — Sticky Mobile CTA */}
-      <div className="fixed bottom-0 left-0 right-0 sm:hidden bg-background border-t border-border z-50 px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <div className="flex items-center gap-3 max-w-4xl mx-auto">
-          <span className="text-sm font-bold text-primary whitespace-nowrap">
-            PKR {tutor.hourly_rate_pkr.toLocaleString()}/hr
-          </span>
-          <Button variant="outline" className="flex-1 min-h-[44px] text-sm" onClick={handleMessage}>
-            <MessageCircle className="mr-1.5 h-4 w-4" /> Message
-          </Button>
-          <Button className="flex-1 min-h-[44px] text-sm" onClick={() => setEnrollOpen(true)}>
-            <GraduationCap className="mr-1.5 h-4 w-4" /> Enroll Course
-          </Button>
+                {/* Review cards */}
+                <div className="space-y-4">
+                  {reviews.map(r => (
+                    <div key={r.id} className="flex gap-3 p-4 rounded-xl border border-border hover:border-primary/20 transition-colors">
+                      <Avatar className="h-9 w-9 shrink-0">
+                        <AvatarImage src={r.student_avatar || undefined} />
+                        <AvatarFallback className="text-xs bg-primary/10 text-primary font-semibold">
+                          {r.student_name[0]}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 flex-wrap mb-1">
+                          <span className="text-sm font-semibold text-foreground">{r.student_name}</span>
+                          <div className="flex gap-0.5">
+                            {[1,2,3,4,5].map(s => (
+                              <Star key={s} className={cn("w-3 h-3", s <= r.rating ? "fill-amber-400 text-amber-400" : "text-muted")} />
+                            ))}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(r.created_at).toLocaleDateString("en-US", { month: "short", year: "numeric" })}
+                          </span>
+                        </div>
+                        {r.comment && <p className="text-sm text-muted-foreground leading-relaxed">{r.comment}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <div className="text-center py-12">
+                <Star className="w-10 h-10 text-muted mx-auto mb-3" />
+                <p className="text-sm font-medium text-muted-foreground">No reviews yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Be the first to book a session!</p>
+              </div>
+            )}
+          </div>
+        </motion.div>
+
+        {/* ── REPORT ───────────────────────────────────── */}
+        <div className="mt-4 text-center">
+          <button className="text-xs text-muted-foreground hover:text-destructive transition-colors inline-flex items-center gap-1.5">
+            <Flag className="w-3 h-3" /> Report this profile
+          </button>
         </div>
       </div>
 
+      {/* ── STICKY MOBILE CTA ─────────────────────────── */}
+      <div className={cn(
+        "fixed bottom-0 left-0 right-0 sm:hidden bg-background/97 backdrop-blur border-t border-border z-50 px-4 py-3 transition-transform duration-300",
+        stickyVisible ? "translate-y-0" : "translate-y-full"
+      )}>
+        <div className="flex items-center gap-2.5 max-w-4xl mx-auto">
+          <div className="flex-1">
+            <p className="text-xs text-muted-foreground">Per hour</p>
+            <p className="text-base font-bold text-primary">PKR {tutor.hourly_rate_pkr.toLocaleString()}</p>
+          </div>
+          <Button variant="outline" className="h-11" onClick={handleMessage}>
+            <MessageCircle className="w-4 h-4 mr-1.5" /> Message
+          </Button>
+          {tutor.live_demo_enabled ? (
+            <Button className="gradient-bg text-white border-0 h-11" onClick={() => setBookingOpen(true)}>
+              <Zap className="w-4 h-4 mr-1.5 fill-white" /> Book Demo
+            </Button>
+          ) : (
+            <Button className="gradient-bg text-white border-0 h-11" onClick={() => setEnrollOpen(true)}>
+              <GraduationCap className="w-4 h-4 mr-1.5" /> Enroll
+            </Button>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      {tutor && (
+        <RequestDemoModal
+          open={bookingOpen}
+          onOpenChange={setBookingOpen}
+          tutor={{ user_id: tutor.user_id, first_name: tutor.first_name, last_name: tutor.last_name, avatar_url: tutor.avatar_url }}
+        />
+      )}
       {enrollOpen && tutor && (
         <EnrollCourseModal
           open={enrollOpen}
           onOpenChange={setEnrollOpen}
-          tutor={{
-            id: tutor.id,
-            first_name: tutor.first_name,
-            last_name: tutor.last_name,
-            primary_subject: tutor.primary_subject,
-            secondary_subject: tutor.secondary_subject,
-            additional_subjects: tutor.additional_subjects,
-          }}
+          tutor={{ id: tutor.id, first_name: tutor.first_name, last_name: tutor.last_name, primary_subject: tutor.primary_subject, secondary_subject: tutor.secondary_subject, additional_subjects: tutor.additional_subjects }}
         />
       )}
     </DashboardLayout>
   );
 }
 
-function TutorProfileSkeleton() {
+/* ─── skeleton ────────────────────────────────────────── */
+function ProfileSkeleton() {
   return (
     <DashboardLayout userType="student">
       <div className="max-w-4xl mx-auto">
-        <Skeleton className="h-8 w-40 mb-4" />
-        <Card>
-          <CardContent className="p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start">
-              <Skeleton className="h-24 w-24 rounded-full" />
-              <div className="flex-1 space-y-3">
-                <Skeleton className="h-7 w-48" />
+        <Skeleton className="h-8 w-24 mb-4" />
+        <div className="bg-card border border-border rounded-2xl overflow-hidden">
+          <Skeleton className="h-28 w-full" />
+          <div className="p-6">
+            <div className="flex gap-4 -mt-12 mb-5">
+              <Skeleton className="w-24 h-24 rounded-full border-4 border-card" />
+              <div className="flex-1 space-y-2 pt-14">
+                <Skeleton className="h-5 w-44" />
                 <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-4 w-40" />
-                <div className="flex gap-3 mt-4">
-                  <Skeleton className="h-10 w-28" />
-                  <Skeleton className="h-10 w-36" />
-                </div>
+                <Skeleton className="h-4 w-28" />
               </div>
             </div>
-          </CardContent>
-        </Card>
-        {[1, 2, 3, 4].map((i) => (
-          <Card key={i} className="mt-4">
-            <CardContent className="p-6">
-              <Skeleton className="h-5 w-32 mb-4" />
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-4 w-1/2" />
-              </div>
-            </CardContent>
-          </Card>
+            <Skeleton className="h-20 w-full rounded-xl" />
+          </div>
+        </div>
+        {[1,2,3].map(i => (
+          <div key={i} className="bg-card border border-border rounded-2xl p-6 mt-4 space-y-3">
+            <Skeleton className="h-5 w-32" />
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
         ))}
       </div>
     </DashboardLayout>
