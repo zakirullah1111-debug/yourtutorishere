@@ -1,109 +1,128 @@
-import { motion } from "framer-motion";
-import { UserPlus, Search, Sparkles, MessageSquare, Calendar, Rocket } from "lucide-react";
+import { useState, useRef } from "react";
+import { motion, useInView } from "framer-motion";
+import { UserPlus, Search, CalendarCheck, Video, Star, Briefcase, CheckCircle, DollarSign } from "lucide-react";
+import { cn } from "@/lib/utils";
 
-const steps = [
-  {
-    number: "01",
-    icon: UserPlus,
-    title: "Create Account",
-    description: "Quick registration in under 2 minutes. No credit card required.",
-    color: "bg-primary",
-  },
-  {
-    number: "02",
-    icon: Search,
-    title: "Tell Us Your Needs",
-    description: "Select your subjects, level, and learning preferences.",
-    color: "bg-blue-500",
-  },
-  {
-    number: "03",
-    icon: Sparkles,
-    title: "Get AI Recommendations",
-    description: "Our AI analyzes your requirements and suggests perfect matches.",
-    color: "bg-accent",
-  },
-  {
-    number: "04",
-    icon: MessageSquare,
-    title: "Book Free Demo",
-    description: "Schedule 3 free demo classes with different tutors to find your fit.",
-    color: "bg-success",
-  },
-  {
-    number: "05",
-    icon: Calendar,
-    title: "Choose Your Tutor",
-    description: "After demos, select the tutor you connected with best.",
-    color: "bg-indigo-500",
-  },
-  {
-    number: "06",
-    icon: Rocket,
-    title: "Start Learning",
-    description: "Join classes directly from your dashboard and track your progress.",
-    color: "bg-primary",
-  },
+const studentSteps = [
+  { icon: UserPlus,     color: "bg-primary",       num: "01", title: "Create your account",       desc: "Sign up in 90 seconds. Tell us your subject, level, and learning goals." },
+  { icon: Search,       color: "bg-blue-500",       num: "02", title: "Discover perfect tutors",   desc: "Browse verified tutors by subject, rating, price, and availability. Read real reviews." },
+  { icon: CalendarCheck,color: "bg-violet-500",     num: "03", title: "Book a free demo",          desc: "Schedule a 30-minute free session with up to 3 tutors before committing to anything." },
+  { icon: Video,        color: "bg-emerald-500",    num: "04", title: "Start learning",            desc: "Join video classes directly from your dashboard. No downloads, no confusion." },
+  { icon: Star,         color: "bg-amber-500",      num: "05", title: "Track & improve",           desc: "Watch your grades climb with personalized progress reports and session reviews." },
+];
+
+const tutorSteps = [
+  { icon: UserPlus,     color: "bg-primary",       num: "01", title: "Apply to join",             desc: "Submit your qualifications. Our team reviews your profile within 24 hours." },
+  { icon: CheckCircle,  color: "bg-emerald-500",   num: "02", title: "Get verified",              desc: "Complete identity & degree verification. Verified tutors get 3× more bookings." },
+  { icon: Briefcase,    color: "bg-violet-500",    num: "03", title: "Build your profile",        desc: "Set your rate, upload a demo video, configure your availability schedule." },
+  { icon: Video,        color: "bg-blue-500",      num: "04", title: "Teach & get paid",          desc: "Accept session requests and teach via integrated Jitsi video — no third-party tools." },
+  { icon: DollarSign,   color: "bg-amber-500",     num: "05", title: "Grow your earnings",       desc: "Earn on your own schedule. Top tutors make PKR 80,000+ per month on Studypulse." },
 ];
 
 export function HowItWorksSection() {
+  const [tab, setTab]  = useState<"student" | "tutor">("student");
+  const ref            = useRef<HTMLDivElement>(null);
+  const inView         = useInView(ref, { once: true, margin: "-60px" });
+  const steps          = tab === "student" ? studentSteps : tutorSteps;
+
   return (
-    <section className="section-padding">
+    <section className="section-padding bg-muted/20" ref={ref}>
       <div className="container mx-auto container-padding">
-        {/* Section Header */}
+
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-16"
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5 }}
+          className="text-center mb-10"
         >
-          <span className="text-primary font-semibold text-sm uppercase tracking-wider">How It Works</span>
-          <h2 className="text-heading-1 md:text-display-3 font-bold text-foreground mt-2 mb-4">
-            Start Learning in{" "}
-            <span className="gradient-text">6 Simple Steps</span>
+          <span className="text-primary font-semibold text-sm uppercase tracking-wider">How it works</span>
+          <h2 className="font-bold text-foreground mt-2 mb-4">
+            Up and running in{" "}
+            <span className="gradient-text">minutes</span>
           </h2>
-          <p className="text-muted-foreground text-body-lg max-w-2xl mx-auto">
-            From sign-up to your first class, we make the process seamless and stress-free.
+          <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+            Whether you're here to learn or to teach — getting started takes less time than making chai.
           </p>
         </motion.div>
 
-        {/* Steps Grid */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {steps.map((step, index) => (
-            <motion.div
-              key={step.number}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              className="relative"
-            >
-              {/* Connector Line (desktop) */}
-              {index < steps.length - 1 && index !== 2 && (
-                <div className="hidden lg:block absolute top-8 left-[60%] w-[80%] h-0.5 bg-border" />
-              )}
+        {/* Tab toggle */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={inView ? { opacity: 1, y: 0 } : {}}
+          transition={{ duration: 0.5, delay: 0.1 }}
+          className="flex justify-center mb-12"
+        >
+          <div className="flex p-1.5 bg-muted rounded-xl gap-1">
+            {(["student", "tutor"] as const).map(t => (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={cn(
+                  "px-6 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 capitalize",
+                  tab === t
+                    ? "bg-card text-foreground shadow-sm border border-border"
+                    : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                I'm a {t}
+              </button>
+            ))}
+          </div>
+        </motion.div>
 
-              <div className="bg-card rounded-2xl p-6 border border-border hover:border-primary/30 transition-colors relative z-10">
-                {/* Step Number Badge */}
-                <div className="flex items-center gap-4 mb-4">
-                  <div className={`w-12 h-12 ${step.color} rounded-xl flex items-center justify-center`}>
-                    <step.icon className="w-6 h-6 text-white" />
-                  </div>
-                  <span className="text-4xl font-bold text-muted-foreground/20">
-                    {step.number}
+        {/* Steps — vertical on mobile, horizontal on desktop */}
+        <div className="max-w-4xl mx-auto">
+
+          {/* Desktop: horizontal timeline */}
+          <div className="hidden md:grid grid-cols-5 gap-4 relative">
+            {/* connecting line */}
+            <div className="absolute top-[28px] left-[10%] right-[10%] h-[2px] bg-border" />
+
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.num}
+                initial={{ opacity: 0, y: 20 }}
+                animate={inView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.45, delay: 0.2 + i * 0.1 }}
+                className="relative z-10 flex flex-col items-center text-center"
+              >
+                {/* icon circle */}
+                <div className={`w-14 h-14 ${step.color} rounded-2xl flex items-center justify-center mb-4 shadow-md relative`}>
+                  <step.icon className="w-6 h-6 text-white" />
+                  <span className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-background border-2 border-border flex items-center justify-center text-[9px] font-bold text-muted-foreground">
+                    {i + 1}
                   </span>
                 </div>
+                <h3 className="font-bold text-sm text-foreground mb-1.5">{step.title}</h3>
+                <p className="text-xs text-muted-foreground leading-relaxed">{step.desc}</p>
+              </motion.div>
+            ))}
+          </div>
 
-                {/* Content */}
-                <h3 className="text-xl font-bold text-foreground mb-2">
-                  {step.title}
-                </h3>
-                <p className="text-muted-foreground">
-                  {step.description}
-                </p>
-              </div>
-            </motion.div>
-          ))}
+          {/* Mobile: vertical list */}
+          <div className="md:hidden space-y-4">
+            {steps.map((step, i) => (
+              <motion.div
+                key={step.num}
+                initial={{ opacity: 0, x: -20 }}
+                animate={inView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.4, delay: 0.15 + i * 0.08 }}
+                className="flex gap-4 items-start"
+              >
+                <div className={`w-12 h-12 ${step.color} rounded-xl flex items-center justify-center shrink-0 shadow-sm`}>
+                  <step.icon className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 pb-4 border-b border-border last:border-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-xs font-bold text-muted-foreground">{step.num}</span>
+                    <h3 className="font-bold text-foreground">{step.title}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{step.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
       </div>
     </section>
