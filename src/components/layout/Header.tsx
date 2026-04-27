@@ -1,18 +1,17 @@
 import { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, GraduationCap } from "lucide-react";
+import { Menu, X, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { UserProfileDropdown } from "./UserProfileDropdown";
 
 const navLinks = [
-  { name: "Home", href: "/" },
-  { name: "Subjects", href: "/subjects" },
   { name: "Find Tutors", href: "/tutors" },
-  { name: "Pricing", href: "/pricing" },
+  { name: "Subjects", href: "/subjects" },
   { name: "How It Works", href: "/how-it-works" },
+  { name: "Pricing", href: "/pricing" },
   { name: "About", href: "/about" },
 ];
 
@@ -20,13 +19,12 @@ export function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, loading, userRole } = useAuth();
 
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
-    };
-    window.addEventListener("scroll", handleScroll);
+    const handleScroll = () => setIsScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
@@ -39,38 +37,41 @@ export function Header() {
     return () => { document.body.style.overflow = ""; };
   }, [isMobileMenuOpen]);
 
+  const isHome = location.pathname === "/";
+
   return (
     <header
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
-        isScrolled
-          ? "bg-background/95 backdrop-blur-lg shadow-md py-3"
+        isScrolled || !isHome
+          ? "bg-background/97 backdrop-blur-xl shadow-sm border-b border-border/50 py-3"
           : "bg-transparent py-5"
       )}
     >
       <div className="container mx-auto container-padding">
-        <nav className="flex items-center justify-between">
+        <nav className="flex items-center justify-between gap-4">
+
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center transform group-hover:scale-110 transition-transform">
-              <GraduationCap className="w-6 h-6 text-white" />
+          <Link to="/" className="flex items-center gap-2.5 shrink-0 group">
+            <div className="w-9 h-9 gradient-bg rounded-xl flex items-center justify-center shadow-primary/30 shadow-md group-hover:scale-105 transition-transform">
+              <Zap className="w-5 h-5 text-white fill-white" />
             </div>
-            <span className="text-xl font-bold text-foreground">
-              Your<span className="gradient-text">-Tutor</span>
+            <span className="text-xl font-bold tracking-tight">
+              Study<span className="gradient-text">pulse</span>
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
+          {/* Desktop Nav */}
           <div className="hidden lg:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
                 key={link.name}
                 to={link.href}
                 className={cn(
-                  "px-4 py-2 rounded-lg text-sm font-medium transition-colors",
+                  "px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200",
                   location.pathname === link.href
-                    ? "text-primary bg-primary/10"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                    ? "text-primary bg-primary/8"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/70"
                 )}
               >
                 {link.name}
@@ -79,66 +80,62 @@ export function Header() {
           </div>
 
           {/* Desktop CTA */}
-          <div className="hidden lg:flex items-center gap-3">
+          <div className="hidden lg:flex items-center gap-2.5">
             {!loading && user ? (
               <UserProfileDropdown />
             ) : (
               <>
-                <Button variant="ghost" asChild>
+                <Button variant="ghost" size="sm" asChild>
                   <Link to="/login">Log in</Link>
                 </Button>
-                <Button variant="gradient" asChild>
-                  <Link to="/signup">Get Started</Link>
+                <Button
+                  size="sm"
+                  className="gradient-bg text-white border-0 shadow-md shadow-primary/25 hover:shadow-primary/40 hover:scale-[1.02] transition-all"
+                  asChild
+                >
+                  <Link to="/signup">Get started free</Link>
                 </Button>
               </>
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile menu toggle */}
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             className="lg:hidden p-2 rounded-lg hover:bg-muted transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            aria-label="Toggle menu"
           >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {isMobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </button>
         </nav>
-
       </div>
 
-      {/* Mobile Menu Overlay */}
+      {/* Mobile Menu */}
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
-            {/* Backdrop */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.25 }}
-              className="fixed inset-0 z-[9998] bg-black/50 lg:hidden"
+              transition={{ duration: 0.2 }}
+              className="fixed inset-0 z-[9998] bg-black/40 backdrop-blur-sm lg:hidden"
               onClick={() => setIsMobileMenuOpen(false)}
             />
-            {/* Panel */}
             <motion.div
               initial={{ x: "100%" }}
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
-              transition={{ duration: 0.25, ease: "easeInOut" }}
-              className="fixed top-0 right-0 z-[9999] h-[100dvh] w-4/5 max-w-[320px] bg-background shadow-[-4px_0_24px_rgba(0,0,0,0.15)] overflow-y-auto lg:hidden"
+              transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+              className="fixed top-0 right-0 z-[9999] h-[100dvh] w-[min(320px,90vw)] bg-background shadow-2xl overflow-y-auto lg:hidden flex flex-col"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between px-4 py-5 border-b border-border">
-                <Link to="/" className="flex items-center gap-2" onClick={() => setIsMobileMenuOpen(false)}>
-                  <div className="w-10 h-10 gradient-bg rounded-xl flex items-center justify-center">
-                    <GraduationCap className="w-6 h-6 text-white" />
+              {/* Mobile header */}
+              <div className="flex items-center justify-between px-5 py-5 border-b border-border">
+                <Link to="/" className="flex items-center gap-2.5" onClick={() => setIsMobileMenuOpen(false)}>
+                  <div className="w-8 h-8 gradient-bg rounded-lg flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-white fill-white" />
                   </div>
-                  <span className="text-xl font-bold text-foreground">
-                    Your<span className="gradient-text">-Tutor</span>
-                  </span>
+                  <span className="text-lg font-bold">Study<span className="gradient-text">pulse</span></span>
                 </Link>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}
@@ -148,46 +145,50 @@ export function Header() {
                 </button>
               </div>
 
-              {/* Nav Links */}
-              <div className="py-2">
+              {/* Nav links */}
+              <nav className="flex-1 py-4">
                 {navLinks.map((link) => (
                   <Link
                     key={link.name}
                     to={link.href}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={cn(
-                      "block px-6 py-3.5 text-base font-medium transition-colors border-b border-border/30",
+                      "flex items-center px-5 py-3.5 text-base font-medium transition-colors",
                       location.pathname === link.href
-                        ? "text-primary bg-primary/10"
-                        : "text-foreground hover:bg-primary/5 hover:text-primary"
+                        ? "text-primary bg-primary/8"
+                        : "text-foreground hover:bg-muted/60"
                     )}
                   >
                     {link.name}
                   </Link>
                 ))}
-              </div>
+              </nav>
 
-              {/* Divider */}
-              <div className="border-t border-border mx-4 my-2" />
-
-              {/* CTA Buttons */}
-              <div className="px-6 py-4 flex flex-col gap-2">
+              {/* Mobile CTA */}
+              <div className="px-5 pb-8 pt-4 border-t border-border space-y-3">
                 {!loading && user ? (
-                  <Button variant="gradient" asChild className="w-full h-11 rounded-lg font-semibold">
-                    <Link to={userRole === "tutor" ? "/dashboard/tutor" : "/dashboard/student"} onClick={() => setIsMobileMenuOpen(false)}>
-                      Go to Dashboard →
-                    </Link>
+                  <Button
+                    className="w-full gradient-bg text-white border-0"
+                    onClick={() => {
+                      navigate(userRole === "tutor" ? "/dashboard/tutor" : "/dashboard/student");
+                      setIsMobileMenuOpen(false);
+                    }}
+                  >
+                    Go to Dashboard →
                   </Button>
                 ) : (
                   <>
-                    <Button variant="outline" asChild className="w-full h-11 rounded-lg border-primary text-primary">
-                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Log In</Link>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link to="/login" onClick={() => setIsMobileMenuOpen(false)}>Log in</Link>
                     </Button>
-                    <Button variant="gradient" asChild className="w-full h-11 rounded-lg font-semibold">
-                      <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>Sign Up Free</Link>
+                    <Button className="w-full gradient-bg text-white border-0 shadow-md" asChild>
+                      <Link to="/signup" onClick={() => setIsMobileMenuOpen(false)}>Get started free</Link>
                     </Button>
                   </>
                 )}
+                <p className="text-center text-xs text-muted-foreground pt-1">
+                  3 free demo sessions · No credit card
+                </p>
               </div>
             </motion.div>
           </>
