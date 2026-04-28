@@ -5,6 +5,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/hooks/useAuth";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+
+// Public Pages
 import Index from "./pages/Index";
 import SubjectsPage from "./pages/SubjectsPage";
 import TutorsPage from "./pages/TutorsPage";
@@ -52,7 +54,7 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            {/* Public Routes */}
+            {/* ── Public ─────────────────────────────────── */}
             <Route path="/" element={<Index />} />
             <Route path="/subjects" element={<SubjectsPage />} />
             <Route path="/tutors" element={<TutorsPage />} />
@@ -65,7 +67,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
 
-            {/* Student Dashboard Routes - Protected */}
+            {/* ── Student Dashboard ───────────────────────── */}
             <Route path="/dashboard/student" element={<ProtectedRoute allowedRoles={["student"]}><StudentDashboard /></ProtectedRoute>} />
             <Route path="/dashboard/student/find-tutors" element={<ProtectedRoute allowedRoles={["student"]}><FindTutors /></ProtectedRoute>} />
             <Route path="/dashboard/student/my-tutors" element={<ProtectedRoute allowedRoles={["student"]}><MyTutors /></ProtectedRoute>} />
@@ -77,7 +79,7 @@ const App = () => (
             <Route path="/dashboard/student/settings" element={<ProtectedRoute allowedRoles={["student"]}><StudentSettings /></ProtectedRoute>} />
             <Route path="/dashboard/student/tutor/:tutorId" element={<ProtectedRoute allowedRoles={["student"]}><TutorProfile /></ProtectedRoute>} />
 
-            {/* Tutor Dashboard Routes - Protected */}
+            {/* ── Tutor Dashboard ─────────────────────────── */}
             <Route path="/dashboard/tutor" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorDashboard /></ProtectedRoute>} />
             <Route path="/dashboard/tutor/students" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><MyStudents /></ProtectedRoute>} />
             <Route path="/dashboard/tutor/schedule" element={<ProtectedRoute allowedRoles={["tutor"]} requireCompleteProfile><TutorSchedule /></ProtectedRoute>} />
