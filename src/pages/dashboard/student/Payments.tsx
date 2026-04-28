@@ -1,290 +1,305 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
 import {
-  CreditCard,
-  Download,
-  Clock,
-  CheckCircle,
-  AlertCircle,
-  Plus,
+  CreditCard, Download, Clock, CheckCircle2, AlertCircle,
+  Loader2, Wallet, ArrowUpRight, Receipt, Banknote, RefreshCw,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
+import { cn } from "@/lib/utils";
+import { format, parseISO } from "date-fns";
 
+/* ─── types ──────────────────────────────────────────── */
 interface Payment {
   id: string;
-  tutorName: string;
-  sessions: number;
-  amount: number;
-  date: string;
-  status: "completed" | "pending" | "failed";
-  method?: string;
+  amount_pkr: number;
+  payment_status: string;
+  payment_method: string | null;
+  created_at: string;
+  tutor_name: string;
+  tutor_avatar: string | null;
+  tutor_initials: string;
+  session_count: number | null;
+  description: string | null;
 }
 
-interface PaymentMethod {
-  id: string;
-  type: "card" | "jazzcash" | "easypaisa" | "bank";
-  name: string;
-  details: string;
-  isDefault: boolean;
+interface Summary {
+  totalPaid: number;
+  totalPending: number;
+  totalTransactions: number;
 }
+
+/* ─── helpers ─────────────────────────────────────────── */
+const STATUS_CONFIG: Record<string, { label: string; icon: any; classes: string }> = {
+  Completed: { label: "Paid",    icon: CheckCircle2,  classes: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400" },
+  completed: { label: "Paid",    icon: CheckCircle2,  classes: "bg-emerald-100 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400" },
+  Pending:   { label: "Pending", icon: Clock,         classes: "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400" },
+  pending:   { label: "Pending", icon: Clock,         classes: "bg-amber-100 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400" },
+  Failed:    { label: "Failed",  icon: AlertCircle,   classes: "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400" },
+  failed:    { label: "Failed",  icon: AlertCircle,   classes: "bg-red-100 dark:bg-red-950/40 text-red-700 dark:text-red-400" },
+};
+
+const METHOD_ICONS: Record<string, string> = {
+  jazzcash: "📱", easypaisa: "💚", card: "💳", bank: "🏦", cash: "💵",
+};
+
+type TabKey = "all" | "completed" | "pending";
 
 export default function Payments() {
-  const [upcomingPayments] = useState<Payment[]>([
-    {
-      id: "1",
-      tutorName: "Ali Khan",
-      sessions: 4,
-      amount: 4800,
-      date: "2026-02-10",
-      status: "pending",
-    },
-  ]);
+  const { user }  = useAuth();
+  const { toast } = useToast();
 
-  const [paymentHistory] = useState<Payment[]>([
-    {
-      id: "2",
-      tutorName: "Ali Khan",
-      sessions: 4,
-      amount: 4800,
-      date: "2026-01-03",
-      status: "completed",
-      method: "JazzCash",
-    },
-    {
-      id: "3",
-      tutorName: "Sara Ahmed",
-      sessions: 3,
-      amount: 3000,
-      date: "2026-01-02",
-      status: "completed",
-      method: "Bank Transfer",
-    },
-    {
-      id: "4",
-      tutorName: "Ali Khan",
-      sessions: 2,
-      amount: 2400,
-      date: "2025-12-28",
-      status: "completed",
-      method: "Card",
-    },
-  ]);
+  const [payments,  setPayments]  = useState<Payment[]>([]);
+  const [summary,   setSummary]   = useState<Summary>({ totalPaid: 0, totalPending: 0, totalTransactions: 0 });
+  const [loading,   setLoading]   = useState(true);
+  const [tab,       setTab]       = useState<TabKey>("all");
 
-  const [paymentMethods] = useState<PaymentMethod[]>([
-    {
-      id: "1",
-      type: "jazzcash",
-      name: "JazzCash",
-      details: "0300-*****67",
-      isDefault: true,
-    },
-    {
-      id: "2",
-      type: "card",
-      name: "Visa Card",
-      details: "**** **** **** 4532",
-      isDefault: false,
-    },
-  ]);
+  const fetchPayments = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      /* get student record */
+      const { data: stu } = await supabase.from("students").select("id").eq("user_id", user.id).maybeSingle();
+      if (!stu) { setPayments([]); setLoading(false); return; }
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  };
+      /* fetch payments */
+      const { data: raw, error } = await supabase
+        .from("payments")
+        .select("id,amount_pkr,payment_status,payment_method,created_at,tutor_id,session_count,description")
+        .eq("student_id", stu.id)
+        .order("created_at", { ascending: false });
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "completed":
-        return (
-          <Badge className="bg-green-500/10 text-green-600">
-            <CheckCircle className="w-3 h-3 mr-1" /> Completed
-          </Badge>
-        );
-      case "pending":
-        return (
-          <Badge className="bg-yellow-500/10 text-yellow-600">
-            <Clock className="w-3 h-3 mr-1" /> Pending
-          </Badge>
-        );
-      case "failed":
-        return (
-          <Badge className="bg-red-500/10 text-red-600">
-            <AlertCircle className="w-3 h-3 mr-1" /> Failed
-          </Badge>
-        );
-    }
-  };
+      if (error) throw error;
+      if (!raw?.length) { setPayments([]); setLoading(false); return; }
 
-  const getMethodIcon = (type: string) => {
-    switch (type) {
-      case "jazzcash":
-        return "📱";
-      case "easypaisa":
-        return "📲";
-      case "bank":
-        return "🏦";
-      case "card":
-        return "💳";
-      default:
-        return "💰";
-    }
-  };
+      /* get tutor profiles */
+      const tutorIds = [...new Set(raw.map(p => p.tutor_id).filter(Boolean))];
+      let profileMap = new Map<string, { name: string; avatar: string | null; initials: string }>();
+
+      if (tutorIds.length) {
+        const { data: tutors } = await supabase.from("tutors").select("id,user_id").in("id", tutorIds);
+        const userIds = (tutors || []).map(t => t.user_id);
+        const { data: profs } = await supabase.from("profiles").select("user_id,first_name,last_name,avatar_url").in("user_id", userIds);
+        const userToTutorId = new Map((tutors || []).map(t => [t.user_id, t.id]));
+        (profs || []).forEach(p => {
+          const tid = userToTutorId.get(p.user_id);
+          if (tid) {
+            const fn = p.first_name || ""; const ln = p.last_name || "";
+            profileMap.set(tid, { name: `${fn} ${ln}`.trim() || "Tutor", avatar: p.avatar_url || null, initials: `${fn[0]||""}${ln[0]||""}`.toUpperCase() });
+          }
+        });
+      }
+
+      const mapped: Payment[] = raw.map(p => {
+        const prof = profileMap.get(p.tutor_id) || { name: "Tutor", avatar: null, initials: "T" };
+        return {
+          id: p.id, amount_pkr: p.amount_pkr || 0,
+          payment_status: p.payment_status || "pending",
+          payment_method: p.payment_method || null,
+          created_at: p.created_at,
+          tutor_name: prof.name, tutor_avatar: prof.avatar, tutor_initials: prof.initials,
+          session_count: p.session_count || null, description: p.description || null,
+        };
+      });
+
+      setPayments(mapped);
+
+      /* summary */
+      const paid    = mapped.filter(p => ["Completed","completed"].includes(p.payment_status)).reduce((s,p)=>s+p.amount_pkr,0);
+      const pending = mapped.filter(p => ["Pending","pending"].includes(p.payment_status)).reduce((s,p)=>s+p.amount_pkr,0);
+      setSummary({ totalPaid: paid, totalPending: pending, totalTransactions: mapped.length });
+    } catch (e) {
+      console.error(e);
+      toast({ title: "Failed to load payments", variant: "destructive" });
+    } finally { setLoading(false); }
+  }, [user]);
+
+  useEffect(() => { fetchPayments(); }, [fetchPayments]);
+
+  const filtered = payments.filter(p => {
+    if (tab === "all") return true;
+    if (tab === "completed") return ["Completed","completed"].includes(p.payment_status);
+    if (tab === "pending")   return ["Pending","pending"].includes(p.payment_status);
+    return true;
+  });
+
+  const tabs: { key: TabKey; label: string; count: number }[] = [
+    { key: "all",       label: "All",       count: payments.length },
+    { key: "completed", label: "Paid",      count: payments.filter(p=>["Completed","completed"].includes(p.payment_status)).length },
+    { key: "pending",   label: "Pending",   count: payments.filter(p=>["Pending","pending"].includes(p.payment_status)).length },
+  ];
 
   return (
     <DashboardLayout userType="student">
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-bold">Payments</h1>
-          <p className="text-muted-foreground">Manage your payments and billing</p>
+      <div className="max-w-3xl mx-auto space-y-6">
+
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Payments</h1>
+            <p className="text-sm text-muted-foreground mt-0.5">Your billing history and payment status</p>
+          </div>
+          <Button variant="outline" size="sm" onClick={fetchPayments} disabled={loading}>
+            <RefreshCw className={cn("w-4 h-4 mr-2", loading && "animate-spin")} />
+            Refresh
+          </Button>
         </div>
 
-        <Tabs defaultValue="upcoming">
-          <TabsList className="w-full grid grid-cols-3">
-            <TabsTrigger value="upcoming" className="text-xs sm:text-sm">Upcoming</TabsTrigger>
-            <TabsTrigger value="history" className="text-xs sm:text-sm">History</TabsTrigger>
-            <TabsTrigger value="methods" className="text-xs sm:text-sm">Methods</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="upcoming" className="mt-4 space-y-4">
-            {upcomingPayments.length === 0 ? (
-              <Card>
-                <CardContent className="p-12 text-center">
-                  <CheckCircle className="w-12 h-12 mx-auto text-green-500 mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">All Caught Up!</h3>
-                  <p className="text-muted-foreground">
-                    You have no pending payments at the moment.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              upcomingPayments.map((payment) => (
-                <Card key={payment.id}>
-                  <CardContent className="p-4 sm:p-6">
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{payment.tutorName}</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {payment.sessions} sessions
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          Due: {formatDate(payment.date)}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between sm:flex-col sm:items-end gap-2">
-                        <div>
-                          <p className="text-xl sm:text-2xl font-bold">
-                            PKR {payment.amount.toLocaleString()}
-                          </p>
-                          <div className="mt-1">{getStatusBadge(payment.status)}</div>
-                        </div>
-                        <Button className="min-h-[44px] w-full sm:w-auto">Pay Now</Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            )}
-          </TabsContent>
-
-          <TabsContent value="history" className="mt-4">
-            {/* Desktop table */}
-            <Card className="hidden md:block">
-              <CardContent className="p-0">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="border-b">
-                      <tr className="text-left">
-                        <th className="p-4 font-medium text-muted-foreground">Date</th>
-                        <th className="p-4 font-medium text-muted-foreground">Tutor</th>
-                        <th className="p-4 font-medium text-muted-foreground">Sessions</th>
-                        <th className="p-4 font-medium text-muted-foreground">Method</th>
-                        <th className="p-4 font-medium text-muted-foreground">Amount</th>
-                        <th className="p-4 font-medium text-muted-foreground">Status</th>
-                        <th className="p-4 font-medium text-muted-foreground">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {paymentHistory.map((payment) => (
-                        <tr key={payment.id} className="border-b last:border-0">
-                          <td className="p-4">{formatDate(payment.date)}</td>
-                          <td className="p-4">{payment.tutorName}</td>
-                          <td className="p-4">{payment.sessions}</td>
-                          <td className="p-4">{payment.method}</td>
-                          <td className="p-4 font-medium">
-                            PKR {payment.amount.toLocaleString()}
-                          </td>
-                          <td className="p-4">{getStatusBadge(payment.status)}</td>
-                          <td className="p-4">
-                            <Button variant="ghost" size="sm">
-                              <Download className="w-4 h-4 mr-1" /> Receipt
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
+        {/* Summary Cards */}
+        {loading ? (
+          <div className="grid grid-cols-3 gap-4">
+            {[1,2,3].map(i => <Skeleton key={i} className="h-28 rounded-2xl" />)}
+          </div>
+        ) : (
+          <motion.div
+            initial={{ opacity:0, y:12 }}
+            animate={{ opacity:1, y:0 }}
+            className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+          >
+            {[
+              { icon: Wallet,       label: "Total Paid",     value: `PKR ${summary.totalPaid.toLocaleString()}`,    color: "bg-emerald-500", sub: "Lifetime" },
+              { icon: Clock,        label: "Pending",        value: `PKR ${summary.totalPending.toLocaleString()}`, color: "bg-amber-500",   sub: "Awaiting" },
+              { icon: Receipt,      label: "Transactions",   value: summary.totalTransactions,                      color: "bg-blue-500",    sub: "Total" },
+            ].map((s, i) => (
+              <div key={s.label} className="bg-card border border-border rounded-2xl p-5">
+                <div className={`w-10 h-10 ${s.color} rounded-xl flex items-center justify-center mb-3`}>
+                  <s.icon className="w-5 h-5 text-white" />
                 </div>
-              </CardContent>
-            </Card>
-            {/* Mobile card layout */}
-            <div className="md:hidden space-y-3">
-              {paymentHistory.map((payment) => (
-                <Card key={payment.id}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h4 className="font-semibold">{payment.tutorName}</h4>
-                      {getStatusBadge(payment.status)}
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground mb-3">
-                      <span>{formatDate(payment.date)}</span>
-                      <span className="text-right">{payment.method}</span>
-                      <span>{payment.sessions} sessions</span>
-                      <span className="text-right font-medium text-foreground">PKR {payment.amount.toLocaleString()}</span>
-                    </div>
-                    <Button variant="ghost" size="sm" className="w-full min-h-[44px]">
-                      <Download className="w-4 h-4 mr-1" /> Download Receipt
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
+                <div className="text-xl font-bold text-foreground">{s.value}</div>
+                <div className="text-sm text-muted-foreground">{s.label}</div>
+              </div>
+            ))}
+          </motion.div>
+        )}
 
-          <TabsContent value="methods" className="mt-4 space-y-4">
-            {paymentMethods.map((method) => (
-              <Card key={method.id}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="text-3xl">{getMethodIcon(method.type)}</div>
-                      <div>
-                        <h4 className="font-medium">{method.name}</h4>
-                        <p className="text-sm text-muted-foreground">{method.details}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {method.isDefault && (
-                        <Badge variant="secondary">Default</Badge>
+        {/* Payment methods note */}
+        <div className="flex items-center gap-3 p-4 bg-primary/5 border border-primary/15 rounded-xl">
+          <CreditCard className="w-5 h-5 text-primary shrink-0" />
+          <div className="flex-1">
+            <p className="text-sm font-semibold text-foreground">Accepted Payment Methods</p>
+            <p className="text-xs text-muted-foreground">JazzCash · EasyPaisa · Credit/Debit Card · Bank Transfer</p>
+          </div>
+          <div className="flex gap-1.5 text-lg">
+            <span title="JazzCash">📱</span>
+            <span title="EasyPaisa">💚</span>
+            <span title="Card">💳</span>
+            <span title="Bank">🏦</span>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
+          {tabs.map(t => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors",
+                tab === t.key ? "bg-card text-foreground shadow-sm border border-border" : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {t.label}
+              {t.count > 0 && (
+                <span className={cn("text-[10px] font-bold px-1.5 py-0.5 rounded-full",
+                  tab === t.key ? "bg-primary text-white" : "bg-muted text-muted-foreground"
+                )}>{t.count}</span>
+              )}
+            </button>
+          ))}
+        </div>
+
+        {/* Payment list */}
+        {loading ? (
+          <div className="space-y-3">
+            {[1,2,3].map(i => <Skeleton key={i} className="h-24 rounded-2xl" />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center">
+            <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-4">
+              <Banknote className="w-8 h-8 text-muted-foreground" />
+            </div>
+            <h3 className="font-bold text-foreground mb-1">No payments yet</h3>
+            <p className="text-sm text-muted-foreground">
+              {tab === "pending" ? "No pending payments." : "Your payment history will appear here."}
+            </p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((p, i) => {
+              const sc = STATUS_CONFIG[p.payment_status] || STATUS_CONFIG["pending"];
+              const StatusIcon = sc.icon;
+              const methodIcon = METHOD_ICONS[p.payment_method?.toLowerCase() || ""] || "💳";
+
+              return (
+                <motion.div
+                  key={p.id}
+                  initial={{ opacity:0, y:10 }}
+                  animate={{ opacity:1, y:0 }}
+                  transition={{ delay: i*0.05 }}
+                  className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4 hover:border-primary/20 transition-colors"
+                >
+                  {/* Avatar */}
+                  <Avatar className="h-11 w-11 shrink-0">
+                    <AvatarImage src={p.tutor_avatar || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-sm">
+                      {p.tutor_initials}
+                    </AvatarFallback>
+                  </Avatar>
+
+                  {/* Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-semibold text-foreground text-sm">{p.tutor_name}</p>
+                      {p.session_count && (
+                        <span className="text-[10px] bg-muted text-muted-foreground px-2 py-0.5 rounded-full">
+                          {p.session_count} session{p.session_count > 1 ? "s" : ""}
+                        </span>
                       )}
-                      <Button variant="outline" size="sm">
-                        Edit
-                      </Button>
+                    </div>
+                    {p.description && <p className="text-xs text-muted-foreground mt-0.5 truncate">{p.description}</p>}
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <span className="text-xs text-muted-foreground">
+                        {format(parseISO(p.created_at), "MMM d, yyyy")}
+                      </span>
+                      {p.payment_method && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          {methodIcon} {p.payment_method}
+                        </span>
+                      )}
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            ))}
-            <Button variant="outline" className="w-full gap-2">
-              <Plus className="w-4 h-4" /> Add Payment Method
-            </Button>
-          </TabsContent>
-        </Tabs>
+
+                  {/* Amount + status */}
+                  <div className="text-right shrink-0">
+                    <p className="font-bold text-foreground">PKR {p.amount_pkr.toLocaleString()}</p>
+                    <span className={cn("inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full mt-1", sc.classes)}>
+                      <StatusIcon className="w-3 h-3" />
+                      {sc.label}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Need help */}
+        {!loading && (
+          <div className="text-center pt-2">
+            <p className="text-xs text-muted-foreground">
+              Questions about billing?{" "}
+              <a href="mailto:hello@studypulse.pk" className="text-primary hover:underline">
+                Contact us at hello@studypulse.pk
+              </a>
+            </p>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
