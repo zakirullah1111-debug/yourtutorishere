@@ -296,7 +296,7 @@ const LoginPage = () => {
       <div className="hidden lg:flex flex-1 gradient-bg items-center justify-center p-12">
         <div className="text-center text-white max-w-md">
           <h2 className="text-display-3 font-bold mb-4">
-            Welcome Back to Your-Tutor
+            Welcome Back to Studypulse
           </h2>
           <p className="text-white/80 text-lg mb-8">
             Continue your learning journey with Pakistan's most advanced AI-powered tutoring platform.
