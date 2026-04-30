@@ -134,7 +134,7 @@ const SignupPage = () => {
     setFormData(prev => ({ ...prev, password: "" }));
     
     toast({
-      title: "Welcome to Your-Tutor! 🎉",
+      title: "Welcome to Studypulse! 🎉",
       description: "Your account has been created. Redirecting to your dashboard...",
     });
 
