@@ -24,7 +24,7 @@ export function AIChatbot() {
     {
       id: "1",
       role: "assistant",
-      content: "Hello! 👋 I'm Your-Tutor's AI assistant. I can help you find the perfect tutor, answer questions about our platform, or guide you through the learning process. How can I help you today?",
+      content: "Hello! 👋 I'm Studypulse's AI assistant. I can help you find the perfect tutor, answer questions about our platform, or guide you through the learning process. How can I help you today?",
       timestamp: new Date(),
     },
   ]);
