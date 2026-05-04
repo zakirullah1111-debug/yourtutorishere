@@ -3,23 +3,123 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- ── Security ──────────────────────────────────── -->
     <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' https:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://api.resend.com https://meet.jit.si; frame-src https://meet.jit.si https://www.youtube.com https://player.vimeo.com; media-src 'self' blob: https:;" />
     <meta http-equiv="X-Content-Type-Options" content="nosniff" />
     <meta http-equiv="X-Frame-Options" content="DENY" />
     <meta name="referrer" content="strict-origin" />
-    <title>Your-Tutor — Pakistan's AI-Powered Tutoring Platform</title>
-    <meta name="description" content="Connect with expert tutors across Pakistan. AI-powered matching, free demo classes, and personalized learning." />
-    <meta name="author" content="Your-Tutor" />
 
-    <!-- TODO: Update og:title to match your application name -->
-    <meta property="og:title" content="Lovable App" />
-    <meta property="og:description" content="Lovable Generated Project" />
-    <meta property="og:type" content="website" />
-    <meta property="og:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- ── Primary SEO ───────────────────────────────── -->
+    <title>Studypulse — Pakistan's #1 Online Tutoring Platform</title>
+    <meta name="description" content="Find expert tutors for O-Level, A-Level, Matric & Intermediate in Pakistan. Book a free demo session today. 500+ verified tutors · Starting PKR 500/hr · JazzCash & EasyPaisa accepted." />
+    <meta name="keywords" content="online tutor Pakistan, O-Level tutor, A-Level tutor, Matric tutor, home tutor Karachi, home tutor Lahore, Physics tutor, Math tutor, Chemistry tutor, online tutoring Pakistan, Studypulse" />
+    <meta name="author" content="Studypulse" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://studypulse.pk/" />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@Lovable" />
-    <meta name="twitter:image" content="https://lovable.dev/opengraph-image-p98pqg.png" />
+    <!-- ── Open Graph (Facebook, WhatsApp, LinkedIn) ─── -->
+    <meta property="og:type"        content="website" />
+    <meta property="og:url"         content="https://studypulse.pk/" />
+    <meta property="og:site_name"   content="Studypulse" />
+    <meta property="og:title"       content="Studypulse — Pakistan's #1 Online Tutoring Platform" />
+    <meta property="og:description" content="Find expert tutors for O-Level, A-Level, Matric & Intermediate. Book a free demo — no credit card needed. 500+ verified tutors across Pakistan." />
+    <meta property="og:image"       content="https://studypulse.pk/og-image.png" />
+    <meta property="og:image:width"  content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:locale"      content="en_PK" />
+
+    <!-- ── Twitter Card ──────────────────────────────── -->
+    <meta name="twitter:card"        content="summary_large_image" />
+    <meta name="twitter:site"        content="@studypulsepk" />
+    <meta name="twitter:creator"     content="@studypulsepk" />
+    <meta name="twitter:title"       content="Studypulse — Pakistan's #1 Online Tutoring Platform" />
+    <meta name="twitter:description" content="500+ verified tutors. Free demo sessions. O-Level · A-Level · Matric · Inter. Starting PKR 500/hr." />
+    <meta name="twitter:image"       content="https://studypulse.pk/og-image.png" />
+
+    <!-- ── PWA / Mobile ──────────────────────────────── -->
+    <meta name="theme-color" content="#7C3AED" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Studypulse" />
+    <link rel="apple-touch-icon" href="/favicon.ico" />
+
+    <!-- ── Structured Data (JSON-LD) ─────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "Studypulse",
+      "url": "https://studypulse.pk",
+      "logo": "https://studypulse.pk/favicon.ico",
+      "description": "Pakistan's #1 online tutoring platform connecting students with verified expert tutors.",
+      "address": {
+        "@type": "PostalAddress",
+        "addressCountry": "PK",
+        "addressLocality": "Karachi"
+      },
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "email": "hello@studypulse.pk"
+      },
+      "sameAs": [
+        "https://www.facebook.com/studypulsepk",
+        "https://www.instagram.com/studypulsepk",
+        "https://twitter.com/studypulsepk"
+      ],
+      "offers": {
+        "@type": "Offer",
+        "description": "Online tutoring sessions",
+        "priceCurrency": "PKR",
+        "price": "500",
+        "availability": "https://schema.org/InStock"
+      }
+    }
+    </script>
+
+    <!-- ── FAQ Structured Data ───────────────────────── -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How do I find a tutor on Studypulse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Search for your subject, browse verified tutor profiles, and book a free 30-minute demo session. No credit card required."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How much do tutors charge on Studypulse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Tutors on Studypulse start from PKR 500 per hour. Prices vary based on subject, level, and tutor experience."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Are tutors verified on Studypulse?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes. Every tutor on Studypulse is manually verified by our team — including identity checks and degree verification — before they can teach."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What payment methods are accepted?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "We accept JazzCash, EasyPaisa, credit/debit cards, and bank transfers."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
 
   <body>
