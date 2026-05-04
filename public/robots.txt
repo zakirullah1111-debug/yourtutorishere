@@ -1,14 +1,17 @@
-User-agent: Googlebot
-Allow: /
-
-User-agent: Bingbot
-Allow: /
-
-User-agent: Twitterbot
-Allow: /
-
-User-agent: facebookexternalhit
-Allow: /
-
 User-agent: *
 Allow: /
+
+# Block dashboard pages from indexing (user-specific content)
+Disallow: /dashboard/
+Disallow: /reset-password
+Disallow: /forgot-password
+
+# Allow key public pages
+Allow: /tutors
+Allow: /tutors/
+Allow: /subjects
+Allow: /pricing
+Allow: /about
+Allow: /how-it-works
+
+Sitemap: https://studypulse.pk/sitemap.xml
